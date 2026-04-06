@@ -1,7 +1,6 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-// আপনার কনসোল থেকে পাওয়া রিয়েল কনফিগ
 const firebaseConfig = {
   apiKey: "AIzaSyAD09MB-IyxS8qUKaE3Drv-gsnnt2InXU8",
   authDomain: "rankpush-78dbd.firebaseapp.com",
@@ -12,7 +11,9 @@ const firebaseConfig = {
   measurementId: "G-JG97RR43Y9"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// অ্যাপ আগে থেকে থাকলে সেটা ব্যবহার করবে, না থাকলে নতুন করে খুলবে (Duplicate App Error ঠেকানোর জন্য)
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+export { app };
