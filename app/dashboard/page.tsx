@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; 
-import { auth } from "@/lib/firebase"; // নিশ্চিত করো তোমার ফায়ারবেস পাথ এটাই কি না
+import { auth } from "@/lib/firebase"; 
 import { onAuthStateChanged } from "firebase/auth";
 import { 
   Zap, Trophy, Swords, Bell, Settings, Target, 
@@ -13,10 +13,10 @@ import {
 
 export default function RankPushSoloLevelingEdition() {
   const [selectedSub, setSelectedSub] = useState("Physics");
-  const [user, setUser] = useState(null); // ইউজার স্টেট যোগ করা হয়েছে
+  const [user, setUser] = useState(null); 
   const router = useRouter(); 
 
-  // লগইন করা ইউজারকে ট্র্যাক করার লজিক
+  // লগইন করা ইউজারকে ট্র্যাক করার লজিক (auth() এর বদলে শুধু auth হবে)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -270,11 +270,14 @@ export default function RankPushSoloLevelingEdition() {
                   ))}
                </div>
 
-               <button className="w-full btn-arena py-5 md:py-6 rounded-2xl border border-white/20 active:scale-95 group focus:outline-none shadow-[0_0_20px_rgba(14,165,233,0.3)]">
-                 <span className="relative z-10 flex items-center justify-center gap-2 md:gap-4 text-white text-xl md:text-3xl italic-black tracking-widest md:tracking-[0.25em] uppercase whitespace-nowrap transition-all md:group-hover:tracking-[0.3em]">
+               <button 
+                  onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)}
+                  className="w-full btn-arena py-5 md:py-6 rounded-2xl border border-white/20 active:scale-95 group focus:outline-none shadow-[0_0_20px_rgba(14,165,233,0.3)]"
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2 md:gap-4 text-white text-xl md:text-3xl italic-black tracking-widest md:tracking-[0.25em] uppercase whitespace-nowrap transition-all md:group-hover:tracking-[0.3em]">
                     Enter Arena <Play className="w-5 h-5 md:w-7 md:h-7 fill-white group-hover:translate-x-1 md:group-hover:translate-x-3 transition-transform text-white"/>
-                 </span>
-               </button>
+                  </span>
+                </button>
             </div>
           </div>
 
