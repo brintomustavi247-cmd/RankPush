@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; 
+import { auth } from "@/lib/firebase"; // নিশ্চিত করো তোমার ফায়ারবেস পাথ এটাই কি না
+import { onAuthStateChanged } from "firebase/auth";
 import { 
   Zap, Trophy, Swords, Bell, Settings, Target, 
   History, Shield, Star, Users, Brain, Activity,
@@ -11,7 +13,16 @@ import {
 
 export default function RankPushSoloLevelingEdition() {
   const [selectedSub, setSelectedSub] = useState("Physics");
+  const [user, setUser] = useState(null); // ইউজার স্টেট যোগ করা হয়েছে
   const router = useRouter(); 
+
+  // লগইন করা ইউজারকে ট্র্যাক করার লজিক
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const subjectList = [
     { name: "Physics", icon: <Atom size={26}/> },
@@ -32,7 +43,6 @@ export default function RankPushSoloLevelingEdition() {
           background-color: #02010a;
         }
 
-        /* --- UPGRADED GAMING BACKGROUND --- */
         body { 
           background-image: 
             linear-gradient(to bottom, rgba(2, 1, 10, 0.8), rgba(2, 1, 10, 0.95)),
@@ -45,7 +55,6 @@ export default function RankPushSoloLevelingEdition() {
           position: relative;
         }
 
-        /* Tactical Scanline Effect */
         body::before {
           content: '';
           position: fixed;
@@ -126,15 +135,12 @@ export default function RankPushSoloLevelingEdition() {
         }
       `}</style>
 
-      {/* Dynamic Background Glows */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] size-[600px] bg-[#0ea5e9] opacity-[0.08] blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[-10%] right-[-10%] size-[600px] bg-[#7c3aed] opacity-[0.06] blur-[120px] rounded-full"></div>
       </div>
 
       <div className="min-h-screen p-4 lg:p-6 relative z-10">
-        
-        {/* --- HEADER --- */}
         <header className="max-w-[1800px] mx-auto flex justify-between items-center mb-12 px-2">
           <div className="flex items-center gap-12">
             <div className="flex items-center gap-3 group cursor-pointer">
@@ -165,28 +171,26 @@ export default function RankPushSoloLevelingEdition() {
           </div>
         </header>
 
-        {/* --- MAIN GRID --- */}
         <main className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
-          
-          {/* --- LEFT COLUMN --- */}
           <div className="lg:col-span-3 space-y-6">
-            
-            {/* PROFILE CARD */}
             <div className="dashboard-card p-10 text-center relative overflow-hidden group border-t-2 border-[#0ea5e9]">
                <div className="relative size-28 mx-auto mb-6 p-1 rounded-full border-2 border-[#0ea5e9] group-hover:scale-105 transition-transform">
-                  <img src="https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg" 
-                       className="rounded-full w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all" 
-                       alt="Profile" />
-                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-[#0ea5e9] to-[#22d3ee] text-white text-[10px] px-2.5 py-1 rounded font-black italic shadow-lg border border-white/30">LVL 47</div>
+                 <img 
+                   src={user?.photoURL || "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg"}
+                   className="rounded-full w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all" 
+                   alt="Profile" 
+                 />
+                 <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-[#0ea5e9] to-[#22d3ee] text-white text-[10px] px-2.5 py-1 rounded font-black italic shadow-lg border border-white/30">LVL 47</div>
                </div>
-               <h2 className="text-2xl font-logo tracking-widest mb-1 group-hover:text-[#22d3ee] transition-colors text-white">CyberWarrior_BD</h2>
+               <h2 className="text-2xl font-logo tracking-widest mb-1 group-hover:text-[#22d3ee] transition-colors text-white">
+                 {user?.displayName || "Cyber Hunter"}
+               </h2>
                
                <div className="flex justify-center items-center gap-2 mt-2">
                  <Crown size={14} className="text-yellow-400 fill-yellow-400/20" />
                  <p className="text-[10px] font-black text-[#0ea5e9] tracking-[0.2em] uppercase">Monarch Rank</p>
                </div>
 
-               {/* 🔥 User Total EXP Score */}
                <div className="mt-4 mb-8">
                  <span className="text-[12px] font-black text-white tracking-widest bg-white/10 px-4 py-1.5 rounded-full border border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)]">
                    15,420 <span className="text-[#22d3ee]">EXP</span>
@@ -201,7 +205,6 @@ export default function RankPushSoloLevelingEdition() {
                </div>
             </div>
 
-            {/* NEURAL ATTRIBUTES */}
             <div className="dashboard-card p-6 space-y-5 border-t border-[#0ea5e9]/20">
                <h3 className="text-[10px] font-black tracking-widest opacity-50 uppercase flex items-center gap-2 italic text-white"><Target size={14}/> Neural Attributes</h3>
                {[
@@ -219,7 +222,6 @@ export default function RankPushSoloLevelingEdition() {
                ))}
             </div>
 
-            {/* ISLAMIC QUOTE (DAILY DIRECTIVE) */}
             <div className="dashboard-card p-6 border-l-4 border-emerald-500 bg-emerald-500/5">
                <div className="flex items-center gap-2 mb-3 opacity-60 text-white">
                  <Quote size={16} className="text-emerald-500" />
@@ -232,7 +234,6 @@ export default function RankPushSoloLevelingEdition() {
             </div>
           </div>
 
-          {/* --- CENTER COLUMN --- */}
           <div className="lg:col-span-6 space-y-6">
             <div className="dashboard-card p-6 md:p-10 flex items-center justify-between bg-gradient-to-br from-[#0ea5e9]/10 to-transparent relative overflow-hidden">
                <div className="relative z-10 w-full text-center md:text-left">
@@ -245,8 +246,8 @@ export default function RankPushSoloLevelingEdition() {
             <div className="dashboard-card p-6 md:p-8 border-t-4 border-[#0ea5e9]">
                <div className="flex justify-between items-center mb-10">
                   <div>
-                     <h3 className="text-xl md:text-2xl italic-black tracking-tight uppercase text-white">Tactical <span className="text-[#0ea5e9]">Arena</span></h3>
-                     <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest text-white">Select your mastery field</p>
+                      <h3 className="text-xl md:text-2xl italic-black tracking-tight uppercase text-white">Tactical <span className="text-[#0ea5e9]">Arena</span></h3>
+                      <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest text-white">Select your mastery field</p>
                   </div>
                   <div className="size-10 md:size-12 bg-[#0ea5e9]/10 rounded-2xl flex items-center justify-center animate-bounce shadow-inner border border-[#0ea5e9]/20"><Swords className="neon-blue w-5 md:w-6 h-5 md:h-6" /></div>
                </div>
@@ -271,16 +272,13 @@ export default function RankPushSoloLevelingEdition() {
 
                <button className="w-full btn-arena py-5 md:py-6 rounded-2xl border border-white/20 active:scale-95 group focus:outline-none shadow-[0_0_20px_rgba(14,165,233,0.3)]">
                  <span className="relative z-10 flex items-center justify-center gap-2 md:gap-4 text-white text-xl md:text-3xl italic-black tracking-widest md:tracking-[0.25em] uppercase whitespace-nowrap transition-all md:group-hover:tracking-[0.3em]">
-                   Enter Arena <Play className="w-5 h-5 md:w-7 md:h-7 fill-white group-hover:translate-x-1 md:group-hover:translate-x-3 transition-transform text-white"/>
+                    Enter Arena <Play className="w-5 h-5 md:w-7 md:h-7 fill-white group-hover:translate-x-1 md:group-hover:translate-x-3 transition-transform text-white"/>
                  </span>
                </button>
             </div>
           </div>
 
-          {/* --- RIGHT COLUMN --- */}
           <div className="lg:col-span-3 space-y-6">
-            
-            {/* GLOBAL ELITE LEADERBOARD WITH SCORES */}
             <div className="dashboard-card p-6 md:p-7 min-h-[300px] border-l-4 border-[#0ea5e9]/50">
                <div className="flex justify-between items-center mb-8">
                  <h3 className="text-[11px] font-black tracking-widest opacity-60 uppercase flex items-center gap-2 italic text-white"><Trophy size={14} className="text-yellow-500"/> Global Elite</h3>
@@ -301,7 +299,6 @@ export default function RankPushSoloLevelingEdition() {
                           <div className={`h-full ${p.rank === '01' ? 'bg-[#22d3ee]' : 'bg-[#0ea5e9]'}`} style={{ width: '75%' }}></div>
                         </div>
                       </div>
-                      {/* 🔥 Global Elite Score */}
                       <div className="text-right">
                         <p className="text-[10px] font-black text-[#22d3ee] tracking-wider">{p.score}</p>
                         <p className="text-[8px] opacity-50 font-bold uppercase text-white">EXP</p>
@@ -311,7 +308,6 @@ export default function RankPushSoloLevelingEdition() {
                </div>
             </div>
 
-            {/* DAILY QUESTS */}
             <div className="dashboard-card p-6 border-l-4 border-orange-500 bg-orange-500/5 group">
                <div className="flex items-center gap-2 mb-5 opacity-80 text-white">
                  <Flame size={16} className="text-orange-500" />
@@ -325,17 +321,9 @@ export default function RankPushSoloLevelingEdition() {
                      <p className="text-[9px] opacity-60 mt-1 uppercase text-white">Solve 20 MCQ <span className="text-[#22d3ee] font-black group-hover:underline">(+500 EXP)</span></p>
                    </div>
                  </div>
-                 <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/5 opacity-50 hover:opacity-100 hover:border-orange-500/30 transition-all cursor-pointer">
-                   <div className="size-4 rounded-full border-2 border-white/30 shrink-0 mt-0.5"></div>
-                   <div>
-                     <p className="text-[11px] font-bold text-white uppercase leading-tight">Chemistry Lab</p>
-                     <p className="text-[9px] opacity-80 mt-1 uppercase text-white">Complete 1 practice set <span className="text-[#22d3ee] font-black group-hover:underline">(+300 EXP)</span></p>
-                   </div>
-                 </div>
                </div>
             </div>
 
-            {/* ANIME QUOTE (MONARCH'S WISDOM) */}
             <div className="dashboard-card p-6 bg-gradient-to-t from-[#0ea5e9]/20 to-transparent border-b-4 border-[#0ea5e9]">
                <div className="flex items-center gap-2 mb-3 opacity-60 text-white">
                  <Crown size={16} className="text-[#0ea5e9]" />
@@ -347,7 +335,6 @@ export default function RankPushSoloLevelingEdition() {
                </p>
                <p className="text-[10px] font-black mt-4 text-[#22d3ee] tracking-[0.2em] uppercase">— SUNG JIN-WOO</p>
             </div>
-
           </div>
         </main>
 
