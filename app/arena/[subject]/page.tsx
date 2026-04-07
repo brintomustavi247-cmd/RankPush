@@ -67,7 +67,7 @@ export default function ArenaPage() {
     setFeedback(prev => [...prev, { text, type, id }]);
     setTimeout(() => {
       setFeedback(prev => prev.filter(f => f.id !== id));
-    }, 1500);
+    }, 1500); // Remove after 1.5s
   };
 
   // --- Handlers ---
@@ -102,6 +102,7 @@ export default function ArenaPage() {
     if (gameState !== "playing") return;
     
     if (selectedOption === currentQuestion?.correctAnswer) {
+      // Success Logic
       const earnedExp = 100 * multiplier;
       setExp((prev) => prev + earnedExp);
       setCombo((prev) => prev + 1);
@@ -111,6 +112,7 @@ export default function ArenaPage() {
       
       moveToNextQuestion();
     } else {
+      // Failure Logic
       setCombo(0);
       showFeedback("MISS! -25 HP", "danger");
       triggerDamage();
@@ -135,6 +137,7 @@ export default function ArenaPage() {
     }
   };
 
+  // Safe Check
   if (!currentQuestion) {
     return (
       <div className="min-h-screen bg-[#030108] flex items-center justify-center font-logo text-cyan-400 text-2xl animate-pulse tracking-[0.5em]">
@@ -143,6 +146,7 @@ export default function ArenaPage() {
     );
   }
 
+  // Calculate Accuracy
   const accuracy = totalQuestions > 0 ? Math.round((correctAnswersCount / totalQuestions) * 100) : 0;
 
   return (
@@ -154,6 +158,7 @@ export default function ArenaPage() {
         .font-logo { font-family: 'Orbitron', sans-serif; }
         body { font-family: 'Outfit', sans-serif; background-color: #030108; overflow: hidden; }
 
+        /* --- IMMERSIVE NEBULA BG WITH SCANLINES --- */
         .nebula-bg {
           background: 
             radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
@@ -183,11 +188,14 @@ export default function ArenaPage() {
           100% { transform: scale(1.1) translate(-20px, 20px); }
         }
 
+        /* --- ARENA SYSTEM CARD --- */
         .system-card {
           background: linear-gradient(145deg, rgba(10, 8, 25, 0.7) 0%, rgba(5, 3, 15, 0.9) 100%);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(34, 211, 238, 0.15);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.8),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
           position: relative;
         }
         
@@ -197,6 +205,7 @@ export default function ArenaPage() {
           box-shadow: 0 0 15px rgba(34, 211, 238, 0.8);
         }
 
+        /* --- OPTIONS BUTTON ANIMATION --- */
         .option-btn {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(139, 92, 246, 0.15);
@@ -218,6 +227,7 @@ export default function ArenaPage() {
         }
         .option-btn:hover::after { left: 200%; }
 
+        /* --- SKILL BUTTONS --- */
         .skill-btn {
           background: rgba(10, 8, 25, 0.6);
           border: 1px solid rgba(255, 255, 255, 0.1);
@@ -234,11 +244,15 @@ export default function ArenaPage() {
           opacity: 0.3; cursor: not-allowed; filter: grayscale(100%);
         }
 
+        /* --- EXTREME MAGICAL MODAL --- */
         .magical-modal {
           background: radial-gradient(circle at 50% 0%, rgba(30, 20, 50, 0.9) 0%, rgba(5, 3, 15, 0.95) 80%);
           backdrop-filter: blur(30px);
           border: 1px solid rgba(139, 92, 246, 0.4);
-          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 0 40px rgba(34, 211, 238, 0.05);
+          box-shadow: 
+            0 30px 60px rgba(0, 0, 0, 0.9),
+            0 0 80px rgba(139, 92, 246, 0.2),
+            inset 0 0 40px rgba(34, 211, 238, 0.05);
         }
 
         .timer-urgent { color: #f43f5e; text-shadow: 0 0 15px #f43f5e; animation: pulseBeat 1s infinite; }
@@ -274,122 +288,108 @@ export default function ArenaPage() {
 
       <div className="relative z-10 h-screen flex flex-col p-4 md:p-8 lg:p-12 overflow-y-auto">
         
-        {/* --- 🌟 HUD HEADER (Mobile Fixed & Cinematic Hide) 🌟 --- */}
-        <AnimatePresence>
-          {gameState === "playing" && (
-            <motion.header 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20, filter: "blur(5px)" }}
-              className="max-w-[1400px] mx-auto w-full flex flex-wrap md:flex-nowrap justify-between items-start mb-6 md:mb-10 relative z-20"
-            >
+        {/* --- 🌟 HUD HEADER 🌟 --- */}
+        <header className="max-w-[1400px] mx-auto w-full grid grid-cols-3 items-start mb-4 md:mb-10">
+          
+          {/* Left: Progress & Combo */}
+          <div className="space-y-4">
+            <button onClick={() => router.back()} className="flex items-center gap-3 group w-fit">
+              <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl group-hover:border-cyan-400 group-hover:bg-cyan-400/10 transition-all">
+                <ArrowLeft size={18} className="text-white/60 group-hover:text-cyan-400 transition-colors" />
+              </div>
+              <span className="text-[10px] font-black tracking-[0.3em] uppercase opacity-40 group-hover:text-cyan-400 group-hover:opacity-100 transition-all">Flee</span>
+            </button>
+            
+            <div className="hidden md:flex flex-col gap-2">
+              <div className="flex items-center gap-3 opacity-60">
+                <Target size={14} className="text-purple-400" />
+                <span className="text-[10px] font-black tracking-[0.2em] uppercase">Trial {currentIdx + 1} / {totalQuestions}</span>
+              </div>
               
-              {/* Left: Exit & Progress */}
-              <div className="order-1 flex-shrink-0 space-y-4 w-auto">
-                <button onClick={() => router.back()} className="flex items-center gap-3 group w-fit">
-                  <div className="p-2 md:p-2.5 bg-white/5 border border-white/10 rounded-xl group-hover:border-cyan-400 group-hover:bg-cyan-400/10 transition-all">
-                    <ArrowLeft size={16} className="text-white/60 group-hover:text-cyan-400 transition-colors md:size-18" />
-                  </div>
-                  <span className="text-[9px] md:text-[10px] font-black tracking-[0.3em] uppercase opacity-40 group-hover:text-cyan-400 group-hover:opacity-100 transition-all hidden xs:block">Flee</span>
-                </button>
-                
-                <div className="hidden md:flex flex-col gap-2">
-                  <div className="flex items-center gap-3 opacity-60">
-                    <Target size={14} className="text-purple-400" />
-                    <span className="text-[10px] font-black tracking-[0.2em] uppercase">Trial {currentIdx + 1} / {totalQuestions}</span>
-                  </div>
-                  
-                  {/* Combo Display */}
-                  <AnimatePresence>
-                    {combo > 1 && (
-                      <motion.div 
-                        initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0 }}
-                        className="flex items-center gap-2 text-orange-400 drop-shadow-[0_0_8px_orange]"
-                      >
-                        <Flame size={18} className="animate-pulse" />
-                        <span className="font-logo font-black text-xl italic">{combo}x COMBO!</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
+              {/* Combo Display */}
+              <AnimatePresence>
+                {combo > 1 && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0 }}
+                    className="flex items-center gap-2 text-orange-400 drop-shadow-[0_0_8px_orange]"
+                  >
+                    <Flame size={18} className="animate-pulse" />
+                    <span className="font-logo font-black text-xl italic">{combo}x COMBO!</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
 
-              {/* Center: Dynamic Timer (Drops down on mobile) */}
-              <div className="order-3 md:order-2 w-full md:w-auto flex flex-col items-center justify-start mt-4 md:mt-0 md:absolute md:left-1/2 md:-translate-x-1/2">
-                <div className="relative flex items-center justify-center w-14 h-14 md:w-20 md:h-20">
-                  <svg className="absolute inset-0 w-full h-full -rotate-90">
-                    <circle cx="50%" cy="50%" r="45%" className="fill-none stroke-white/5 stroke-[3]" />
-                    <motion.circle 
-                      cx="50%" cy="50%" r="45%" 
-                      className={`fill-none stroke-[3] stroke-linecap-round ${isTimeFrozen ? 'stroke-blue-500' : timeLeft <= 5 ? 'stroke-rose-500' : 'stroke-cyan-400'}`}
-                      initial={{ strokeDasharray: "283", strokeDashoffset: "0" }}
-                      animate={{ strokeDashoffset: 283 - (283 * timeLeft) / 15 }}
-                      transition={{ duration: 1, ease: "linear" }}
-                    />
-                  </svg>
-                  <span className={`font-logo text-lg md:text-3xl font-black ${isTimeFrozen ? 'timer-frozen' : timeLeft <= 5 ? 'timer-urgent' : 'text-white'}`}>
-                    {isTimeFrozen ? '❄️' : timeLeft}
-                  </span>
-                </div>
-                <span className="text-[7px] md:text-[8px] font-black tracking-[0.3em] uppercase opacity-40 mt-1 md:mt-2">
-                  {isTimeFrozen ? 'FROZEN' : 'Time Left'}
-                </span>
-              </div>
+          {/* Center: Dynamic Timer */}
+          <div className="flex flex-col items-center justify-start mt-2">
+            <div className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20">
+              <svg className="absolute inset-0 w-full h-full -rotate-90">
+                <circle cx="50%" cy="50%" r="45%" className="fill-none stroke-white/5 stroke-[3]" />
+                <motion.circle 
+                  cx="50%" cy="50%" r="45%" 
+                  className={`fill-none stroke-[3] stroke-linecap-round ${isTimeFrozen ? 'stroke-blue-500' : timeLeft <= 5 ? 'stroke-rose-500' : 'stroke-cyan-400'}`}
+                  initial={{ strokeDasharray: "283", strokeDashoffset: "0" }}
+                  animate={{ strokeDashoffset: 283 - (283 * timeLeft) / 15 }}
+                  transition={{ duration: 1, ease: "linear" }}
+                />
+              </svg>
+              <span className={`font-logo text-xl md:text-3xl font-black ${isTimeFrozen ? 'timer-frozen' : timeLeft <= 5 ? 'timer-urgent' : 'text-white'}`}>
+                {isTimeFrozen ? '❄️' : timeLeft}
+              </span>
+            </div>
+            <span className="text-[8px] font-black tracking-[0.3em] uppercase opacity-40 mt-2">
+              {isTimeFrozen ? 'FROZEN' : 'Time Left'}
+            </span>
+          </div>
 
-              {/* Right: HP & EXP Stats */}
-              <div className="order-2 md:order-3 flex-shrink-0 flex flex-col items-end gap-3 md:gap-5 w-auto">
-                <div className="flex flex-col md:flex-row items-end md:items-center gap-2 md:gap-4 bg-purple-900/20 px-3 py-2 md:px-5 md:py-3 rounded-xl border border-purple-500/20 backdrop-blur-md">
-                  <div className="text-right">
-                    <p className="text-[7px] md:text-[9px] font-black text-rose-500 uppercase mb-1 md:mb-1.5 tracking-widest drop-shadow-[0_0_5px_red]">Vitality: {hp}%</p>
-                    <motion.div 
-                      className="w-16 md:w-32 h-1 md:h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5"
-                      animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-rose-700 to-rose-400 shadow-[0_0_10px_red]" 
-                        initial={{ width: "100%" }}
-                        animate={{ width: `${hp}%` }}
-                        transition={{ type: "spring", stiffness: 50 }}
-                      />
-                    </motion.div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="text-right">
-                    <p className="text-[7px] md:text-[8px] font-black text-cyan-400 uppercase leading-none mb-1 tracking-[0.2em]">Experience</p>
-                    <p className="font-logo text-lg md:text-2xl leading-none text-white drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-                      {exp} <span className="text-[8px] md:text-[10px] text-purple-400">({multiplier}x)</span>
-                    </p>
-                  </div>
-                  <div className="size-8 md:size-10 rounded-full border border-cyan-400/30 flex items-center justify-center bg-cyan-400/10">
-                    <Zap size={14} className="text-cyan-400 md:size-16" />
-                  </div>
-                </div>
+          {/* Right: HP & EXP Stats */}
+          <div className="flex flex-col items-end gap-5">
+            <div className="flex items-center gap-4 bg-purple-900/20 px-5 py-3 rounded-2xl border border-purple-500/20 backdrop-blur-md">
+              <div className="text-right">
+                <p className="text-[9px] font-black text-rose-500 uppercase mb-1.5 tracking-widest drop-shadow-[0_0_5px_red]">Vitality: {hp}%</p>
+                <motion.div 
+                  className="w-24 md:w-32 h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5"
+                  animate={isWrong ? { x: [-10, 10, -10, 10, 0] } : {}}
+                  transition={{ duration: 0.4 }}
+                >
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-rose-700 to-rose-400 shadow-[0_0_10px_red]" 
+                    initial={{ width: "100%" }}
+                    animate={{ width: `${hp}%` }}
+                    transition={{ type: "spring", stiffness: 50 }}
+                  />
+                </motion.div>
               </div>
-            </motion.header>
-          )}
-        </AnimatePresence>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-[8px] font-black text-cyan-400 uppercase leading-none mb-1 tracking-[0.2em]">Experience</p>
+                <p className="font-logo text-2xl leading-none text-white drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+                  {exp} <span className="text-[10px] text-purple-400">({multiplier}x)</span>
+                </p>
+              </div>
+              <div className="size-10 rounded-full border border-cyan-400/30 flex items-center justify-center bg-cyan-400/10">
+                <Zap size={16} className="text-cyan-400" />
+              </div>
+            </div>
+          </div>
+        </header>
 
-        {/* --- 🌟 SKILL BAR 🌟 --- */}
-        <AnimatePresence>
-          {gameState === "playing" && (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="max-w-[1000px] mx-auto w-full flex justify-center gap-3 md:gap-4 mb-6 z-10 relative"
-            >
-               <button onClick={useTimeFreeze} disabled={!hasTimeFreeze} className="skill-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl flex items-center gap-1.5 md:gap-2 group">
-                 <Clock size={14} className={hasTimeFreeze ? 'text-blue-400' : 'text-gray-500'} />
-                 <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white">Freeze</span>
-               </button>
-               <button onClick={useHeal} disabled={!hasHeal || hp === 100} className="skill-btn px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl flex items-center gap-1.5 md:gap-2 group">
-                 <Heart size={14} className={hasHeal && hp < 100 ? 'text-green-400' : 'text-gray-500'} />
-                 <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white">Heal</span>
-               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* --- 🌟 SKILL BAR (New) 🌟 --- */}
+        {gameState === "playing" && (
+          <div className="max-w-[1000px] mx-auto w-full flex justify-center gap-4 mb-6 z-10 relative">
+             <button onClick={useTimeFreeze} disabled={!hasTimeFreeze} className="skill-btn px-4 py-2 rounded-xl flex items-center gap-2 group">
+               <Clock size={16} className={hasTimeFreeze ? 'text-blue-400' : 'text-gray-500'} />
+               <span className="text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white">Freeze (1x)</span>
+             </button>
+             <button onClick={useHeal} disabled={!hasHeal || hp === 100} className="skill-btn px-4 py-2 rounded-xl flex items-center gap-2 group">
+               <Heart size={16} className={hasHeal && hp < 100 ? 'text-green-400' : 'text-gray-500'} />
+               <span className="text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white">Heal (1x)</span>
+             </button>
+          </div>
+        )}
 
         {/* --- 🌟 ARENA MAIN 🌟 --- */}
         <main className="flex-1 flex flex-col items-center justify-center max-w-[1000px] mx-auto w-full pb-10">
@@ -404,24 +404,24 @@ export default function ArenaPage() {
                 className="w-full space-y-6"
               >
                 {/* Question Card */}
-                <div className="system-card p-6 md:p-14 rounded-2xl md:rounded-3xl">
-                  <div className="flex flex-wrap justify-between items-center gap-3 mb-4 md:mb-6">
-                    <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-cyan-400/10 rounded-full border border-cyan-400/20 shadow-[inset_0_0_10px_rgba(34,211,238,0.2)]">
-                      <Swords size={14} className="text-cyan-400 animate-pulse md:size-16" />
-                      <span className="text-[8px] md:text-[10px] font-black text-cyan-400 tracking-[0.3em] uppercase">Tactical Query</span>
+                <div className="system-card p-8 md:p-14 rounded-3xl">
+                  <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+                    <div className="flex items-center gap-3 px-4 py-2 bg-cyan-400/10 rounded-full border border-cyan-400/20 shadow-[inset_0_0_10px_rgba(34,211,238,0.2)]">
+                      <Swords size={16} className="text-cyan-400 animate-pulse" />
+                      <span className="text-[10px] font-black text-cyan-400 tracking-[0.3em] uppercase">Tactical Query</span>
                     </div>
-                    <span className="text-[8px] md:text-[10px] font-mono text-white/30 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">
+                    <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest bg-white/5 px-3 py-1 rounded">
                       ID: {currentQuestion.exam || "SYS-TEST"}
                     </span>
                   </div>
                   
-                  <h2 className="text-xl md:text-4xl lg:text-5xl font-bold leading-tight text-white drop-shadow-lg">
+                  <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight text-white drop-shadow-lg">
                     {currentQuestion.questionText}
                   </h2>
                 </div>
 
                 {/* Options Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                   {currentQuestion.options.map((opt, i) => (
                     <motion.button
                       key={i}
@@ -429,12 +429,12 @@ export default function ArenaPage() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.1, type: "spring", stiffness: 70 }}
                       onClick={() => handleAnswer(opt)}
-                      className="option-btn p-4 md:p-8 rounded-xl md:rounded-2xl text-left flex items-center gap-4 md:gap-6 group"
+                      className="option-btn p-5 md:p-7 rounded-2xl text-left flex items-center gap-6 group"
                     >
-                      <div className="size-8 md:size-10 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shrink-0 group-hover:bg-cyan-400/20 group-hover:border-cyan-400/50 transition-colors shadow-[inset_0_0_10px_rgba(168,85,247,0.2)] group-hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]">
-                        <span className="font-logo text-[10px] md:text-[12px] text-purple-400 group-hover:text-cyan-300">0{i+1}</span>
+                      <div className="size-10 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shrink-0 group-hover:bg-cyan-400/20 group-hover:border-cyan-400/50 transition-colors shadow-[inset_0_0_10px_rgba(168,85,247,0.2)] group-hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                        <span className="font-logo text-[12px] text-purple-400 group-hover:text-cyan-300">0{i+1}</span>
                       </div>
-                      <span className="text-sm md:text-xl font-bold text-white/80 group-hover:text-white transition-colors">{opt}</span>
+                      <span className="text-base md:text-xl font-bold text-white/80 group-hover:text-white transition-colors">{opt}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -445,41 +445,41 @@ export default function ArenaPage() {
                 initial={{ opacity: 0, scale: 0.8, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                className={`magical-modal w-full max-w-[95%] md:max-w-4xl text-center flex flex-col relative z-50 rounded-2xl md:rounded-3xl ${gameState === 'lost' ? '!border-rose-500 shadow-[0_0_80px_rgba(225,29,72,0.4)]' : ''}`}
+                className={`magical-modal w-full max-w-[95%] md:max-w-4xl text-center flex flex-col relative z-50 rounded-3xl ${gameState === 'lost' ? '!border-rose-500 shadow-[0_0_80px_rgba(225,29,72,0.4)]' : ''}`}
               >
-                <div className="p-6 md:p-16 flex flex-col items-center gap-6 md:gap-8 relative z-10">
+                <div className="p-8 md:p-16 flex flex-col items-center gap-8 relative z-10">
                   
                   {/* Title Section */}
                   <div className="space-y-2">
-                    <h1 className={`font-logo text-4xl md:text-7xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text drop-shadow-[0_0_30px_rgba(139,92,246,0.8)] ${gameState === 'won' ? 'bg-gradient-to-br from-cyan-300 via-purple-300 to-purple-600' : 'bg-gradient-to-b from-white via-rose-300 to-rose-600'}`}>
+                    <h1 className={`font-logo text-5xl md:text-7xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text drop-shadow-[0_0_30px_rgba(139,92,246,0.8)] ${gameState === 'won' ? 'bg-gradient-to-br from-cyan-300 via-purple-300 to-purple-600' : 'bg-gradient-to-b from-white via-rose-300 to-rose-600'}`}>
                       {gameState === "won" ? "DUNGEON CLEARED" : "SYSTEM FAILED"}
                     </h1>
-                    <p className={`text-[9px] md:text-[12px] font-black tracking-[0.6em] uppercase ${gameState === 'won' ? 'text-cyan-400/80' : 'text-rose-500/80'}`}>
+                    <p className={`text-[12px] font-black tracking-[0.6em] uppercase ${gameState === 'won' ? 'text-cyan-400/80' : 'text-rose-500/80'}`}>
                       {gameState === "won" ? "Performance Evaluation" : "Fatal Error Detected"}
                     </p>
                   </div>
 
                   {/* Detailed Stats Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full max-w-3xl mt-4 md:mt-6">
-                     <div className="bg-white/5 border border-white/10 p-3 md:p-4 rounded-xl flex flex-col items-center justify-center">
-                        <Target size={16} className="text-cyan-400 mb-1.5 opacity-50 md:size-20" />
-                        <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-white/50 mb-1">Accuracy</span>
-                        <span className="font-logo text-xl md:text-3xl font-black text-white">{accuracy}%</span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl mt-6">
+                     <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex flex-col items-center justify-center">
+                        <Target size={20} className="text-cyan-400 mb-2 opacity-50" />
+                        <span className="text-[10px] uppercase tracking-widest text-white/50 mb-1">Accuracy</span>
+                        <span className="font-logo text-2xl md:text-3xl font-black text-white">{accuracy}%</span>
                      </div>
-                     <div className="bg-white/5 border border-white/10 p-3 md:p-4 rounded-xl flex flex-col items-center justify-center">
-                        <Flame size={16} className="text-orange-400 mb-1.5 opacity-50 md:size-20" />
-                        <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-white/50 mb-1">Max Combo</span>
-                        <span className="font-logo text-xl md:text-3xl font-black text-white">{maxCombo}x</span>
+                     <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex flex-col items-center justify-center">
+                        <Flame size={20} className="text-orange-400 mb-2 opacity-50" />
+                        <span className="text-[10px] uppercase tracking-widest text-white/50 mb-1">Max Combo</span>
+                        <span className="font-logo text-2xl md:text-3xl font-black text-white">{maxCombo}x</span>
                      </div>
-                     <div className="bg-white/5 border border-white/10 p-3 md:p-4 rounded-xl flex flex-col items-center justify-center">
-                        <Heart size={16} className={hp > 50 ? 'text-green-400 mb-1.5 opacity-50 md:size-20' : 'text-rose-500 mb-1.5 opacity-50 animate-pulse md:size-20'} />
-                        <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-white/50 mb-1">Remaining HP</span>
-                        <span className="font-logo text-xl md:text-3xl font-black text-white">{hp}</span>
+                     <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex flex-col items-center justify-center">
+                        <Heart size={20} className={hp > 50 ? 'text-green-400 mb-2 opacity-50' : 'text-rose-500 mb-2 opacity-50 animate-pulse'} />
+                        <span className="text-[10px] uppercase tracking-widest text-white/50 mb-1">Remaining HP</span>
+                        <span className="font-logo text-2xl md:text-3xl font-black text-white">{hp}</span>
                      </div>
-                     <div className="bg-purple-900/30 border border-purple-500/30 p-3 md:p-4 rounded-xl flex flex-col items-center justify-center shadow-[inset_0_0_15px_rgba(168,85,247,0.2)]">
-                        <Zap size={16} className="text-cyan-400 mb-1.5 md:size-20" />
-                        <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-cyan-400/80 mb-1">Total EXP</span>
-                        <span className="font-logo text-xl md:text-3xl font-black text-cyan-300 drop-shadow-[0_0_10px_cyan]">+{exp}</span>
+                     <div className="bg-purple-900/30 border border-purple-500/30 p-4 rounded-xl flex flex-col items-center justify-center shadow-[inset_0_0_15px_rgba(168,85,247,0.2)]">
+                        <Zap size={20} className="text-cyan-400 mb-2" />
+                        <span className="text-[10px] uppercase tracking-widest text-cyan-400/80 mb-1">Total EXP</span>
+                        <span className="font-logo text-2xl md:text-3xl font-black text-cyan-300 drop-shadow-[0_0_10px_cyan]">+{exp}</span>
                      </div>
                   </div>
                 </div>
@@ -487,16 +487,16 @@ export default function ArenaPage() {
                 {/* Massive Premium Button */}
                 <button 
                   onClick={() => router.push("/dashboard")}
-                  className={`relative w-full py-5 md:py-8 group overflow-hidden bg-purple-900/40 border-t-2 border-purple-500/50 hover:bg-purple-800/60 transition-all duration-500 rounded-b-2xl md:rounded-b-3xl ${gameState === 'lost' ? '!bg-rose-950/60 !border-rose-500/50 hover:!bg-rose-900/80' : ''}`}
+                  className={`relative w-full py-6 md:py-8 group overflow-hidden bg-purple-900/40 border-t-2 border-purple-500/50 hover:bg-purple-800/60 transition-all duration-500 ${gameState === 'lost' ? '!bg-rose-950/60 !border-rose-500/50 hover:!bg-rose-900/80' : ''}`}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ${gameState === 'lost' ? 'from-rose-500/20 to-orange-500/20' : ''}`}></div>
                   
-                  <div className="relative z-10 flex items-center justify-center gap-3 md:gap-5">
-                    <Sparkles size={16} className="text-cyan-300 group-hover:animate-pulse md:size-20" />
-                    <span className="font-bold text-[10px] md:text-[14px] uppercase tracking-[0.4em] text-cyan-50 group-hover:text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                  <div className="relative z-10 flex items-center justify-center gap-5">
+                    <Sparkles size={20} className="text-cyan-300 group-hover:animate-pulse" />
+                    <span className="font-bold text-[12px] md:text-[14px] uppercase tracking-[0.4em] text-cyan-50 group-hover:text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                       Return to Sanctuary
                     </span>
-                    <ChevronRight size={16} className="text-cyan-300 group-hover:translate-x-3 transition-transform duration-300 md:size-20" />
+                    <ChevronRight size={20} className="text-cyan-300 group-hover:translate-x-3 transition-transform duration-300" />
                   </div>
                 </button>
               </motion.div>
