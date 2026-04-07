@@ -75,12 +75,15 @@ export default function ArenaPage() {
     setCombo(0);
     showFeedback("TIME OUT! -25 HP", "danger");
     triggerDamage();
-    moveToNextQuestion();
+    // Fix: মরে গেলে যেন পরের প্রশ্নে না যায়
+    if (hp > 25) {
+      moveToNextQuestion();
+    }
   };
 
   const triggerDamage = () => {
     setIsWrong(true);
-    setTimeout(() => setIsWrong(false), 400); // reduced flash time for snappiness
+    setTimeout(() => setIsWrong(false), 400); 
     setHp((prev) => {
       const newHp = prev - 25;
       if (newHp <= 0) setGameState("lost");
@@ -107,13 +110,18 @@ export default function ArenaPage() {
       setCombo((prev) => prev + 1);
       setCorrectAnswersCount((prev) => prev + 1);
       showFeedback(`+${earnedExp} EXP!`, "success");
-      if (combo > 0) showFeedback(`${combo + 1}x COMBO!`, "success"); // Fixed combo display logic
+      if (combo > 0) showFeedback(`${combo + 1}x COMBO!`, "success"); 
       
       moveToNextQuestion();
     } else {
       setCombo(0);
       showFeedback("MISS! -25 HP", "danger");
       triggerDamage();
+      
+      // Fix: ভুল উত্তর দিলেও পরের প্রশ্নে যাবে, যদি HP বেঁচে থাকে
+      if (hp > 25) {
+        moveToNextQuestion(); 
+      }
     }
   };
 
@@ -182,7 +190,7 @@ export default function ArenaPage() {
 
         .system-card {
           background: linear-gradient(145deg, rgba(10, 8, 25, 0.8) 0%, rgba(5, 3, 15, 0.95) 100%);
-          backdrop-filter: blur(10px); /* Reduced blur for performance */
+          backdrop-filter: blur(10px);
           border: 1px solid rgba(34, 211, 238, 0.15);
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
           position: relative;
