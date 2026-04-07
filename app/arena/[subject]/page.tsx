@@ -12,7 +12,7 @@ export default function ArenaPage() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [hp, setHp] = useState(100);
   const [exp, setExp] = useState(0);
-  // টেস্টিং এর জন্য ডিফল্ট state "won" করে দেখতে পারেন, তবে মেইন গেমে "playing" রাখবেন
+  // টেস্টিং এর জন্য ডিফল্ট state "playing" রাখবেন, তবে "won" বা "lost" দিয়েও চেক করতে পারেন।
   const [gameState, setGameState] = useState<"playing" | "won" | "lost">("playing");
   
   const [isWrong, setIsWrong] = useState(false);
