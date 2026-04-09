@@ -81,13 +81,13 @@ export default function ArenaPage() {
   const [feedback,     setFeedback]     = useState<Feedback[]>([]);
   const [answerLog,    setAnswerLog]    = useState<AnswerLog[]>([]);
   const [questionStart, setQuestionStart] = useState(Date.now());
-  const [selectedOpt,  setSelectedOpt] = useState<string | null>(null);
+  const [selectedOpt,  setSelectedOpt]  = useState<string | null>(null);
   const [showAnswer,   setShowAnswer]  = useState(false);
 
   // ── Power-ups ──
   const [hasFreeze,   setHasFreeze]   = useState(true);
   const [hasHeal,     setHasHeal]     = useState(true);
-  const [hasShield,   setHasShield]   = useState(true); // NEW: absorbs 1 wrong answer
+  const [hasShield,   setHasShield]   = useState(true); 
   const [isFrozen,    setIsFrozen]    = useState(false);
   const [shieldActive,setShieldActive]= useState(false);
 
@@ -195,7 +195,6 @@ export default function ArenaPage() {
 
     if (opt === currentQ?.correctAnswer) {
       const earned = Math.round(100 * multiplier);
-      // Speed bonus
       const speedBonus = elapsed < 5000 ? Math.round(50 * multiplier) : 0;
       setExp(prev => prev + earned + speedBonus);
       setCombo(prev => prev + 1);
@@ -258,17 +257,17 @@ export default function ArenaPage() {
 
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Fix: Allowed vertical scrolling, removed strict height limit */
         html, body {
           background: #02010a;
           color: white;
           font-family: 'Outfit', sans-serif;
-          overflow: hidden;
-          height: 100%;
+          overflow-x: hidden;
+          min-height: 100vh; 
         }
         .font-logo { font-family: 'Orbitron', sans-serif; }
         .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
 
-        /* Scanlines — same as dashboard */
         body::before {
           content: '';
           position: fixed; inset: 0;
@@ -276,7 +275,6 @@ export default function ArenaPage() {
           pointer-events: none; z-index: 1;
         }
 
-        /* Question Card */
         .q-card {
           background: rgba(255,255,255,0.025);
           backdrop-filter: blur(16px);
@@ -292,12 +290,10 @@ export default function ArenaPage() {
           background: linear-gradient(90deg, var(--sub-color), transparent);
         }
 
-        /* Option Buttons */
         .opt-btn {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(255,255,255,0.07);
           border-radius: 14px;
-          padding: 18px 20px;
           display: flex;
           align-items: center;
           gap: 16px;
@@ -323,12 +319,10 @@ export default function ArenaPage() {
           border-color: #ef4444 !important;
         }
 
-        /* Power-up buttons */
         .power-btn {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.08);
           border-radius: 12px;
-          padding: 10px 18px;
           display: flex;
           align-items: center;
           gap: 8px;
@@ -336,8 +330,6 @@ export default function ArenaPage() {
           transition: all 0.2s;
           color: white;
           font-family: 'Outfit', sans-serif;
-          font-size: 11px;
-          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.1em;
         }
@@ -351,51 +343,26 @@ export default function ArenaPage() {
           opacity: 0.3; cursor: not-allowed;
         }
 
-        /* Damage flash */
-        @keyframes damageFlash {
-          0%, 100% { opacity: 0; }
-          50% { opacity: 0.6; }
-        }
+        @keyframes damageFlash { 0%, 100% { opacity: 0; } 50% { opacity: 0.6; } }
         .damage-flash { animation: damageFlash 0.5s ease; }
 
-        /* Timer urgent pulse */
-        @keyframes urgentPulse {
-          0%, 100% { transform: scale(1); color: #ef4444; }
-          50% { transform: scale(1.15); color: #fca5a5; }
-        }
+        @keyframes urgentPulse { 0%, 100% { transform: scale(1); color: #ef4444; } 50% { transform: scale(1.15); color: #fca5a5; } }
         .timer-urgent { animation: urgentPulse 0.6s infinite; }
 
-        /* Combo badge pop */
-        @keyframes comboPop {
-          0% { transform: scale(0.7); opacity: 0; }
-          60% { transform: scale(1.15); }
-          100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes comboPop { 0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
         .combo-pop { animation: comboPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 
-        /* HP critical */
-        @keyframes hpBeat {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
+        @keyframes hpBeat { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .hp-critical { animation: hpBeat 0.7s infinite; }
 
-        /* Result stats count-up */
-        @keyframes statReveal {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes statReveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .stat-reveal { animation: statReveal 0.5s ease forwards; }
 
-        /* Shield glow */
-        @keyframes shieldGlow {
-          0%, 100% { box-shadow: 0 0 10px rgba(250,204,21,0.3); }
-          50% { box-shadow: 0 0 25px rgba(250,204,21,0.7); }
-        }
+        @keyframes shieldGlow { 0%, 100% { box-shadow: 0 0 10px rgba(250,204,21,0.3); } 50% { box-shadow: 0 0 25px rgba(250,204,21,0.7); } }
         .shield-active { animation: shieldGlow 1s ease infinite; border-color: #facc15 !important; }
       `}</style>
 
-      {/* ── AMBIENT BG (same as dashboard) ── */}
+      {/* ── AMBIENT BG ── */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
         <div style={{ position: "absolute", top: "-20%", left: "-10%", width: 600, height: 600, background: subjectMeta.color, opacity: 0.05, filter: "blur(130px)", borderRadius: "50%" }} />
         <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: 600, height: 600, background: "#7c3aed", opacity: 0.04, filter: "blur(130px)", borderRadius: "50%" }} />
@@ -432,10 +399,11 @@ export default function ArenaPage() {
               animate={{ opacity: 1, y: -60, scale: 1 }}
               exit={{ opacity: 0, y: -120, scale: 1.1 }}
               transition={{ duration: 0.7, ease: "easeOut" }}
+              className="text-center w-full px-4"
               style={{
                 position: "absolute",
                 fontFamily: "'Orbitron', sans-serif",
-                fontSize: 28,
+                fontSize: "clamp(20px, 6vw, 36px)",
                 fontWeight: 900,
                 fontStyle: "italic",
                 letterSpacing: "0.1em",
@@ -450,8 +418,8 @@ export default function ArenaPage() {
         </AnimatePresence>
       </div>
 
-      {/* ── MAIN LAYOUT ── */}
-      <div style={{ minHeight: "100vh", height: "100vh", display: "flex", flexDirection: "column", padding: "20px 28px", position: "relative", zIndex: 10, overflow: "hidden" }}>
+      {/* ── MAIN LAYOUT (Fixed for scroll and responsiveness) ── */}
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "20px 5%", position: "relative", zIndex: 10, overflowX: "hidden", overflowY: "auto" }}>
 
         {/* ═══════ HUD HEADER ═══════ */}
         <AnimatePresence>
@@ -460,28 +428,28 @@ export default function ArenaPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexShrink: 0 }}
+              className="flex flex-wrap md:flex-nowrap justify-between items-start md:items-center mb-6 shrink-0 relative z-20 gap-y-4"
             >
               {/* Left: Back + Subject + Progress */}
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto order-1">
                 <button
                   onClick={() => router.back()}
-                  style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 14px", cursor: "pointer", color: "rgba(255,255,255,0.6)", transition: "all 0.2s", fontFamily: "'Outfit', sans-serif" }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer", color: "rgba(255,255,255,0.6)", transition: "all 0.2s", fontFamily: "'Outfit', sans-serif" }}
                 >
                   <ArrowLeft size={16} />
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Flee</span>
+                  <span className="hidden xs:inline" style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Flee</span>
                 </button>
 
                 {/* Subject badge */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, background: `rgba(${subjectMeta.color === "#22d3ee" ? "34,211,238" : "167,139,250"},0.08)`, border: `1px solid ${subjectMeta.color}33`, borderRadius: 100, padding: "6px 14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, background: `rgba(${subjectMeta.color === "#22d3ee" ? "34,211,238" : "167,139,250"},0.08)`, border: `1px solid ${subjectMeta.color}33`, borderRadius: 100, padding: "6px 12px" }}>
                   <span style={{ color: subjectMeta.color }}>{subjectMeta.icon}</span>
-                  <span style={{ fontSize: 11, fontWeight: 900, color: subjectMeta.color, letterSpacing: "0.15em", textTransform: "uppercase" }}>{subjectMeta.label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 900, color: subjectMeta.color, letterSpacing: "0.15em", textTransform: "uppercase" }}>{subjectMeta.label}</span>
                 </div>
 
                 {/* Progress */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, opacity: 0.5 }}>
-                  <Target size={13} color="#a855f7" />
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Trial {idx + 1} / {total}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, opacity: 0.5 }}>
+                  <Target size={12} color="#a855f7" />
+                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" }}>Trial {idx + 1}/{total}</span>
                 </div>
 
                 {/* Combo badge */}
@@ -490,10 +458,10 @@ export default function ArenaPage() {
                     <motion.div
                       key={combo}
                       className="combo-pop"
-                      style={{ display: "flex", alignItems: "center", gap: 6, background: `${comboInfo.color}22`, border: `1px solid ${comboInfo.color}55`, borderRadius: 100, padding: "5px 12px" }}
+                      style={{ display: "flex", alignItems: "center", gap: 6, background: `${comboInfo.color}22`, border: `1px solid ${comboInfo.color}55`, borderRadius: 100, padding: "4px 10px" }}
                     >
-                      <Flame size={14} color={comboInfo.color} />
-                      <span className="font-logo" style={{ fontSize: 13, fontWeight: 900, color: comboInfo.color, fontStyle: "italic" }}>
+                      <Flame size={12} color={comboInfo.color} />
+                      <span className="font-logo" style={{ fontSize: 11, fontWeight: 900, color: comboInfo.color, fontStyle: "italic" }}>
                         {combo}x {comboInfo.label}
                       </span>
                     </motion.div>
@@ -501,9 +469,9 @@ export default function ArenaPage() {
                 </AnimatePresence>
               </div>
 
-              {/* Center: Timer */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
-                <div style={{ position: "relative", width: 72, height: 72 }}>
+              {/* Center: Timer (Moves to new row on mobile) */}
+              <div className="flex flex-col items-center order-3 w-full md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2 md:order-2 mt-2 md:mt-0">
+                <div style={{ position: "relative", width: 64, height: 64 }}>
                   <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
                     <circle cx="50%" cy="50%" r="44%" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
                     <motion.circle
@@ -521,7 +489,7 @@ export default function ArenaPage() {
                   <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                     <span
                       className={`font-logo ${timeLeft <= 5 && !isFrozen ? "timer-urgent" : ""}`}
-                      style={{ fontSize: 22, fontWeight: 900, color: isFrozen ? "#3b82f6" : timeLeft <= 5 ? "#ef4444" : "white" }}
+                      style={{ fontSize: 20, fontWeight: 900, color: isFrozen ? "#3b82f6" : timeLeft <= 5 ? "#ef4444" : "white" }}
                     >
                       {isFrozen ? "❄" : timeLeft}
                     </span>
@@ -533,16 +501,16 @@ export default function ArenaPage() {
               </div>
 
               {/* Right: HP + EXP */}
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div className="flex items-center gap-3 md:gap-4 order-2 md:order-3 ml-auto md:ml-0">
                 {/* HP */}
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Heart size={13} color={hpColor} style={{ filter: `drop-shadow(0 0 6px ${hpGlow})` }} className={hp <= 25 ? "hp-critical" : ""} />
-                    <span style={{ fontSize: 10, fontWeight: 900, color: hpColor, letterSpacing: "0.1em", textTransform: "uppercase" }} className={hp <= 25 ? "hp-critical" : ""}>
+                    <Heart size={12} color={hpColor} style={{ filter: `drop-shadow(0 0 6px ${hpGlow})` }} className={hp <= 25 ? "hp-critical" : ""} />
+                    <span style={{ fontSize: 9, fontWeight: 900, color: hpColor, letterSpacing: "0.1em", textTransform: "uppercase" }} className={hp <= 25 ? "hp-critical" : ""}>
                       VITALITY: {hp}%
                     </span>
                   </div>
-                  <div style={{ width: 140, height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden", border: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div className="w-24 md:w-32" style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden", border: "1px solid rgba(255,255,255,0.04)" }}>
                     <motion.div
                       style={{ height: "100%", background: `linear-gradient(90deg, ${hpColor}, ${hpColor}cc)`, borderRadius: 4, boxShadow: `0 0 8px ${hpGlow}` }}
                       animate={{ width: `${hp}%` }}
@@ -552,12 +520,12 @@ export default function ArenaPage() {
                 </div>
 
                 {/* EXP */}
-                <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "right" }}>
-                  <p style={{ fontSize: 9, fontWeight: 800, color: subjectMeta.color, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 2 }}>Experience</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span className="font-logo" style={{ fontSize: 22, fontWeight: 900, color: "white" }}>{exp}</span>
-                    <span style={{ fontSize: 10, color: "#a855f7", fontWeight: 900 }}>{multiplier}x</span>
-                    <Zap size={14} color={subjectMeta.color} />
+                <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", textAlign: "right" }}>
+                  <p style={{ fontSize: 8, fontWeight: 800, color: subjectMeta.color, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 2 }}>Experience</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span className="font-logo" style={{ fontSize: 18, fontWeight: 900, color: "white" }}>{exp}</span>
+                    <span style={{ fontSize: 9, color: "#a855f7", fontWeight: 900 }}>{multiplier}x</span>
+                    <Zap size={12} color={subjectMeta.color} />
                   </div>
                 </div>
               </div>
@@ -570,35 +538,36 @@ export default function ArenaPage() {
           {gameState === "playing" && (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 16, flexShrink: 0 }}
+              style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20, flexShrink: 0 }}
+              className="flex-wrap"
             >
               <button
-                className="power-btn"
+                className="power-btn px-3 py-2 text-[9px] md:text-[11px]"
                 onClick={useFreeze}
                 disabled={!hasFreeze}
                 style={{ "--btn-color": "#3b82f6", "--btn-rgb": "59,130,246" } as any}
               >
-                <Clock size={15} color={hasFreeze ? "#3b82f6" : "rgba(255,255,255,0.3)"} />
+                <Clock size={14} color={hasFreeze ? "#3b82f6" : "rgba(255,255,255,0.3)"} />
                 <span style={{ color: hasFreeze ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.3)", textDecoration: hasFreeze ? "none" : "line-through" }}>Freeze</span>
               </button>
 
               <button
-                className="power-btn"
+                className="power-btn px-3 py-2 text-[9px] md:text-[11px]"
                 onClick={useHeal}
                 disabled={!hasHeal || hp >= 100}
                 style={{ "--btn-color": "#22c55e", "--btn-rgb": "34,197,94" } as any}
               >
-                <Heart size={15} color={hasHeal && hp < 100 ? "#22c55e" : "rgba(255,255,255,0.3)"} />
+                <Heart size={14} color={hasHeal && hp < 100 ? "#22c55e" : "rgba(255,255,255,0.3)"} />
                 <span style={{ color: hasHeal && hp < 100 ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.3)", textDecoration: hasHeal && hp < 100 ? "none" : "line-through" }}>Heal</span>
               </button>
 
               <button
-                className={`power-btn ${shieldActive ? "shield-active" : ""}`}
+                className={`power-btn px-3 py-2 text-[9px] md:text-[11px] ${shieldActive ? "shield-active" : ""}`}
                 onClick={useShield}
                 disabled={!hasShield || shieldActive}
                 style={{ "--btn-color": "#facc15", "--btn-rgb": "250,204,21" } as any}
               >
-                <Shield size={15} color={hasShield ? "#facc15" : "rgba(255,255,255,0.3)"} />
+                <Shield size={14} color={hasShield ? "#facc15" : "rgba(255,255,255,0.3)"} />
                 <span style={{ color: hasShield ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.3)", textDecoration: hasShield ? "none" : "line-through" }}>
                   {shieldActive ? "Active" : "Shield"}
                 </span>
@@ -608,7 +577,7 @@ export default function ArenaPage() {
         </AnimatePresence>
 
         {/* ═══════ MAIN CONTENT ═══════ */}
-        <main style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", maxWidth: 900, margin: "0 auto", width: "100%", overflow: "hidden" }}>
+        <main className="flex-1 flex flex-col items-center max-w-[900px] mx-auto w-full relative z-10 pb-10">
           <AnimatePresence mode="wait">
 
             {/* ── PLAYING STATE ── */}
@@ -623,8 +592,8 @@ export default function ArenaPage() {
               >
                 {/* Question Card */}
                 <div
-                  className="q-card"
-                  style={{ padding: "28px 32px", "--sub-color": subjectMeta.color } as any}
+                  className="q-card p-5 md:p-8"
+                  style={{ "--sub-color": subjectMeta.color } as any}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, background: `${subjectMeta.color}18`, border: `1px solid ${subjectMeta.color}33`, borderRadius: 100, padding: "6px 14px" }}>
@@ -636,13 +605,13 @@ export default function ArenaPage() {
                     </span>
                   </div>
 
-                  <h2 className="font-bangla" style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.5, color: "white" }}>
+                  <h2 className="font-bangla text-xl md:text-2xl lg:text-[28px] font-bold leading-relaxed text-white">
                     {currentQ.questionText}
                   </h2>
                 </div>
 
                 {/* Options */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full mt-2">
                   {currentQ.options.map((opt: string, i: number) => {
                     const isSelected = selectedOpt === opt;
                     const isCorrect  = showAnswer && opt === currentQ.correctAnswer;
@@ -652,17 +621,17 @@ export default function ArenaPage() {
                     return (
                       <button
                         key={i}
-                        className={`opt-btn ${isCorrect ? "correct" : ""} ${isWrongSel ? "wrong" : ""}`}
+                        className={`opt-btn py-4 px-4 md:py-5 md:px-5 ${isCorrect ? "correct" : ""} ${isWrongSel ? "wrong" : ""}`}
                         onClick={() => handleAnswer(opt)}
                         disabled={!!selectedOpt}
                         style={{ "--sub-color": subjectMeta.color, "--sub-rgb": "34,211,238" } as any}
                       >
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: isCorrect ? "rgba(34,197,94,0.2)" : isWrongSel ? "rgba(239,68,68,0.2)" : `${subjectMeta.color}18`, border: `1px solid ${isCorrect ? "#22c55e" : isWrongSel ? "#ef4444" : subjectMeta.color + "44"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          {isCorrect ? <CheckCircle size={16} color="#22c55e" /> : isWrongSel ? <XCircle size={16} color="#ef4444" /> : (
-                            <span className="font-logo" style={{ fontSize: 12, color: subjectMeta.color }}>{optLabels[i]}</span>
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: isCorrect ? "rgba(34,197,94,0.2)" : isWrongSel ? "rgba(239,68,68,0.2)" : `${subjectMeta.color}18`, border: `1px solid ${isCorrect ? "#22c55e" : isWrongSel ? "#ef4444" : subjectMeta.color + "44"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {isCorrect ? <CheckCircle size={14} color="#22c55e" /> : isWrongSel ? <XCircle size={14} color="#ef4444" /> : (
+                            <span className="font-logo" style={{ fontSize: 11, color: subjectMeta.color }}>{optLabels[i]}</span>
                           )}
                         </div>
-                        <span className="font-bangla" style={{ fontSize: 15, fontWeight: 600, color: isCorrect ? "#22c55e" : isWrongSel ? "#f87171" : "rgba(255,255,255,0.85)" }}>
+                        <span className="font-bangla text-sm md:text-[15px] font-semibold text-left" style={{ color: isCorrect ? "#22c55e" : isWrongSel ? "#f87171" : "rgba(255,255,255,0.85)", wordBreak: "break-word" }}>
                           {opt}
                         </span>
                       </button>
@@ -671,7 +640,7 @@ export default function ArenaPage() {
                 </div>
 
                 {/* Progress bar at bottom */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
                   <div style={{ flex: 1, height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden" }}>
                     <motion.div
                       style={{ height: "100%", background: `linear-gradient(90deg, ${subjectMeta.color}, ${subjectMeta.color}88)`, borderRadius: 2 }}
@@ -701,12 +670,12 @@ export default function ArenaPage() {
                 }}
               >
                 {/* Result Header */}
-                <div style={{ padding: "36px 40px 28px", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ padding: "36px 20px 28px", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                   <motion.h1
                     className="font-logo"
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                     style={{
-                      fontSize: 48, fontStyle: "italic", textTransform: "uppercase",
+                      fontSize: "clamp(32px, 8vw, 48px)", fontStyle: "italic", textTransform: "uppercase",
                       background: gameState === "won"
                         ? "linear-gradient(135deg, #22d3ee, #a855f7)"
                         : "linear-gradient(135deg, #ef4444, #f87171)",
@@ -716,13 +685,13 @@ export default function ArenaPage() {
                   >
                     {gameState === "won" ? "DUNGEON CLEARED" : "SYSTEM FAILED"}
                   </motion.h1>
-                  <p style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.4em", textTransform: "uppercase", opacity: 0.5 }}>
+                  <p style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.5 }}>
                     {gameState === "won" ? "Performance Evaluation" : "Fatal Error Detected"}
                   </p>
                 </div>
 
                 {/* Stats Grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, padding: "24px 32px" }}>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-5 md:p-8">
                   {[
                     { label: "Accuracy",    value: `${accuracy}%`,      icon: Crosshair, color: "#22d3ee", delay: 0.1 },
                     { label: "Max Combo",   value: `${maxCombo}x`,      icon: Flame,     color: "#f59e0b", delay: 0.2 },
@@ -732,20 +701,20 @@ export default function ArenaPage() {
                     <motion.div
                       key={s.label}
                       className="stat-reveal"
-                      style={{ animationDelay: `${s.delay}s`, background: i === 3 ? `${subjectMeta.color}10` : "rgba(255,255,255,0.03)", border: `1px solid ${i === 3 ? subjectMeta.color + "33" : "rgba(255,255,255,0.06)"}`, borderRadius: 16, padding: "18px 14px", textAlign: "center" }}
+                      style={{ animationDelay: `${s.delay}s`, background: i === 3 ? `${subjectMeta.color}10` : "rgba(255,255,255,0.03)", border: `1px solid ${i === 3 ? subjectMeta.color + "33" : "rgba(255,255,255,0.06)"}`, borderRadius: 16, padding: "16px 10px", textAlign: "center" }}
                     >
-                      <s.icon size={18} color={s.color} style={{ margin: "0 auto 10px", opacity: 0.7 }} />
-                      <p style={{ fontSize: 28, fontWeight: 900, color: s.color, fontFamily: "'Orbitron', sans-serif", marginBottom: 4 }}>{s.value}</p>
-                      <p style={{ fontSize: 9, opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.1em" }}>{s.label}</p>
+                      <s.icon size={16} color={s.color} style={{ margin: "0 auto 8px", opacity: 0.7 }} />
+                      <p style={{ fontSize: "clamp(20px, 5vw, 26px)", fontWeight: 900, color: s.color, fontFamily: "'Orbitron', sans-serif", marginBottom: 2 }}>{s.value}</p>
+                      <p style={{ fontSize: 8, opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.1em" }}>{s.label}</p>
                     </motion.div>
                   ))}
                 </div>
 
                 {/* Review Toggle */}
-                <div style={{ padding: "0 32px 16px" }}>
+                <div style={{ padding: "0 24px 16px" }}>
                   <button
                     onClick={() => setShowReview(!showReview)}
-                    style={{ width: "100%", padding: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 800, cursor: "pointer", letterSpacing: "0.15em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                    style={{ width: "100%", padding: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, color: "rgba(255,255,255,0.6)", fontSize: 10, fontWeight: 800, cursor: "pointer", letterSpacing: "0.15em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                   >
                     <BarChart2 size={13} />
                     {showReview ? "Hide" : "Review"} Answers ({correctCount}/{total})
@@ -757,14 +726,14 @@ export default function ArenaPage() {
                         initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                         style={{ overflow: "hidden", marginTop: 10 }}
                       >
-                        <div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                        <div style={{ maxHeight: 180, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, paddingRight: 4 }}>
                           {answerLog.map((a, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: a.isCorrect ? "rgba(34,197,94,0.05)" : "rgba(239,68,68,0.05)", border: `1px solid ${a.isCorrect ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`, borderRadius: 8 }}>
-                              {a.isCorrect ? <CheckCircle size={13} color="#22c55e" /> : <XCircle size={13} color="#ef4444" />}
-                              <span className="font-bangla" style={{ fontSize: 12, opacity: 0.7, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                Q{i + 1}: {a.question.slice(0, 50)}...
+                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px", background: a.isCorrect ? "rgba(34,197,94,0.05)" : "rgba(239,68,68,0.05)", border: `1px solid ${a.isCorrect ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`, borderRadius: 8 }}>
+                              {a.isCorrect ? <CheckCircle size={14} color="#22c55e" className="shrink-0" /> : <XCircle size={14} color="#ef4444" className="shrink-0" />}
+                              <span className="font-bangla" style={{ fontSize: 12, opacity: 0.8, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                Q{i + 1}: {a.question.slice(0, 40)}...
                               </span>
-                              <span style={{ fontSize: 10, color: a.isCorrect ? "#22c55e" : "#ef4444", fontWeight: 800, whiteSpace: "nowrap" }}>
+                              <span style={{ fontSize: 9, color: a.isCorrect ? "#22c55e" : "#ef4444", fontWeight: 800, whiteSpace: "nowrap" }}>
                                 {Math.round(a.timeMs / 1000)}s
                               </span>
                             </div>
@@ -779,19 +748,15 @@ export default function ArenaPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                   <button
                     onClick={() => { setIdx(0); setHp(100); setExp(0); setCombo(0); setMaxCombo(0); setCorrectCount(0); setGameState("playing"); setTimeLeft(15); setAnswerLog([]); setHasFreeze(true); setHasHeal(true); setHasShield(true); setShieldActive(false); setAnimExp(0); setSelectedOpt(null); setShowAnswer(false); }}
-                    style={{ padding: "20px", background: "rgba(255,255,255,0.03)", border: "none", borderRight: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", fontWeight: 900, fontSize: 12, cursor: "pointer", letterSpacing: "0.15em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s", fontFamily: "'Outfit', sans-serif" }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"}
+                    style={{ padding: "18px", background: "rgba(255,255,255,0.03)", border: "none", borderRight: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", fontWeight: 900, fontSize: 11, cursor: "pointer", letterSpacing: "0.15em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s", fontFamily: "'Outfit', sans-serif" }}
                   >
-                    <Swords size={14} /> Retry
+                    <Swords size={13} /> Retry
                   </button>
                   <button
                     onClick={() => router.push("/dashboard")}
-                    style={{ padding: "20px", background: `${subjectMeta.color}15`, border: "none", color: subjectMeta.color, fontWeight: 900, fontSize: 12, cursor: "pointer", letterSpacing: "0.15em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s", fontFamily: "'Outfit', sans-serif" }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = `${subjectMeta.color}25`}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = `${subjectMeta.color}15`}
+                    style={{ padding: "18px", background: `${subjectMeta.color}15`, border: "none", color: subjectMeta.color, fontWeight: 900, fontSize: 11, cursor: "pointer", letterSpacing: "0.1em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.2s", fontFamily: "'Outfit', sans-serif" }}
                   >
-                    <Sparkles size={14} /> Return to Sanctuary <ChevronRight size={14} />
+                    <Sparkles size={13} /> Sanctuary <ChevronRight size={13} />
                   </button>
                 </div>
               </motion.div>
@@ -800,9 +765,9 @@ export default function ArenaPage() {
         </main>
 
         {/* Footer */}
-        <footer style={{ textAlign: "center", paddingTop: 12, opacity: 0.15, flexShrink: 0 }}>
+        <footer style={{ textAlign: "center", paddingTop: 16, opacity: 0.2, flexShrink: 0 }}>
           <p className="font-logo" style={{ fontSize: 8, letterSpacing: "1.5em", color: subjectMeta.color, textTransform: "uppercase" }}>
-            System Engine v9.1 // RankPush 2026
+            System Engine v9.1
           </p>
         </footer>
       </div>
