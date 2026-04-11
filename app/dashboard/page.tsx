@@ -12,7 +12,7 @@ import {
   Sword, LogOut, X, CheckCircle, Lock,
   TrendingUp, Calendar, Award, Sparkles,
   ChevronUp, BarChart2, Clock, Crosshair,
-  GitBranch, Layers, Medal, Wifi
+  GitBranch, Layers, Medal, Wifi, Timer
 } from "lucide-react";
 
 // ============================================================
@@ -425,6 +425,10 @@ export default function RankPushDashboard() {
             <nav className="hidden xl:flex gap-7">
               <a href="#" className="nav-link active">Dashboard</a>
               <a href="#" className="nav-link" onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)}>Battle Arena</a>
+              {/* 🆕 NEW TIMER LINK */}
+              <a href="#" className="nav-link flex items-center gap-1.5" onClick={() => router.push('/timer')}>
+                <Timer size={12} className="text-cyan-400" /> Shadow Focus
+              </a>
               <a href="#" className="nav-link">Leaderboard</a>
               <a href="#" className="nav-link">Analytics</a>
             </nav>
@@ -614,18 +618,6 @@ export default function RankPushDashboard() {
               </div>
             </div>
             
-            {/* Daily Directive - Hidden on mobile to save space */}
-            <div className="card p-5 md:p-6 border-l-[3px] border-emerald-400 bg-emerald-400/5 hidden lg:block">
-              <div className="flex items-center gap-2 mb-3 opacity-70">
-                <Quote size={14} color="#34d399" />
-                <h3 className="text-[9px] md:text-[10px] font-black tracking-widest uppercase">Daily Directive</h3>
-              </div>
-              <p className="text-xs md:text-[13px] italic font-semibold leading-relaxed text-white/80 mb-2">
-                "Seek knowledge from the cradle to the grave."
-              </p>
-              <p className="text-[8px] md:text-[9px] font-black text-emerald-400 tracking-widest uppercase">— PROPHET MUHAMMAD (PBUH)</p>
-            </div>
-
           </div>
 
           {/* ─────────────────────────────────────────────
@@ -664,6 +656,27 @@ export default function RankPushDashboard() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* 🆕 SHADOW FOCUS TIMER CARD (ADDED HERE) */}
+            <div className="card p-6 md:p-8 border-l-[4px] border-l-purple-500 bg-gradient-to-r from-purple-500/10 to-transparent flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30">
+                  <Timer size={24} className="text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="font-logo text-lg md:text-xl font-black uppercase text-purple-400 tracking-wider mb-1">Shadow Focus</h3>
+                  <p className="text-[10px] md:text-xs text-white/50 leading-relaxed max-w-[300px]">
+                    Enter deep focus mode. Study using Pomodoro or Free Timer to earn bonus XP and climb the daily leaderboard.
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => router.push('/timer')}
+                className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-fuchsia-600 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2"
+              >
+                <Play size={14} fill="currentColor" /> Enter Focus
+              </button>
             </div>
 
             {/* Tactical Arena */}
@@ -717,23 +730,6 @@ export default function RankPushDashboard() {
               {/* Enter Arena */}
               <button className="arena-btn glow-pulse py-4 md:py-5 text-base md:text-lg" onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)}>
                 ENTER ARENA <Play size={18} className="md:w-5 md:h-5" fill="white" />
-              </button>
-            </div>
-
-            {/* 🆕 RIVAL BATTLE CARD */}
-            <div className="card p-5 md:p-7 bg-gradient-to-r from-red-500/5 to-transparent border-l-[3px] border-red-500 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-5">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20 shrink-0">
-                <Sword size={20} className="md:w-6 md:h-6" color="#ef4444" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-logo text-sm md:text-base text-red-500 uppercase mb-1">Rival Battle</h3>
-                <p className="text-[10px] md:text-xs opacity-50">Challenge a friend to real-time 1v1 MCQ battle</p>
-              </div>
-              <button
-                onClick={() => stats.plan === "pro" ? setShowRivalModal(true) : setShowProModal(true)}
-                className="w-full md:w-auto bg-gradient-to-br from-red-600 to-red-500 border-none rounded-xl py-2.5 px-4 md:py-3 md:px-5 text-white font-black text-[10px] md:text-xs tracking-wide flex items-center justify-center gap-2"
-              >
-                {stats.plan === "pro" ? <><Wifi size={14} /> Find Rival</> : <><Lock size={14} /> PRO Only</>}
               </button>
             </div>
 
