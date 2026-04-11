@@ -46,85 +46,43 @@ const RANKS: RankInfo[] = [
 
 const getRankByXP = (xp: number) => RANKS.find(r => xp >= r.minXP && xp <= r.maxXP) || RANKS[0];
 const getNextRank = (rank: RankInfo) => { const i = RANKS.findIndex(r => r.id === rank.id); return i < RANKS.length - 1 ? RANKS[i+1] : null; };
-const getXPPct   = (xp: number, rank: RankInfo) => rank.maxXP === Infinity ? 100 : Math.round(((xp - rank.minXP) / (rank.maxXP - rank.minXP)) * 100);
+const getXPPct   = (xp: number, rank: RankInfo) => rank.maxXP === Infinity ? 100 : Math.max(0, Math.min(100, Math.round(((xp - rank.minXP) / (rank.maxXP - rank.minXP)) * 100)));
 
 // ═══════════════════════════════════════════
-// GAMING RANK BAR COMPONENT
-// Each rank has its own unique bar style
+// CONSTANTS
 // ═══════════════════════════════════════════
-function GamingRankBar({ rank, pct, height = 8, showGems = true }: { rank: RankInfo; pct: number; height?: number; showGems?: boolean }) {
-  const styles: Record<string, { track: string; fill: string; shimmer: string; gem: string }> = {
-    stone:    { track:"#1a1a1a", fill:"linear-gradient(90deg,#4b5563,#6b7280,#9ca3af)", shimmer:"rgba(255,255,255,0.15)", gem:"#9ca3af" },
-    fire:     { track:"#1a0800", fill:"linear-gradient(90deg,#92400e,#b45309,#f59e0b,#fbbf24)", shimmer:"rgba(251,191,36,0.3)", gem:"#f59e0b" },
-    ice:      { track:"#001220", fill:"linear-gradient(90deg,#075985,#0ea5e9,#38bdf8,#7dd3fc)", shimmer:"rgba(125,211,252,0.3)", gem:"#38bdf8" },
-    electric: { track:"#001a1a", fill:"linear-gradient(90deg,#164e63,#06b6d4,#22d3ee,#67e8f9)", shimmer:"rgba(103,232,249,0.35)", gem:"#22d3ee" },
-    void:     { track:"#0d0020", fill:"linear-gradient(90deg,#581c87,#7c3aed,#a855f7,#c084fc)", shimmer:"rgba(192,132,252,0.3)", gem:"#a855f7" },
-    solar:    { track:"#1a0f00", fill:"linear-gradient(90deg,#78350f,#d97706,#f59e0b,#fcd34d)", shimmer:"rgba(252,211,77,0.4)", gem:"#fcd34d" },
-    cosmic:   { track:"#1a001a", fill:"linear-gradient(90deg,#831843,#be185d,#ec4899,#f9a8d4)", shimmer:"rgba(249,168,212,0.35)", gem:"#ec4899" },
-    shadow:   { track:"#0a000f", fill:"linear-gradient(90deg,#3b0764,#6d28d9,#c084fc,#e879f9)", shimmer:"rgba(232,121,249,0.4)", gem:"#c084fc" },
-  };
-  const s = styles[rank.barStyle];
-  const gemCount = Math.floor(pct / 20); // 1 gem per 20%
+const SUBJECTS = [
+  { name:"Physics",   icon:Atom,         color:"#22d3ee", rgb:"34,211,238",  locked:false, questions:48  },
+  { name:"Chemistry", icon:FlaskConical, color:"#a78bfa", rgb:"167,139,250", locked:false, questions:36  },
+  { name:"Math",      icon:Sigma,        color:"#34d399", rgb:"52,211,153",  locked:true,  questions:0   },
+  { name:"Biology",   icon:Dna,          color:"#f87171", rgb:"248,113,113", locked:true,  questions:0   },
+];
 
-  return (
-    <div style={{ position:"relative" }}>
-      {/* Main bar track */}
-      <div style={{
-        position:"relative", height, borderRadius: height,
-        background: s.track,
-        border:`1px solid ${rank.color}33`,
-        overflow:"hidden",
-        boxShadow:`inset 0 2px 4px rgba(0,0,0,0.5), 0 0 8px ${rank.glowColor}`,
-      }}>
-        {/* Filled portion */}
-        <div style={{
-          position:"absolute", top:0, left:0,
-          width:`${pct}%`, height:"100%",
-          background: s.fill,
-          borderRadius: height,
-          transition:"width 1.2s cubic-bezier(0.4,0,0.2,1)",
-          boxShadow:`0 0 12px ${rank.glowColor}`,
-        }}>
-          {/* Shimmer sweep */}
-          <div style={{
-            position:"absolute", top:0, left:"-60%", width:"40%", height:"100%",
-            background:`linear-gradient(90deg,transparent,${s.shimmer},transparent)`,
-            animation:"barShimmer 2.5s ease-in-out infinite",
-            borderRadius: height,
-          }}/>
-        </div>
-        {/* Notch lines (every 25%) */}
-        {[25,50,75].map(n => (
-          <div key={n} style={{
-            position:"absolute", top:0, left:`${n}%`,
-            width:1, height:"100%",
-            background:"rgba(0,0,0,0.4)",
-            zIndex:2,
-          }}/>
-        ))}
-      </div>
+const DAILY_QUESTS = [
+  { id:1, title:"Physics Mastery",  desc:"Solve 20 MCQ",       xp:500, progress:12, total:20, icon:Atom,  color:"#22d3ee", done:false },
+  { id:2, title:"Speed Demon",      desc:"Answer in <5s × 10", xp:300, progress:10, total:10, icon:Clock, color:"#f59e0b", done:true  },
+  { id:3, title:"Combo Master",     desc:"Get 5x combo streak", xp:400, progress:3,  total:5,  icon:Flame, color:"#f87171", done:false },
+];
 
-      {/* Gem indicators */}
-      {showGems && (
-        <div style={{ display:"flex", gap:3, marginTop:4, justifyContent:"flex-end" }}>
-          {[1,2,3,4,5].map(i => (
-            <div key={i} style={{
-              width:5, height:5,
-              background: i <= gemCount ? s.gem : "rgba(255,255,255,0.08)",
-              borderRadius:1,
-              transform:"rotate(45deg)",
-              boxShadow: i <= gemCount ? `0 0 4px ${s.gem}` : "none",
-              transition:"all 0.3s",
-            }}/>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const STREAK_DAYS = ["M","T","W","T","F","S","S"];
+
+const ACHIEVEMENTS = [
+  { title:"First Blood",  desc:"Complete first battle", icon:"🩸", unlocked:true,  xp:100  },
+  { title:"Speed Freak",  desc:"10 answers under 3s",   icon:"⚡", unlocked:true,  xp:200  },
+  { title:"Combo God",    desc:"20x combo streak",      icon:"🔥", unlocked:false, xp:500  },
+  { title:"Scholar",      desc:"100 questions solved",  icon:"📚", unlocked:false, xp:1000 },
+];
+
+// Default user data (before Firebase loads)
+const DEFAULT_USER_DATA = {
+  xp: 0, level: 1, accuracy: 0, speed: 0, iq: 0, logic: 0, focus: 0,
+  streak: 0, totalBattles: 0, weeklyXP: 0, plan: "free" as Plan,
+  questionsAttempted: 0, correctAnswers: 0, streakDays: [false,false,false,false,false,false,false],
+  joinDate: "", totalHoursStudied: 0,
+};
 
 // ═══════════════════════════════════════════
-// SVG RANK EMBLEM — unique per rank
+// SVG RANK EMBLEM — unique per rank (ORIGINAL KEPT INTACT)
 // ═══════════════════════════════════════════
 function RankEmblem({ rank, size = 48 }: { rank: RankInfo; size?: number }) {
   const c = rank.color;
@@ -133,19 +91,14 @@ function RankEmblem({ rank, size = 48 }: { rank: RankInfo; size?: number }) {
   const cx = s/2, cy = s/2, r = s*0.38;
 
   const emblems: Record<RankId, React.ReactNode> = {
-    // E-Rank: Simple broken stone shield
     e: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
-        <defs>
-          <filter id="glow-e"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
+        <defs><filter id="glow-e"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
         <polygon points={`${cx},${cy-r} ${cx+r*0.7},${cy-r*0.3} ${cx+r*0.7},${cy+r*0.5} ${cx},${cy+r} ${cx-r*0.7},${cy+r*0.5} ${cx-r*0.7},${cy-r*0.3}`} fill="#1a1a2e" stroke={c} strokeWidth="1.5" filter="url(#glow-e)"/>
-        {/* Crack */}
         <line x1={cx-2} y1={cy-r*0.4} x2={cx+3} y2={cy+r*0.3} stroke="#374151" strokeWidth="2" strokeLinecap="round"/>
         <text x={cx} y={cy+4} textAnchor="middle" fill={c} fontSize={s*0.2} fontFamily="Orbitron,sans-serif" fontWeight="900">E</text>
       </svg>
     ),
-    // D-Rank: Flame shield
     d: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
         <defs>
@@ -153,21 +106,17 @@ function RankEmblem({ rank, size = 48 }: { rank: RankInfo; size?: number }) {
           <linearGradient id="fg-d" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stopColor="#92400e"/><stop offset="100%" stopColor="#fbbf24"/></linearGradient>
         </defs>
         <polygon points={`${cx},${cy-r} ${cx+r*0.72},${cy-r*0.28} ${cx+r*0.72},${cy+r*0.5} ${cx},${cy+r} ${cx-r*0.72},${cy+r*0.5} ${cx-r*0.72},${cy-r*0.28}`} fill="#1a0800" stroke="url(#fg-d)" strokeWidth="2" filter="url(#glow-d)"/>
-        {/* Flame shape */}
         <path d={`M${cx} ${cy+r*0.3} C${cx-r*0.3} ${cy} ${cx-r*0.15} ${cy-r*0.5} ${cx} ${cy-r*0.6} C${cx+r*0.15} ${cy-r*0.5} ${cx+r*0.3} ${cy} ${cx} ${cy+r*0.3}Z`} fill="url(#fg-d)" opacity="0.85" filter="url(#glow-d)"/>
         <text x={cx} y={cy+r*0.72} textAnchor="middle" fill={c} fontSize={s*0.14} fontFamily="Orbitron,sans-serif" fontWeight="900">D</text>
       </svg>
     ),
-    // C-Rank: Ice crystal
     c: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
         <defs>
           <filter id="glow-c"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           <linearGradient id="fg-c" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#075985"/><stop offset="100%" stopColor="#7dd3fc"/></linearGradient>
         </defs>
-        {/* Hexagon */}
         <polygon points={`${cx},${cy-r} ${cx+r*0.866},${cy-r*0.5} ${cx+r*0.866},${cy+r*0.5} ${cx},${cy+r} ${cx-r*0.866},${cy+r*0.5} ${cx-r*0.866},${cy-r*0.5}`} fill="#001220" stroke="url(#fg-c)" strokeWidth="2" filter="url(#glow-c)"/>
-        {/* Crystal spikes */}
         {[0,60,120,180,240,300].map(angle => {
           const rad = (angle*Math.PI)/180;
           const x1 = cx + r*0.4*Math.cos(rad), y1 = cy + r*0.4*Math.sin(rad);
@@ -178,73 +127,57 @@ function RankEmblem({ rank, size = 48 }: { rank: RankInfo; size?: number }) {
         <text x={cx} y={cy+s*0.42} textAnchor="middle" fill="#e0f7ff" fontSize={s*0.13} fontFamily="Orbitron,sans-serif" fontWeight="900">C-RANK</text>
       </svg>
     ),
-    // B-Rank: Lightning wings
     b: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
         <defs>
           <filter id="glow-b"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           <linearGradient id="fg-b" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#06b6d4"/><stop offset="100%" stopColor="#a5f3fc"/></linearGradient>
         </defs>
-        {/* Shield base */}
         <path d={`M${cx} ${cy-r} L${cx+r*0.8} ${cy-r*0.4} L${cx+r*0.8} ${cy+r*0.3} L${cx} ${cy+r} L${cx-r*0.8} ${cy+r*0.3} L${cx-r*0.8} ${cy-r*0.4}Z`} fill="#001a1a" stroke="url(#fg-b)" strokeWidth="2" filter="url(#glow-b)"/>
-        {/* Lightning bolt */}
         <path d={`M${cx+r*0.15} ${cy-r*0.55} L${cx-r*0.05} ${cy+r*0.05} L${cx+r*0.18} ${cy+r*0.05} L${cx-r*0.15} ${cy+r*0.55} L${cx+r*0.25} ${cy-r*0.05} L${cx-r*0.05} ${cy-r*0.05}Z`} fill="#22d3ee" filter="url(#glow-b)"/>
-        {/* Wing left */}
         <path d={`M${cx-r*0.8} ${cy} C${cx-r*1.1} ${cy-r*0.4} ${cx-r*1.3} ${cy-r*0.1} ${cx-r*0.8} ${cy+r*0.15}`} fill="none" stroke="#22d3ee" strokeWidth="1.5" opacity="0.6"/>
-        {/* Wing right */}
         <path d={`M${cx+r*0.8} ${cy} C${cx+r*1.1} ${cy-r*0.4} ${cx+r*1.3} ${cy-r*0.1} ${cx+r*0.8} ${cy+r*0.15}`} fill="none" stroke="#22d3ee" strokeWidth="1.5" opacity="0.6"/>
       </svg>
     ),
-    // A-Rank: Void eye / arcane
     a: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
         <defs>
           <filter id="glow-a"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           <radialGradient id="rg-a" cx="50%" cy="50%"><stop offset="0%" stopColor="#c084fc"/><stop offset="100%" stopColor="#581c87"/></radialGradient>
         </defs>
-        {/* Outer ring */}
         <circle cx={cx} cy={cy} r={r} fill="#0d0020" stroke="#7c3aed" strokeWidth="2" filter="url(#glow-a)"/>
-        {/* Rune marks */}
         {[0,45,90,135,180,225,270,315].map(angle => {
           const rad=(angle*Math.PI)/180;
           const x1=cx+r*0.7*Math.cos(rad),y1=cy+r*0.7*Math.sin(rad);
           const x2=cx+r*0.88*Math.cos(rad),y2=cy+r*0.88*Math.sin(rad);
           return <line key={angle} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#a855f7" strokeWidth="1.5"/>;
         })}
-        {/* Inner eye */}
         <circle cx={cx} cy={cy} r={r*0.42} fill="url(#rg-a)" filter="url(#glow-a)"/>
         <ellipse cx={cx} cy={cy} rx={r*0.15} ry={r*0.28} fill="#0d0020"/>
         <text x={cx} y={cy+r*1.25} textAnchor="middle" fill={c} fontSize={s*0.13} fontFamily="Orbitron,sans-serif" fontWeight="900">A-RANK</text>
       </svg>
     ),
-    // S-Rank: Golden crown with wings
     s: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
         <defs>
           <filter id="glow-s"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           <linearGradient id="fg-s" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stopColor="#92400e"/><stop offset="50%" stopColor="#f59e0b"/><stop offset="100%" stopColor="#fef3c7"/></linearGradient>
         </defs>
-        {/* Shield */}
         <path d={`M${cx} ${cy-r} L${cx+r*0.85} ${cy-r*0.4} L${cx+r*0.85} ${cy+r*0.4} L${cx} ${cy+r} L${cx-r*0.85} ${cy+r*0.4} L${cx-r*0.85} ${cy-r*0.4}Z`} fill="#1a0f00" stroke="url(#fg-s)" strokeWidth="2.5" filter="url(#glow-s)"/>
-        {/* Crown */}
         <path d={`M${cx-r*0.45} ${cy+r*0.1} L${cx-r*0.45} ${cy-r*0.35} L${cx-r*0.15} ${cy-r*0.1} L${cx} ${cy-r*0.45} L${cx+r*0.15} ${cy-r*0.1} L${cx+r*0.45} ${cy-r*0.35} L${cx+r*0.45} ${cy+r*0.1}Z`} fill="url(#fg-s)" filter="url(#glow-s)"/>
-        {/* Crown gems */}
         {[-r*0.45, 0, r*0.45].map((dx,i) => (
           <circle key={i} cx={cx+dx} cy={cy-r*(i===1?0.45:0.35)} r={r*0.07} fill={i===1?"#fff":"#fcd34d"} filter="url(#glow-s)"/>
         ))}
-        {/* Bottom bar */}
         <rect x={cx-r*0.45} y={cy+r*0.08} width={r*0.9} height={r*0.16} rx="2" fill="url(#fg-s)"/>
         <text x={cx} y={cy+r*0.72} textAnchor="middle" fill="#fef3c7" fontSize={s*0.14} fontFamily="Orbitron,sans-serif" fontWeight="900">S-RANK</text>
       </svg>
     ),
-    // National Level: Cosmic star burst
     national: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
         <defs>
           <filter id="glow-n"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           <radialGradient id="rg-n" cx="50%" cy="50%"><stop offset="0%" stopColor="#f9a8d4"/><stop offset="60%" stopColor="#ec4899"/><stop offset="100%" stopColor="#831843"/></radialGradient>
         </defs>
-        {/* Outer starburst */}
         {[0,30,60,90,120,150,180,210,240,270,300,330].map(angle => {
           const rad=(angle*Math.PI)/180;
           const inner = angle%60===0 ? r*0.55 : r*0.35;
@@ -253,14 +186,12 @@ function RankEmblem({ rank, size = 48 }: { rank: RankInfo; size?: number }) {
           return <line key={angle} x1={x1} y1={y1} x2={x2} y2={y2} stroke={angle%60===0?"#f9a8d4":"#ec4899"} strokeWidth={angle%60===0?2.5:1} filter="url(#glow-n)"/>;
         })}
         <circle cx={cx} cy={cy} r={r*0.5} fill="url(#rg-n)" filter="url(#glow-n)"/>
-        {/* Trident symbol */}
         <line x1={cx} y1={cy-r*0.3} x2={cx} y2={cy+r*0.28} stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
         <line x1={cx-r*0.18} y1={cy-r*0.12} x2={cx-r*0.18} y2={cy-r*0.3} stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
         <line x1={cx+r*0.18} y1={cy-r*0.12} x2={cx+r*0.18} y2={cy-r*0.3} stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
         <line x1={cx-r*0.18} y1={cy-r*0.14} x2={cx+r*0.18} y2={cy-r*0.14} stroke="#fff" strokeWidth="1.5"/>
       </svg>
     ),
-    // Shadow Monarch: Dark wings + crown
     shadow_monarch: (
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}>
         <defs>
@@ -269,18 +200,12 @@ function RankEmblem({ rank, size = 48 }: { rank: RankInfo; size?: number }) {
           <linearGradient id="wing-sm" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#c084fc"/><stop offset="100%" stopColor="transparent"/></linearGradient>
           <linearGradient id="wingr-sm" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stopColor="#c084fc"/><stop offset="100%" stopColor="transparent"/></linearGradient>
         </defs>
-        {/* Left wing */}
         <path d={`M${cx-r*0.15} ${cy} C${cx-r*0.5} ${cy-r*0.3} ${cx-r*1.1} ${cy-r*0.6} ${cx-r*1.2} ${cy-r*1.1} C${cx-r*0.9} ${cy-r*0.5} ${cx-r*0.5} ${cy-r*0.1} ${cx-r*0.15} ${cy+r*0.25}Z`} fill="url(#wing-sm)" opacity="0.85"/>
-        {/* Right wing */}
         <path d={`M${cx+r*0.15} ${cy} C${cx+r*0.5} ${cy-r*0.3} ${cx+r*1.1} ${cy-r*0.6} ${cx+r*1.2} ${cy-r*1.1} C${cx+r*0.9} ${cy-r*0.5} ${cx+r*0.5} ${cy-r*0.1} ${cx+r*0.15} ${cy+r*0.25}Z`} fill="url(#wingr-sm)" opacity="0.85"/>
-        {/* Wing veins */}
         <path d={`M${cx-r*0.15} ${cy+r*0.1} C${cx-r*0.7} ${cy-r*0.2} ${cx-r*1.0} ${cy-r*0.8} ${cx-r*1.1} ${cy-r*1.0}`} fill="none" stroke="#c084fc" strokeWidth="1" opacity="0.5"/>
         <path d={`M${cx+r*0.15} ${cy+r*0.1} C${cx+r*0.7} ${cy-r*0.2} ${cx+r*1.0} ${cy-r*0.8} ${cx+r*1.1} ${cy-r*1.0}`} fill="none" stroke="#c084fc" strokeWidth="1" opacity="0.5"/>
-        {/* Center orb */}
         <circle cx={cx} cy={cy} r={r*0.45} fill="url(#rg-sm)" filter="url(#glow-sm)"/>
-        {/* Crown */}
         <path d={`M${cx-r*0.3} ${cy-r*0.05} L${cx-r*0.3} ${cy-r*0.38} L${cx-r*0.05} ${cy-r*0.18} L${cx} ${cy-r*0.42} L${cx+r*0.05} ${cy-r*0.18} L${cx+r*0.3} ${cy-r*0.38} L${cx+r*0.3} ${cy-r*0.05}Z`} fill="#c084fc" filter="url(#glow-sm)"/>
-        {/* Sword */}
         <line x1={cx} y1={cy+r*0.02} x2={cx} y2={cy+r*0.42} stroke="#e879f9" strokeWidth="2" strokeLinecap="round" filter="url(#glow-sm)"/>
         <line x1={cx-r*0.14} y1={cy+r*0.14} x2={cx+r*0.14} y2={cy+r*0.14} stroke="#c084fc" strokeWidth="1.5"/>
         <text x={cx} y={cy+r*1.3} textAnchor="middle" fill="#e879f9" fontSize={s*0.11} fontFamily="Orbitron,sans-serif" fontWeight="900">SHADOW</text>
@@ -296,16 +221,90 @@ function RankEmblem({ rank, size = 48 }: { rank: RankInfo; size?: number }) {
 }
 
 // ═══════════════════════════════════════════
-// RANK BADGE (text version, used in small UI)
+// GAMING RANK BAR COMPONENT (NEW SAVAGE UI)
+// ═══════════════════════════════════════════
+function GamingRankBar({ rank, pct, height = 8, showGems = true }: { rank: RankInfo; pct: number; height?: number; showGems?: boolean }) {
+  const styles: Record<string, { track: string; fill: string; shimmer: string; gem: string }> = {
+    stone:    { track:"#1a1a1a", fill:"linear-gradient(90deg,#4b5563,#6b7280,#9ca3af)", shimmer:"rgba(255,255,255,0.15)", gem:"#9ca3af" },
+    fire:     { track:"#1a0800", fill:"linear-gradient(90deg,#92400e,#b45309,#f59e0b,#fbbf24)", shimmer:"rgba(251,191,36,0.3)", gem:"#f59e0b" },
+    ice:      { track:"#001220", fill:"linear-gradient(90deg,#075985,#0ea5e9,#38bdf8,#7dd3fc)", shimmer:"rgba(125,211,252,0.3)", gem:"#38bdf8" },
+    electric: { track:"#001a1a", fill:"linear-gradient(90deg,#164e63,#06b6d4,#22d3ee,#67e8f9)", shimmer:"rgba(103,232,249,0.35)", gem:"#22d3ee" },
+    void:     { track:"#0d0020", fill:"linear-gradient(90deg,#581c87,#7c3aed,#a855f7,#c084fc)", shimmer:"rgba(192,132,252,0.3)", gem:"#a855f7" },
+    solar:    { track:"#1a0f00", fill:"linear-gradient(90deg,#78350f,#d97706,#f59e0b,#fcd34d)", shimmer:"rgba(252,211,77,0.4)", gem:"#fcd34d" },
+    cosmic:   { track:"#1a001a", fill:"linear-gradient(90deg,#831843,#be185d,#ec4899,#f9a8d4)", shimmer:"rgba(249,168,212,0.35)", gem:"#ec4899" },
+    shadow:   { track:"#0a000f", fill:"linear-gradient(90deg,#3b0764,#6d28d9,#c084fc,#e879f9)", shimmer:"rgba(232,121,249,0.4)", gem:"#c084fc" },
+  };
+  const s = styles[rank.barStyle];
+  const gemCount = Math.floor(pct / 20); // 1 gem per 20%
+  const isHighRank = ["a", "s", "national", "shadow_monarch"].includes(rank.id);
+
+  return (
+    <div style={{ position:"relative", padding: isHighRank ? "2px" : "0", background: isHighRank ? "rgba(0,0,0,0.3)" : "transparent", borderRadius: 4, transform: "skewX(-15deg)", filter: `drop-shadow(0 0 4px ${rank.glowColor})` }}>
+      {/* Main bar track */}
+      <div style={{
+        position:"relative", height,
+        background: s.track,
+        borderTop: isHighRank ? `2px solid ${rank.color}` : `1px solid ${rank.color}66`,
+        borderBottom: isHighRank ? `2px solid ${rank.color}` : `1px solid ${rank.color}66`,
+        borderLeft: `1px solid ${rank.color}33`,
+        borderRight: `1px solid ${rank.color}33`,
+        overflow:"hidden",
+        boxShadow:`inset 0 2px 4px rgba(0,0,0,0.8), 0 0 ${isHighRank ? '12px' : '6px'} ${rank.glowColor}`,
+      }}>
+        {/* Filled portion */}
+        <div style={{
+          position:"absolute", top:0, left:0,
+          width:`${pct}%`, height:"100%",
+          background: s.fill,
+          transition:"width 1.2s cubic-bezier(0.4,0,0.2,1)",
+          borderRight: isHighRank ? "2px solid #fff" : "none",
+          boxShadow:`0 0 15px ${rank.glowColor}`,
+        }}>
+          {/* Shimmer sweep */}
+          <div style={{
+            position:"absolute", top:0, left:"-60%", width:"40%", height:"100%",
+            background:`linear-gradient(90deg,transparent,${s.shimmer},transparent)`,
+            animation:"barShimmer 2s ease-in-out infinite",
+          }}/>
+        </div>
+        {/* Notch lines (every 25%) */}
+        {[25,50,75].map(n => (
+          <div key={n} style={{
+            position:"absolute", top:0, left:`${n}%`,
+            width:1, height:"100%", background:"rgba(0,0,0,0.7)", zIndex:2,
+          }}/>
+        ))}
+      </div>
+
+      {/* Gem indicators */}
+      {showGems && (
+        <div style={{ display:"flex", gap:4, marginTop:6, justifyContent:"flex-end", transform: "skewX(15deg)" }}>
+          {[1,2,3,4,5].map(i => (
+            <div key={i} style={{
+              width:6, height:6,
+              background: i <= gemCount ? s.gem : "rgba(255,255,255,0.05)",
+              transform:"rotate(45deg)",
+              boxShadow: i <= gemCount ? `0 0 6px ${s.gem}` : "none",
+              transition:"all 0.3s",
+            }}/>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// RANK BADGE (UPGRADED SAVAGE UI)
 // ═══════════════════════════════════════════
 function RankBadge({ rank, size="md" }: { rank:RankInfo; size?:"sm"|"md"|"lg" }) {
-  const s = { sm:{px:"7px 11px",fs:9,icon:13}, md:{px:"9px 15px",fs:11,icon:17}, lg:{px:"13px 20px",fs:14,icon:22} }[size];
+  const s = { sm:{px:"6px 12px",fs:10,icon:18}, md:{px:"8px 16px",fs:12,icon:24}, lg:{px:"12px 24px",fs:16,icon:32} }[size];
   return (
-    <div style={{ display:"inline-flex", alignItems:"center", gap:7, padding:s.px, borderRadius:30, background:rank.bgColor, border:`1px solid ${rank.color}44`, boxShadow:`0 0 14px ${rank.glowColor}` }}>
-      <span style={{ fontSize:s.icon }}>{rank.icon}</span>
-      <div>
-        <p style={{ fontFamily:"'Orbitron',sans-serif", fontSize:s.fs, fontWeight:900, letterSpacing:"0.1em", color:rank.color, lineHeight:1 }}>{rank.name}</p>
-        {size==="lg" && <p style={{ fontSize:9, color:`${rank.color}99`, marginTop:2 }}>{rank.title}</p>}
+    <div style={{ display:"inline-flex", alignItems:"center", gap:10, padding:s.px, borderRadius:8, background:`linear-gradient(90deg, ${rank.bgColor}, transparent)`, borderLeft:`3px solid ${rank.color}`, boxShadow:`-8px 0 15px -8px ${rank.glowColor}` }}>
+      <RankEmblem rank={rank} size={s.icon} />
+      <div style={{ textAlign: "left" }}>
+        <p style={{ fontFamily:"'Orbitron',sans-serif", fontSize:s.fs, fontWeight:900, letterSpacing:"0.12em", color:rank.color, lineHeight:1, textShadow: `0 0 8px ${rank.glowColor}` }}>{rank.name}</p>
+        {size==="lg" && <p style={{ fontSize:10, color:`${rank.color}99`, marginTop:4, fontStyle:"italic", fontWeight: 700, letterSpacing: "0.05em" }}>{rank.title}</p>}
       </div>
     </div>
   );
@@ -488,6 +487,7 @@ function ProfileModal({ onClose, user, userData }: { onClose:()=>void; user:any;
           <div style={{ display:"flex", gap:4, background:"rgba(255,255,255,0.03)", borderRadius:11, padding:4, marginBottom:16 }}>
             {(["overview","stats","achievements"] as const).map(t => <button key={t} style={ts(t)} onClick={() => setTab(t)}>{t}</button>)}
           </div>
+          {/* Tab: Overview */}
           {tab==="overview" && (
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9 }}>
               {[
@@ -501,6 +501,7 @@ function ProfileModal({ onClose, user, userData }: { onClose:()=>void; user:any;
               ))}
             </div>
           )}
+          {/* Tab: Stats */}
           {tab==="stats" && (
             <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9 }}>
@@ -511,6 +512,7 @@ function ProfileModal({ onClose, user, userData }: { onClose:()=>void; user:any;
                   </div>
                 ))}
               </div>
+              {/* Attributes */}
               <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:13, padding:"14px" }}>
                 <p style={{ fontSize:8, letterSpacing:"0.1em", color:"rgba(255,255,255,0.3)", textTransform:"uppercase", marginBottom:14 }}>Neural Attributes</p>
                 {[{l:"Accuracy",v:userData.accuracy,c:"#22d3ee"},{l:"Speed",v:userData.speed,c:"#0ea5e9"},{l:"Logic",v:userData.logic,c:"#34d399"},{l:"Focus",v:userData.focus,c:"#a855f7"}].map(a => {
@@ -528,6 +530,7 @@ function ProfileModal({ onClose, user, userData }: { onClose:()=>void; user:any;
               </div>
             </div>
           )}
+          {/* Tab: Achievements */}
           {tab==="achievements" && (
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
               {ACHIEVEMENTS.map(a => (
@@ -545,39 +548,6 @@ function ProfileModal({ onClose, user, userData }: { onClose:()=>void; user:any;
     </div>
   );
 }
-
-// ═══════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════
-const SUBJECTS = [
-  { name:"Physics",   icon:Atom,         color:"#22d3ee", rgb:"34,211,238",  locked:false, questions:48  },
-  { name:"Chemistry", icon:FlaskConical, color:"#a78bfa", rgb:"167,139,250", locked:false, questions:36  },
-  { name:"Math",      icon:Sigma,        color:"#34d399", rgb:"52,211,153",  locked:true,  questions:0   },
-  { name:"Biology",   icon:Dna,          color:"#f87171", rgb:"248,113,113", locked:true,  questions:0   },
-];
-
-const DAILY_QUESTS = [
-  { id:1, title:"Physics Mastery", desc:"Solve 20 MCQ",       xp:500, progress:12, total:20, icon:Atom,  color:"#22d3ee", done:false },
-  { id:2, title:"Speed Demon",     desc:"Answer in <5s × 10", xp:300, progress:10, total:10, icon:Clock, color:"#f59e0b", done:true  },
-  { id:3, title:"Combo Master",    desc:"Get 5x combo streak", xp:400, progress:3,  total:5,  icon:Flame, color:"#f87171", done:false },
-];
-
-const STREAK_DAYS = ["M","T","W","T","F","S","S"];
-
-const ACHIEVEMENTS = [
-  { title:"First Blood", desc:"Complete first battle", icon:"🩸", unlocked:true,  xp:100  },
-  { title:"Speed Freak", desc:"10 answers under 3s",   icon:"⚡", unlocked:true,  xp:200  },
-  { title:"Combo God",   desc:"20x combo streak",      icon:"🔥", unlocked:false, xp:500  },
-  { title:"Scholar",     desc:"100 questions solved",  icon:"📚", unlocked:false, xp:1000 },
-];
-
-const DEFAULT_USER_DATA = {
-  xp:0, level:1, accuracy:0, speed:0, iq:0, logic:0, focus:0,
-  streak:0, totalBattles:0, weeklyXP:0, plan:"free" as Plan,
-  questionsAttempted:0, correctAnswers:0,
-  streakDays:[false,false,false,false,false,false,false],
-  joinDate:"", totalHoursStudied:0,
-};
 
 // ═══════════════════════════════════════════
 // GLOBAL CSS
@@ -657,6 +627,7 @@ export default function RankPushDashboard() {
   const [showRankModal, setShowRankModal]= useState(false);
   const [showProfile,   setShowProfile]  = useState(false);
   const [showNotif,     setShowNotif]    = useState(false);
+  const [showMobileMenu,setMobileMenu]   = useState(false);
   const [animXP,        setAnimXP]       = useState(0);
   const [rankUpRank,    setRankUpRank]   = useState<RankInfo|null>(null);
   const [leaderboard,   setLeaderboard]  = useState<any[]>([]);
@@ -669,19 +640,25 @@ export default function RankPushDashboard() {
   // Firebase Auth
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
       if (!u) { router.push("/"); return; }
-      const ref = doc(db, "users", u.uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        const newData = { ...DEFAULT_USER_DATA, displayName:u.displayName||"Cyber Hunter", email:u.email||"", avatar:u.photoURL||"", plan:"free", joinDate:new Date().toISOString(), createdAt:new Date(), streakDays:[false,false,false,false,false,false,false] };
-        await setDoc(ref, newData);
-        setUserData(newData as any);
-      } else {
-        setUserData(snap.data() as any);
-        prevRankRef.current = getRankByXP((snap.data() as any).xp||0).id;
+      setUser(u);
+
+      try {
+        const ref = doc(db, "users", u.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          const newData = { ...DEFAULT_USER_DATA, displayName:u.displayName||"Cyber Hunter", email:u.email||"", avatar:u.photoURL||"", plan:"free", joinDate:new Date().toISOString(), createdAt:new Date(), streakDays:[false,false,false,false,false,false,false] };
+          await setDoc(ref, newData);
+          setUserData(newData as any);
+        } else {
+          setUserData(snap.data() as any);
+          prevRankRef.current = getRankByXP((snap.data() as any).xp||0).id;
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      } finally {
+        setDataLoading(false);
       }
-      setDataLoading(false);
     });
     return () => unsub();
   }, [router]);
@@ -748,7 +725,7 @@ export default function RankPushDashboard() {
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet"/>
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       <AnimatePresence>
         {rankUpRank && <RankUpCelebration rank={rankUpRank} onDone={()=>setRankUpRank(null)}/>}
@@ -794,7 +771,7 @@ export default function RankPushDashboard() {
                   {showNotif && (
                     <motion.div initial={{opacity:0,y:8,scale:0.95}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:8,scale:0.95}} onClick={e=>e.stopPropagation()}
                       style={{ position:"absolute", top:46, right:0, width:270, background:"#0d1420", border:"1px solid rgba(255,255,255,0.09)", borderRadius:18, padding:16, zIndex:60, boxShadow:"0 20px 60px rgba(0,0,0,0.5)" }}>
-                      {[{msg:`Ranked up to ${rank.name}! ${rank.icon}`,time:"2m ago",color:"#22d3ee"},{msg:"Daily quest reset!",time:"1h ago",color:"#f59e0b"},{msg:"ZeroOne challenged you ⚔️",time:"3h ago",color:"#ef4444"}].map((n,i)=>(
+                      {[{msg:`Ranked up to ${rank.name}!`,time:"2m ago",color:"#22d3ee"},{msg:"Daily quest reset!",time:"1h ago",color:"#f59e0b"},{msg:"ZeroOne challenged you ⚔️",time:"3h ago",color:"#ef4444"}].map((n,i)=>(
                         <div key={i} style={{ padding:"10px 0", borderBottom:i<2?"1px solid rgba(255,255,255,0.05)":"none" }}>
                           <p style={{ fontSize:12, color:"rgba(255,255,255,0.8)", marginBottom:3 }}>{n.msg}</p>
                           <p style={{ fontSize:10, color:n.color }}>{n.time}</p>
@@ -822,11 +799,11 @@ export default function RankPushDashboard() {
           {/* ── LEFT SIDEBAR ── */}
           <div className="desktop-sidebar" style={{ display:"flex", flexDirection:"column", gap:18 }}>
 
-            {/* ★ PLAYER CARD — with Emblem + Gaming bar */}
+            {/* Player Card */}
             <div className="card" style={{ padding:"28px 24px", textAlign:"center", borderTop:`3px solid ${rank.color}`, position:"relative", overflow:"hidden" }}>
               <div style={{ position:"absolute", top:"-25%", left:"50%", transform:"translateX(-50%)", width:200, height:200, borderRadius:"50%", background:rank.color, opacity:0.06, filter:"blur(50px)", pointerEvents:"none" }}/>
 
-              {/* Rank Emblem — centered, large */}
+              {/* Rank Emblem */}
               <div className="emblem-pulse" style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
                 <button onClick={()=>setShowRankModal(true)} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
                   <RankEmblem rank={rank} size={72}/>
@@ -888,7 +865,6 @@ export default function RankPushDashboard() {
                 {[
                   {l:"Accuracy",v:userData.accuracy,d:`${userData.accuracy}%`,c:"#22d3ee",bs:"electric"},
                   {l:"Speed",   v:userData.speed,   d:`${userData.speed}%`,   c:"#0ea5e9",bs:"ice"},
-                  {l:"IQ",      v:Math.min(userData.iq,100),d:`${userData.iq}`,c:"rgba(255,255,255,0.7)",bs:"stone"},
                   {l:"Logic",   v:userData.logic,   d:`${userData.logic}%`,   c:"#34d399",bs:"void"},
                   {l:"Focus",   v:userData.focus,   d:`${userData.focus}%`,   c:"#a855f7",bs:"shadow"},
                 ].map(s=>{
@@ -945,18 +921,6 @@ export default function RankPushDashboard() {
                 ))}
               </div>
             </div>
-
-            {/* Daily Directive */}
-            <div className="card" style={{ padding:"22px", borderLeft:"3px solid #34d399", background:"rgba(52,211,153,0.03)" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:10, opacity:0.7 }}>
-                <Quote size={13} color="#34d399"/>
-                <h3 style={{ fontSize:9, fontWeight:900, letterSpacing:"0.2em", textTransform:"uppercase" }}>Daily Directive</h3>
-              </div>
-              <p className="font-bn" style={{ fontSize:12, fontStyle:"italic", fontWeight:600, lineHeight:1.65, color:"rgba(255,255,255,0.8)", marginBottom:8 }}>
-                "Seek knowledge from the cradle to the grave."
-              </p>
-              <p style={{ fontSize:8, fontWeight:900, color:"#34d399", letterSpacing:"0.15em", textTransform:"uppercase" }}>— PROPHET MUHAMMAD (PBUH)</p>
-            </div>
           </div>
 
           {/* ── CENTER COLUMN ── */}
@@ -992,23 +956,13 @@ export default function RankPushDashboard() {
               </div>
             </div>
 
-            {/* Shadow Focus Banner */}
-            <div className="card" style={{ padding:"22px 26px", borderLeft:"4px solid #a855f7", background:"linear-gradient(90deg,rgba(168,85,247,0.08),transparent)", display:"flex", alignItems:"center", gap:18, flexWrap:"wrap" }}>
-              <div style={{ padding:12, background:"rgba(168,85,247,0.12)", border:"1px solid rgba(168,85,247,0.25)", borderRadius:14 }}><Timer size={22} color="#a855f7"/></div>
-              <div style={{ flex:1, minWidth:180 }}>
-                <h3 className="font-logo" style={{ fontSize:15, color:"#a855f7", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4 }}>Shadow Focus</h3>
-                <p style={{ fontSize:11, color:"rgba(255,255,255,0.4)", lineHeight:1.5 }}>Pomodoro or Free Timer — earn bonus XP and climb the study leaderboard.</p>
-              </div>
-              <button onClick={()=>router.push("/timer")} style={{ padding:"11px 22px", borderRadius:12, fontWeight:900, fontSize:11, letterSpacing:"0.1em", textTransform:"uppercase", background:"linear-gradient(135deg,#7c3aed,#a855f7)", border:"none", color:"white", cursor:"pointer", display:"flex", alignItems:"center", gap:7, boxShadow:"0 0 20px rgba(168,85,247,0.3)", whiteSpace:"nowrap" }}>
-                <Play size={13} fill="white"/> Enter Focus
-              </button>
-            </div>
-
             {/* Tactical Arena */}
             <div className="card" style={{ padding:"26px 28px", borderTop:"3px solid #0ea5e9" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
                 <div>
-                  <h2 className="font-logo" style={{ fontSize:20, textTransform:"uppercase", marginBottom:3 }}>Tactical <span style={{ color:"#0ea5e9" }}>Arena</span></h2>
+                  <h2 className="font-logo" style={{ fontSize:20, textTransform:"uppercase", marginBottom:3 }}>
+                    Tactical <span style={{ color:"#0ea5e9" }}>Arena</span>
+                  </h2>
                   <p style={{ fontSize:9, fontWeight:700, opacity:0.33, textTransform:"uppercase", letterSpacing:"0.2em" }}>Select your mastery field</p>
                 </div>
                 <div className="float" style={{ width:44, height:44, background:"rgba(14,165,233,0.1)", borderRadius:14, display:"flex", alignItems:"center", justifyContent:"center", border:"1px solid rgba(14,165,233,0.2)" }}>
@@ -1074,7 +1028,7 @@ export default function RankPushDashboard() {
           {/* ── RIGHT COLUMN ── */}
           <div className="right-col" style={{ display:"flex", flexDirection:"column", gap:18 }}>
 
-            {/* Leaderboard — with rank emblems */}
+            {/* Live Leaderboard — with Gaming Bars */}
             <div className="card" style={{ padding:"22px", borderLeft:"3px solid rgba(14,165,233,0.5)" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
                 <h3 style={{ fontSize:9, fontWeight:900, letterSpacing:"0.2em", textTransform:"uppercase", opacity:0.55, display:"flex", alignItems:"center", gap:7 }}>
@@ -1093,14 +1047,17 @@ export default function RankPushDashboard() {
                   return (
                     <div key={i} style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 10px", borderRadius:12, background:isMe?"rgba(34,211,238,0.06)":i===0?"rgba(34,211,238,0.04)":"transparent", border:isMe?"1px solid rgba(34,211,238,0.2)":i===0?"1px solid rgba(34,211,238,0.08)":"1px solid transparent", cursor:"pointer" }}>
                       <span style={{ fontSize:12, fontWeight:900, fontStyle:"italic", minWidth:22, color:i===0?"#22d3ee":"rgba(255,255,255,0.35)" }}>{String(i+1).padStart(2,"0")}</span>
-                      {/* Mini emblem instead of avatar */}
-                      <RankEmblem rank={pRank} size={28}/>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontSize:10, fontWeight:800, textTransform:"uppercase", fontStyle:"italic", color:isMe?"#22d3ee":i===0?"#22d3ee":"rgba(255,255,255,0.75)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      
+                      <div style={{ position:"relative", flexShrink:0 }}>
+                        <RankEmblem rank={pRank} size={30}/>
+                      </div>
+
+                      <div style={{ flex:1, minWidth:0, paddingRight: 4 }}>
+                        <p style={{ fontSize:10, fontWeight:800, textTransform:"uppercase", fontStyle:"italic", color:isMe?"#22d3ee":i===0?"#22d3ee":"rgba(255,255,255,0.75)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", paddingBottom: 2 }}>
                           {p.displayName||"Hunter"}{isMe?" (You)":""}
                         </p>
-                        <div style={{ height:2, background:"rgba(255,255,255,0.05)", borderRadius:1, marginTop:4, overflow:"hidden" }}>
-                          <div style={{ height:"100%", width:`${Math.min(100,(p.xp||0)/300)}%`, background:pRank.color }}/>
+                        <div style={{ marginTop: 2 }}>
+                          <GamingRankBar rank={pRank} pct={Math.max(0, 100-i*15)} height={4} showGems={false}/>
                         </div>
                       </div>
                       <div style={{ textAlign:"right", flexShrink:0 }}>
@@ -1116,7 +1073,7 @@ export default function RankPushDashboard() {
               </button>
             </div>
 
-            {/* Daily Quests */}
+            {/* Daily Quests — with Gaming Bars */}
             <div className="card" style={{ padding:"22px", borderLeft:"3px solid #f97316", background:"rgba(249,115,22,0.03)" }}>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:16, opacity:0.8 }}>
                 <Flame size={14} color="#f97316"/>
@@ -1125,7 +1082,7 @@ export default function RankPushDashboard() {
               </div>
               <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
                 {DAILY_QUESTS.map(q=>{
-                  const qRank={...RANKS[2],color:q.color,glowColor:`${q.color}66`,barStyle:"electric" as const};
+                  const qRank={...RANKS[3], color:q.color, glowColor:`${q.color}66`, barStyle:"electric" as const};
                   return (
                     <div key={q.id} style={{ background:q.done?"rgba(34,197,94,0.05)":"rgba(255,255,255,0.025)", border:`1px solid ${q.done?"rgba(34,197,94,0.18)":"rgba(255,255,255,0.05)"}`, borderRadius:13, padding:"12px 14px" }}>
                       <div style={{ display:"flex", alignItems:"flex-start", gap:9, marginBottom:q.done?0:9 }}>
@@ -1168,18 +1125,6 @@ export default function RankPushDashboard() {
               </button>
             </div>
 
-            {/* Monarch's Wisdom */}
-            <div className="card" style={{ padding:"22px", background:"linear-gradient(135deg,rgba(14,165,233,0.05),transparent)", borderBottom:"3px solid #0ea5e9" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:10, opacity:0.55 }}>
-                <Crown size={14} color="#0ea5e9"/>
-                <h3 style={{ fontSize:9, fontWeight:900, letterSpacing:"0.2em", textTransform:"uppercase" }}>Monarch's Wisdom</h3>
-              </div>
-              <Quote size={18} color="#22d3ee" style={{ opacity:0.3, marginBottom:7 }}/>
-              <p style={{ fontSize:12, fontStyle:"italic", fontWeight:600, lineHeight:1.7, color:"rgba(255,255,255,0.82)", borderLeft:"2px solid #22d3ee", paddingLeft:10, marginBottom:10 }}>
-                "I will grow stronger. Much, much stronger."
-              </p>
-              <p className="font-logo" style={{ fontSize:8, color:"#22d3ee", letterSpacing:"0.18em" }}>— SUNG JIN-WOO</p>
-            </div>
           </div>
         </div>
 
