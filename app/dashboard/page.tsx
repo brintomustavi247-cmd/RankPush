@@ -178,7 +178,7 @@ export default function RankPushDashboard() {
   const [showProModal, setShowProModal]   = useState(false);
   const [showRivalModal, setShowRivalModal] = useState(false);
   const [showNotif, setShowNotif]         = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 🆕 For Mobile Logo Menu
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   const [animXP, setAnimXP]              = useState(0);
   const router = useRouter();
 
@@ -502,7 +502,7 @@ export default function RankPushDashboard() {
               <span className="text-[11px] font-extrabold tracking-widest opacity-70">3,892 ONLINE</span>
             </div>
 
-            {/* Notifications */}
+            {/* Notifications 🚨 FIXED MOBILE ALIGNMENT */}
             <div className="relative">
               <button
                 onClick={() => setShowNotif(!showNotif)}
@@ -512,7 +512,7 @@ export default function RankPushDashboard() {
               </button>
               <div className="badge-bounce absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-[#02010a]">3</div>
               {showNotif && (
-                <div className="absolute top-12 right-0 w-72 bg-[#0d1420] border border-white/10 rounded-2xl p-4 z-50 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+                <div className="absolute top-12 -right-14 md:right-0 w-[270px] md:w-72 bg-[#0d1420] border border-white/10 rounded-2xl p-4 z-50 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
                   {[
                     { msg: "You ranked up to Monarch! 👑",  time: "2m ago",  color: "#a855f7" },
                     { msg: "Daily quest reset — new challenges await!", time: "1h ago", color: "#f59e0b" },
