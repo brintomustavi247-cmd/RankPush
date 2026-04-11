@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Timer, Play, Pause, RotateCcw, Zap, Trophy,
   Flame, Crown, ChevronRight, Clock, Target,
   CheckCircle, BarChart2, TrendingUp, Medal,
   Swords, Brain, Star, Users, Coffee, BookOpen,
-  Moon, Sunrise, Lock, Award
+  Moon, Sunrise, Lock, Award, ArrowLeft
 } from "lucide-react";
 
 // ─────────────────────────────────────────────
@@ -86,7 +87,7 @@ function formatMinutes(mins: number): string {
 // SVG RING COMPONENT
 // ─────────────────────────────────────────────
 function TimerRing({
-  progress, color, size = 220, stroke = 8, children
+  progress, color, size = 280, stroke = 12, children
 }: {
   progress: number; color: string; size?: number; stroke?: number; children?: React.ReactNode;
 }) {
@@ -99,9 +100,9 @@ function TimerRing({
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         {/* Outer deco ring */}
-        <circle cx={cx} cy={cx} r={r + stroke + 4}
-          fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={1}
-          strokeDasharray="3 8" />
+        <circle cx={cx} cy={cx} r={r + stroke + 6}
+          fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={1.5}
+          strokeDasharray="4 10" />
         {/* Track */}
         <circle cx={cx} cy={cx} r={r}
           fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={stroke} />
@@ -111,9 +112,9 @@ function TimerRing({
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.5s linear, stroke 0.4s ease" }} />
+          style={{ transition: "stroke-dashoffset 0.5s linear, stroke 0.4s ease", filter: `drop-shadow(0 0 12px ${color}88)` }} />
         {/* Inner deco */}
-        <circle cx={cx} cy={cx} r={r - stroke - 6}
+        <circle cx={cx} cy={cx} r={r - stroke - 8}
           fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={1}
           strokeDasharray="2 6" />
       </svg>
@@ -142,14 +143,14 @@ function XPNotif({ xp, onDone }: { xp: number; onDone: () => void }) {
       position: "fixed", top: 80, right: 24, zIndex: 999,
       background: "linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.05))",
       border: "1px solid rgba(34,211,238,0.4)",
-      borderRadius: 16, padding: "12px 20px",
+      borderRadius: 16, padding: "16px 24px",
       animation: "slideInRight 0.4s ease, fadeOut 0.4s ease 2.4s forwards",
       backdropFilter: "blur(12px)",
     }}>
-      <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 13, color: "#22d3ee", fontWeight: 900, letterSpacing: "0.1em" }}>
+      <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 15, color: "#22d3ee", fontWeight: 900, letterSpacing: "0.1em" }}>
         +{xp} XP ACQUIRED
       </p>
-      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Session complete</p>
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>Session complete</p>
     </div>
   );
 }
@@ -209,19 +210,19 @@ function FreeTimer({
   const color = running ? "#22d3ee" : elapsed > 0 ? "#f59e0b" : "#444466";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
 
-      {/* Subject Selector */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+      {/* Subject Selector (Bigger & Softer) */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", maxWidth: "600px" }}>
         {SUBJECTS.map(s => (
           <button key={s} onClick={() => { if (!running) setSubject(s); }}
             style={{
-              padding: "5px 12px", borderRadius: 20, fontSize: 10, fontWeight: 800,
-              letterSpacing: "0.06em", cursor: running ? "not-allowed" : "pointer",
-              fontFamily: "'Outfit', sans-serif",
-              background: subject === s ? "rgba(34,211,238,0.1)" : "rgba(255,255,255,0.03)",
-              border: subject === s ? "1px solid rgba(34,211,238,0.4)" : "1px solid rgba(255,255,255,0.08)",
-              color: subject === s ? "#22d3ee" : "rgba(255,255,255,0.4)",
+              padding: "8px 18px", borderRadius: 24, fontSize: 13, fontWeight: 800,
+              letterSpacing: "0.08em", cursor: running ? "not-allowed" : "pointer",
+              fontFamily: "'Outfit', sans-serif", textTransform: "uppercase",
+              background: subject === s ? "rgba(34,211,238,0.15)" : "rgba(255,255,255,0.03)",
+              border: subject === s ? "2px solid rgba(34,211,238,0.5)" : "1px solid rgba(255,255,255,0.1)",
+              color: subject === s ? "#22d3ee" : "rgba(255,255,255,0.5)",
               transition: "all 0.2s",
               opacity: running && subject !== s ? 0.4 : 1,
             }}>
@@ -230,37 +231,37 @@ function FreeTimer({
         ))}
       </div>
 
-      {/* Ring */}
-      <TimerRing progress={progress} color={color} size={220} stroke={7}>
+      {/* Ring (Bigger) */}
+      <TimerRing progress={progress} color={color} size={280} stroke={10}>
         <div style={{ textAlign: "center" }}>
           <p style={{
-            fontFamily: "'Orbitron', sans-serif", fontSize: 34, fontWeight: 900,
-            color: running ? "#22d3ee" : elapsed > 0 ? "#f59e0b" : "rgba(255,255,255,0.8)",
-            letterSpacing: -1, lineHeight: 1,
-            textShadow: running ? "0 0 20px rgba(34,211,238,0.5)" : "none",
+            fontFamily: "'Orbitron', sans-serif", fontSize: 48, fontWeight: 900,
+            color: running ? "#22d3ee" : elapsed > 0 ? "#f59e0b" : "rgba(255,255,255,0.9)",
+            letterSpacing: -2, lineHeight: 1,
+            textShadow: running ? "0 0 30px rgba(34,211,238,0.6)" : "none",
             transition: "all 0.4s",
           }}>
             {formatTime(elapsed)}
           </p>
-          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", marginTop: 6, color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>
+          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", marginTop: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
             {running ? subject + " · IN SESSION" : elapsed > 0 ? "PAUSED" : "FREE STUDY TIMER"}
           </p>
           {elapsed > 0 && (
-            <p style={{ fontSize: 10, color: "#22d3ee", fontWeight: 800, marginTop: 4, fontFamily: "'Orbitron', sans-serif" }}>
+            <p style={{ fontSize: 13, color: "#22d3ee", fontWeight: 800, marginTop: 6, fontFamily: "'Orbitron', sans-serif", textShadow: "0 0 10px #22d3ee" }}>
               +{Math.floor(elapsed / 60) * XP_PER_MINUTE} XP
             </p>
           )}
         </div>
       </TimerRing>
 
-      {/* Controls */}
-      <div style={{ display: "flex", gap: 10 }}>
+      {/* Controls (Bigger & Softer) */}
+      <div style={{ display: "flex", gap: 14 }}>
         <button onClick={handleStartStop} style={{
-          padding: "12px 32px", borderRadius: 12,
-          fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 900,
-          letterSpacing: "0.1em", cursor: "pointer",
-          background: running ? "rgba(239,68,68,0.1)" : "rgba(34,211,238,0.1)",
-          border: running ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(34,211,238,0.4)",
+          padding: "16px 40px", borderRadius: 16,
+          fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900,
+          letterSpacing: "0.15em", cursor: "pointer",
+          background: running ? "rgba(239,68,68,0.15)" : "rgba(34,211,238,0.15)",
+          border: running ? "2px solid rgba(239,68,68,0.5)" : "2px solid rgba(34,211,238,0.5)",
           color: running ? "#ef4444" : "#22d3ee",
           transition: "all 0.2s",
         }}>
@@ -270,16 +271,16 @@ function FreeTimer({
         {elapsed > 0 && (
           <>
             <button onClick={handleLap} style={{
-              padding: "12px 16px", borderRadius: 12, fontSize: 12, cursor: "pointer",
-              background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)",
-              color: "#f59e0b", fontFamily: "'Outfit', sans-serif", fontWeight: 800,
+              padding: "16px 24px", borderRadius: 16, fontSize: 14, cursor: "pointer", letterSpacing: "0.1em",
+              background: "rgba(245,158,11,0.1)", border: "2px solid rgba(245,158,11,0.4)",
+              color: "#f59e0b", fontFamily: "'Outfit', sans-serif", fontWeight: 900,
             }}>
               LAP
             </button>
             <button onClick={handleStop} style={{
-              padding: "12px 16px", borderRadius: 12, fontSize: 12, cursor: "pointer",
-              background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)",
-              color: "#22c55e", fontFamily: "'Outfit', sans-serif", fontWeight: 800,
+              padding: "16px 24px", borderRadius: 16, fontSize: 14, cursor: "pointer", letterSpacing: "0.1em",
+              background: "rgba(34,197,94,0.1)", border: "2px solid rgba(34,197,94,0.4)",
+              color: "#22c55e", fontFamily: "'Outfit', sans-serif", fontWeight: 900,
             }}>
               DONE
             </button>
@@ -289,16 +290,16 @@ function FreeTimer({
 
       {/* Laps */}
       {laps.length > 0 && (
-        <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ width: "100%", maxWidth: 400, display: "flex", flexDirection: "column", gap: 8 }}>
           {laps.map((l, i) => (
             <div key={i} style={{
-              display: "flex", justifyContent: "space-between",
-              padding: "6px 12px", borderRadius: 8,
-              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-              fontSize: 11, color: "rgba(255,255,255,0.5)",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "10px 16px", borderRadius: 12,
+              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+              fontSize: 13, color: "rgba(255,255,255,0.6)",
             }}>
-              <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 10 }}>{l.label}</span>
-              <span style={{ color: "#22d3ee", fontWeight: 800 }}>{formatTime(l.secs)}</span>
+              <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 800 }}>{l.label}</span>
+              <span style={{ color: "#22d3ee", fontWeight: 900, fontSize: 14 }}>{formatTime(l.secs)}</span>
             </div>
           ))}
         </div>
@@ -375,40 +376,40 @@ function PomodoroTimer({
   const displayXP   = bonusActive ? Math.round(preset.xp * 1.5) : preset.xp;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
 
-      {/* Phase tabs */}
-      <div style={{ display: "flex", gap: 6, width: "100%" }}>
+      {/* Phase tabs (Bigger & Softer) */}
+      <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: "600px" }}>
         {(["focus", "short", "long"] as PomodoroPhase[]).map(p => {
           const pr = POMODORO_PRESETS[p];
           return (
             <button key={p} onClick={() => switchPhase(p)} style={{
-              flex: 1, padding: "9px 4px", borderRadius: 10, cursor: running ? "not-allowed" : "pointer",
-              fontFamily: "'Orbitron', sans-serif", fontSize: 9, fontWeight: 700,
-              letterSpacing: "0.08em", textTransform: "uppercase",
-              background: phase === p ? `rgba(${p === "focus" ? "34,211,238" : p === "short" ? "52,211,153" : "168,85,247"},0.1)` : "rgba(255,255,255,0.03)",
-              border: phase === p ? `1px solid ${pr.color}66` : "1px solid rgba(255,255,255,0.06)",
-              color: phase === p ? pr.color : "rgba(255,255,255,0.3)",
+              flex: 1, padding: "16px 8px", borderRadius: 16, cursor: running ? "not-allowed" : "pointer",
+              fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 800,
+              letterSpacing: "0.1em", textTransform: "uppercase",
+              background: phase === p ? `rgba(${p === "focus" ? "34,211,238" : p === "short" ? "52,211,153" : "168,85,247"},0.15)` : "rgba(255,255,255,0.03)",
+              border: phase === p ? `2px solid ${pr.color}66` : "1px solid rgba(255,255,255,0.1)",
+              color: phase === p ? pr.color : "rgba(255,255,255,0.4)",
               transition: "all 0.2s",
               opacity: running && phase !== p ? 0.4 : 1,
             }}>
               {pr.label}<br />
-              <span style={{ fontSize: 8, opacity: 0.7 }}>{pr.mins}M</span>
+              <span style={{ fontSize: 10, opacity: 0.7, marginTop: 4, display: "inline-block" }}>{pr.mins}M</span>
             </button>
           );
         })}
       </div>
 
-      {/* Subject */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+      {/* Subject (Bigger & Softer) */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", maxWidth: "500px" }}>
         {SUBJECTS.slice(0, 4).map(s => (
           <button key={s} onClick={() => { if (!running) setSubject(s); }}
             style={{
-              padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 700,
-              cursor: running ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif",
-              background: subject === s ? `${preset.color}15` : "rgba(255,255,255,0.03)",
-              border: subject === s ? `1px solid ${preset.color}44` : "1px solid rgba(255,255,255,0.07)",
-              color: subject === s ? preset.color : "rgba(255,255,255,0.35)",
+              padding: "8px 18px", borderRadius: 24, fontSize: 13, fontWeight: 800, textTransform: "uppercase",
+              cursor: running ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: "0.08em",
+              background: subject === s ? `${preset.color}20` : "rgba(255,255,255,0.03)",
+              border: subject === s ? `2px solid ${preset.color}66` : "1px solid rgba(255,255,255,0.1)",
+              color: subject === s ? preset.color : "rgba(255,255,255,0.5)",
               transition: "all 0.2s",
             }}>
             {s}
@@ -416,32 +417,32 @@ function PomodoroTimer({
         ))}
       </div>
 
-      {/* Ring */}
-      <TimerRing progress={progress} color={preset.color} size={220} stroke={7}>
+      {/* Ring (Bigger) */}
+      <TimerRing progress={progress} color={preset.color} size={280} stroke={10}>
         <div style={{ textAlign: "center" }}>
           {/* Cycle dots */}
-          <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 12 }}>
             {[1, 2, 3, 4].map(i => (
               <div key={i} style={{
-                width: 5, height: 5, borderRadius: "50%",
-                background: i < cycle % 4 + 1 ? preset.color : "rgba(255,255,255,0.1)",
-                boxShadow: i < cycle % 4 + 1 ? `0 0 6px ${preset.color}` : "none",
+                width: 8, height: 8, borderRadius: "50%",
+                background: i < cycle % 4 + 1 ? preset.color : "rgba(255,255,255,0.15)",
+                boxShadow: i < cycle % 4 + 1 ? `0 0 10px ${preset.color}` : "none",
               }} />
             ))}
           </div>
           <p style={{
-            fontFamily: "'Orbitron', sans-serif", fontSize: 34, fontWeight: 900,
-            color: running ? preset.color : "rgba(255,255,255,0.8)",
-            letterSpacing: -1, lineHeight: 1,
-            textShadow: running ? `0 0 20px ${preset.color}66` : "none",
+            fontFamily: "'Orbitron', sans-serif", fontSize: 48, fontWeight: 900,
+            color: running ? preset.color : "rgba(255,255,255,0.9)",
+            letterSpacing: -2, lineHeight: 1,
+            textShadow: running ? `0 0 30px ${preset.color}66` : "none",
             transition: "all 0.4s",
           }}>
             {formatTime(remaining)}
           </p>
-          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", marginTop: 6, color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>
+          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", marginTop: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
             {running ? preset.desc : preset.label}
           </p>
-          <p style={{ fontSize: 10, color: bonusActive ? "#f59e0b" : preset.color, fontWeight: 800, marginTop: 5, fontFamily: "'Orbitron', sans-serif" }}>
+          <p style={{ fontSize: 13, color: bonusActive ? "#f59e0b" : preset.color, fontWeight: 800, marginTop: 6, fontFamily: "'Orbitron', sans-serif", textShadow: `0 0 10px ${bonusActive ? "#f59e0b" : preset.color}` }}>
             +{displayXP} XP {bonusActive && "🔥x1.5"}
           </p>
         </div>
@@ -450,42 +451,42 @@ function PomodoroTimer({
       {/* Streak & bonus */}
       {streak > 0 && (
         <div style={{
-          display: "flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 20,
-          background: bonusActive ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.04)",
-          border: bonusActive ? "1px solid rgba(245,158,11,0.3)" : "1px solid rgba(255,255,255,0.08)",
+          display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", borderRadius: 24,
+          background: bonusActive ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)",
+          border: bonusActive ? "2px solid rgba(245,158,11,0.4)" : "1px solid rgba(255,255,255,0.1)",
         }}>
-          <Flame size={13} color={bonusActive ? "#f59e0b" : "rgba(255,255,255,0.3)"} />
-          <span style={{ fontSize: 10, fontWeight: 800, fontFamily: "'Orbitron', sans-serif", color: bonusActive ? "#f59e0b" : "rgba(255,255,255,0.4)", letterSpacing: "0.08em" }}>
+          <Flame size={16} color={bonusActive ? "#f59e0b" : "rgba(255,255,255,0.4)"} />
+          <span style={{ fontSize: 12, fontWeight: 800, fontFamily: "'Orbitron', sans-serif", color: bonusActive ? "#f59e0b" : "rgba(255,255,255,0.5)", letterSpacing: "0.1em" }}>
             {streak} STREAK {bonusActive ? "— BONUS ACTIVE" : ""}
           </span>
         </div>
       )}
 
-      {/* Controls */}
-      <div style={{ display: "flex", gap: 10 }}>
+      {/* Controls (Bigger) */}
+      <div style={{ display: "flex", gap: 14 }}>
         <button onClick={toggleTimer} style={{
-          padding: "12px 36px", borderRadius: 12,
-          fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 900,
-          letterSpacing: "0.1em", cursor: "pointer",
-          background: running ? "rgba(239,68,68,0.1)" : `${preset.color}15`,
-          border: running ? "1px solid rgba(239,68,68,0.4)" : `1px solid ${preset.color}44`,
+          padding: "16px 44px", borderRadius: 16,
+          fontFamily: "'Orbitron', sans-serif", fontSize: 15, fontWeight: 900,
+          letterSpacing: "0.15em", cursor: "pointer",
+          background: running ? "rgba(239,68,68,0.15)" : `${preset.color}20`,
+          border: running ? "2px solid rgba(239,68,68,0.5)" : `2px solid ${preset.color}66`,
           color: running ? "#ef4444" : preset.color,
           transition: "all 0.2s",
         }}>
           {running ? "PAUSE" : remaining === totalSecs ? "ENTER DUNGEON" : "RESUME"}
         </button>
         <button onClick={resetTimer} style={{
-          padding: "12px 14px", borderRadius: 12, cursor: "pointer",
-          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-          color: "rgba(255,255,255,0.4)", transition: "all 0.2s",
+          padding: "16px 20px", borderRadius: 16, cursor: "pointer",
+          background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)",
+          color: "rgba(255,255,255,0.6)", transition: "all 0.2s",
         }}>
-          <RotateCcw size={16} />
+          <RotateCcw size={20} />
         </button>
       </div>
 
       {/* Pomodoro tip */}
-      <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "center", lineHeight: 1.5, maxWidth: 260 }}>
-        {phase === "focus" ? `Cycle ${cycle} · Focus for ${preset.mins}min → short break` : `Rest up · Next: Focus session`}
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", lineHeight: 1.6, maxWidth: 300, fontStyle: "italic", fontWeight: 600 }}>
+        {phase === "focus" ? `Cycle ${cycle} · Focus for ${preset.mins}min → short break` : `Rest up Hunter · Next: Focus session`}
       </p>
     </div>
   );
@@ -501,72 +502,73 @@ function StudyLeaderboard({ todayMinutes }: { todayMinutes: number }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Trophy size={14} color="#f59e0b" />
-          <h3 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Trophy size={18} color="#f59e0b" />
+          <h3 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.8)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
             Today's Study Board
           </h3>
         </div>
-        <span style={{ fontSize: 9, color: "#22d3ee", fontWeight: 800, border: "1px solid rgba(34,211,238,0.3)", padding: "2px 8px", borderRadius: 20 }}>LIVE</span>
+        <span style={{ fontSize: 10, color: "#22d3ee", fontWeight: 900, border: "1px solid rgba(34,211,238,0.4)", padding: "4px 12px", borderRadius: 20, background: "rgba(34,211,238,0.1)" }}>LIVE</span>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {data.map((p, i) => (
           <div key={p.name} style={{
-            display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
-            borderRadius: 12, cursor: "pointer", transition: "all 0.2s",
-            background: p.isCurrentUser ? "rgba(34,211,238,0.06)" : i === 0 ? "rgba(245,158,11,0.04)" : "transparent",
-            border: p.isCurrentUser ? "1px solid rgba(34,211,238,0.2)" : i === 0 ? "1px solid rgba(245,158,11,0.15)" : "1px solid transparent",
+            display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
+            borderRadius: 16, cursor: "pointer", transition: "all 0.2s",
+            background: p.isCurrentUser ? "rgba(34,211,238,0.08)" : i === 0 ? "rgba(245,158,11,0.06)" : "transparent",
+            border: p.isCurrentUser ? "1px solid rgba(34,211,238,0.3)" : i === 0 ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent",
           }}>
-            {/* Rank number */}
+            {/* Rank number (Bigger) */}
             <span style={{
-              fontFamily: "'Orbitron', sans-serif", fontSize: 11, fontWeight: 900, minWidth: 22, textAlign: "center", fontStyle: "italic",
-              color: i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#b45309" : "rgba(255,255,255,0.3)",
+              fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, minWidth: 26, textAlign: "center", fontStyle: "italic",
+              color: i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#b45309" : "rgba(255,255,255,0.4)",
             }}>
               {String(p.rank).padStart(2, "0")}
             </span>
 
-            {/* Avatar */}
+            {/* Avatar (Bigger) */}
             <div style={{ position: "relative", flexShrink: 0 }}>
-              <img src={p.avatar} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }} alt={p.name} />
-              <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 9 }}>{p.rankIcon}</span>
+              <img src={p.avatar} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }} alt={p.name} />
+              <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 12 }}>{p.rankIcon}</span>
             </div>
 
             {/* Name + bar */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{
-                fontSize: 11, fontWeight: 800, letterSpacing: "0.04em",
-                color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.8)",
+                fontSize: 14, fontWeight: 800, letterSpacing: "0.05em",
+                color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)",
                 textTransform: "uppercase", fontStyle: "italic",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 2
               }}>
                 {p.name} {p.isCurrentUser && "(YOU)"}
               </p>
-              {/* Study bar */}
-              <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
+              {/* Study bar (Thicker & Softer) */}
+              <div style={{ height: 8, background: "rgba(0,0,0,0.4)", borderRadius: 4, marginTop: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{
-                  height: "100%", borderRadius: 2,
+                  height: "100%", borderRadius: 4,
                   width: `${Math.min(100, (p.todayMinutes / 200) * 100)}%`,
                   background: p.isCurrentUser ? "#22d3ee" : p.rankColor,
                   transition: "width 0.8s ease",
+                  boxShadow: `0 0 10px ${p.rankColor}aa`
                 }} />
               </div>
             </div>
 
             {/* Stats */}
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <p style={{ fontSize: 11, fontWeight: 900, color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.7)" }}>
+            <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 10 }}>
+              <p style={{ fontSize: 14, fontWeight: 900, color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)" }}>
                 {formatMinutes(p.todayMinutes)}
               </p>
-              <p style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", marginTop: 1 }}>TODAY</p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}>TODAY</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.1)" }}>
-        <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center" }}>
+      <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 12, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)" }}>
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", fontWeight: 600, fontStyle: "italic" }}>
           Study more to climb the leaderboard today!
         </p>
       </div>
@@ -585,15 +587,15 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-        <BarChart2 size={14} color="#22d3ee" />
-        <h3 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.6)", letterSpacing: "0.15em" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+        <BarChart2 size={18} color="#22d3ee" />
+        <h3 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.8)", letterSpacing: "0.15em" }}>
           TODAY'S STATS
         </h3>
       </div>
 
-      {/* Stat grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+      {/* Stat grid (Bigger) */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
         {[
           { label: "Study Time",    value: formatMinutes(todayMins), color: "#22d3ee", icon: Clock       },
           { label: "Focus XP",      value: `+${totalXP}`,           color: "#f59e0b", icon: Zap          },
@@ -601,32 +603,32 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
           { label: "Avg Session",   value: `${avgMins}m`,           color: "#34d399", icon: TrendingUp   },
         ].map(s => (
           <div key={s.label} style={{
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: 12, padding: "12px 14px", textAlign: "center",
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 16, padding: "16px 20px", textAlign: "center",
           }}>
-            <s.icon size={16} color={s.color} style={{ margin: "0 auto 6px" }} />
-            <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 16, fontWeight: 900, color: s.color }}>{s.value}</p>
-            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 3, textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</p>
+            <s.icon size={20} color={s.color} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
+            <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>{s.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Session log */}
+      {/* Session log (Bigger) */}
       {sessions.length > 0 && (
         <div>
-          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", color: "rgba(255,255,255,0.25)", textTransform: "uppercase", marginBottom: 8 }}>SESSION LOG</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 180, overflowY: "auto" }}>
+          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid rgba(255,255,255,0.1)" }}>SESSION LOG</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 220, overflowY: "auto" }}>
             {[...sessions].reverse().map(s => (
               <div key={s.id} style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "7px 12px", borderRadius: 8,
-                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)",
+                padding: "12px 16px", borderRadius: 12,
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
               }}>
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{s.type} · {s.subject}</p>
-                  <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 1 }}>{s.duration}min</p>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.type} <span style={{ opacity: 0.5, margin: "0 4px" }}>·</span> {s.subject}</p>
+                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>{s.duration} minutes</p>
                 </div>
-                <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 10, fontWeight: 900, color: "#f59e0b" }}>+{s.xp} XP</span>
+                <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 13, fontWeight: 900, color: "#f59e0b" }}>+{s.xp} XP</span>
               </div>
             ))}
           </div>
@@ -634,9 +636,9 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
       )}
 
       {sessions.length === 0 && (
-        <div style={{ textAlign: "center", padding: "20px 0" }}>
-          <BookOpen size={32} color="rgba(255,255,255,0.1)" style={{ margin: "0 auto 8px" }} />
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>Start a session to track stats</p>
+        <div style={{ textAlign: "center", padding: "30px 0", background: "rgba(255,255,255,0.02)", borderRadius: 16, border: "1px dashed rgba(255,255,255,0.1)" }}>
+          <BookOpen size={36} color="rgba(255,255,255,0.2)" style={{ margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>No sessions cleared today</p>
         </div>
       )}
     </div>
@@ -647,6 +649,7 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
 // MAIN COMPONENT
 // ─────────────────────────────────────────────
 export default function ShadowTimer() {
+  const router = useRouter();
   const [mode, setMode]             = useState<TimerMode>("pomodoro");
   const [sessions, setSessions]     = useState<Session[]>([]);
   const [xpNotif, setXpNotif]       = useState<number | null>(null);
@@ -679,9 +682,9 @@ export default function ShadowTimer() {
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
         @keyframes glowPulse { 0%,100%{box-shadow:0 0 12px rgba(34,211,238,0.3)} 50%{box-shadow:0 0 24px rgba(34,211,238,0.6)} }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.2); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.3); border-radius: 4px; }
       `}</style>
 
       {xpNotif !== null && (
@@ -691,33 +694,50 @@ export default function ShadowTimer() {
       <div style={{
         background: "#02010a", minHeight: "100vh",
         fontFamily: "'Outfit', sans-serif", color: "white",
-        padding: "28px 20px",
+        padding: "32px 24px",
         backgroundImage: "radial-gradient(ellipse 60% 40% at 20% 0%, rgba(14,165,233,0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 80% 100%, rgba(124,58,237,0.05) 0%, transparent 60%)",
       }}>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ padding: 8, background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.3)", borderRadius: 10, display: "flex", alignItems: "center" }}>
-              <Timer size={18} color="#22d3ee" />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            
+            {/* 🆕 BACK BUTTON ADDED HERE (Bigger) */}
+            <button
+              onClick={() => router.push('/')}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 12, padding: "10px 16px", cursor: "pointer",
+                color: "rgba(255,255,255,0.7)", transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+            >
+              <ArrowLeft size={18} color="#22d3ee" />
+              <span style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>Back</span>
+            </button>
+
+            <div style={{ padding: 10, background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.3)", borderRadius: 12, display: "flex", alignItems: "center" }}>
+              <Timer size={20} color="#22d3ee" />
             </div>
             <div>
-              <h1 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.1em" }}>
+              <h1 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 22, fontWeight: 900, letterSpacing: "0.15em" }}>
                 SHADOW <span style={{ color: "#22d3ee" }}>FOCUS</span>
               </h1>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", marginTop: 2 }}>STUDY TIMER SYSTEM</p>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em", marginTop: 4, fontWeight: 800 }}>STUDY TIMER SYSTEM</p>
             </div>
           </div>
 
           {/* Live stats pills */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 20, padding: "5px 12px" }}>
-              <Clock size={12} color="#f59e0b" />
-              <span style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", fontFamily: "'Orbitron', sans-serif" }}>{formatMinutes(todayMins)}</span>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 24, padding: "8px 16px" }}>
+              <Clock size={14} color="#f59e0b" />
+              <span style={{ fontSize: 13, fontWeight: 900, color: "#f59e0b", fontFamily: "'Orbitron', sans-serif" }}>{formatMinutes(todayMins)}</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 20, padding: "5px 12px" }}>
-              <Zap size={12} color="#22d3ee" />
-              <span style={{ fontSize: 11, fontWeight: 800, color: "#22d3ee", fontFamily: "'Orbitron', sans-serif" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 24, padding: "8px 16px" }}>
+              <Zap size={14} color="#22d3ee" />
+              <span style={{ fontSize: 13, fontWeight: 900, color: "#22d3ee", fontFamily: "'Orbitron', sans-serif" }}>
                 +{sessions.reduce((a, s) => a + s.xp, 0)} XP
               </span>
             </div>
@@ -727,24 +747,24 @@ export default function ShadowTimer() {
         {/* Motivational banner */}
         <div style={{
           background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
-          borderLeft: "3px solid #22d3ee", borderRadius: 10, padding: "10px 16px",
-          marginBottom: 24,
+          borderLeft: "4px solid #22d3ee", borderRadius: 12, padding: "14px 20px",
+          marginBottom: 32,
         }}>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontStyle: "italic", letterSpacing: "0.04em" }}>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontStyle: "italic", letterSpacing: "0.06em", fontWeight: 600 }}>
             ⚔️ {motiveLine}
           </p>
         </div>
 
         {/* Mode Switcher */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 24, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: 5 }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 32, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 6, maxWidth: 500 }}>
           {(["pomodoro", "free"] as TimerMode[]).map(m => (
             <button key={m} onClick={() => setMode(m)} style={{
-              flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer",
-              fontFamily: "'Orbitron', sans-serif", fontSize: 10, fontWeight: 900,
-              letterSpacing: "0.1em", textTransform: "uppercase",
+              flex: 1, padding: "14px", borderRadius: 12, cursor: "pointer",
+              fontFamily: "'Orbitron', sans-serif", fontSize: 13, fontWeight: 900,
+              letterSpacing: "0.15em", textTransform: "uppercase",
               background: mode === m ? "rgba(34,211,238,0.12)" : "transparent",
               border: mode === m ? "1px solid rgba(34,211,238,0.35)" : "1px solid transparent",
-              color: mode === m ? "#22d3ee" : "rgba(255,255,255,0.3)",
+              color: mode === m ? "#22d3ee" : "rgba(255,255,255,0.4)",
               transition: "all 0.25s",
             }}>
               {m === "pomodoro" ? "⏱ Pomodoro" : "∞ Free Timer"}
@@ -753,13 +773,13 @@ export default function ShadowTimer() {
         </div>
 
         {/* Main layout: Timer | Leaderboard + Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24, maxWidth: 1400, margin: "0 auto" }}>
 
           {/* Timer Card */}
           <div style={{
             background: "rgba(255,255,255,0.025)", backdropFilter: "blur(16px)",
-            border: "1px solid rgba(255,255,255,0.07)", borderTop: "3px solid #22d3ee",
-            borderRadius: 20, padding: "28px 24px",
+            border: "1px solid rgba(255,255,255,0.07)", borderTop: "4px solid #22d3ee",
+            borderRadius: 24, padding: "40px 30px",
           }}>
             {mode === "pomodoro" ? (
               <PomodoroTimer onSessionComplete={handleSessionComplete} />
@@ -769,13 +789,13 @@ export default function ShadowTimer() {
           </div>
 
           {/* Right column: Leaderboard + Stats */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
             {/* Leaderboard */}
             <div style={{
               background: "rgba(255,255,255,0.025)", backdropFilter: "blur(16px)",
-              border: "1px solid rgba(255,255,255,0.07)", borderLeft: "3px solid rgba(34,211,238,0.5)",
-              borderRadius: 20, padding: "20px",
+              border: "1px solid rgba(255,255,255,0.07)", borderLeft: "4px solid rgba(34,211,238,0.6)",
+              borderRadius: 24, padding: "28px",
             }}>
               <StudyLeaderboard todayMinutes={todayMins} />
             </div>
@@ -783,8 +803,8 @@ export default function ShadowTimer() {
             {/* Stats */}
             <div style={{
               background: "rgba(255,255,255,0.025)", backdropFilter: "blur(16px)",
-              border: "1px solid rgba(255,255,255,0.07)", borderLeft: "3px solid rgba(168,85,247,0.5)",
-              borderRadius: 20, padding: "20px",
+              border: "1px solid rgba(255,255,255,0.07)", borderLeft: "4px solid rgba(168,85,247,0.6)",
+              borderRadius: 24, padding: "28px",
             }}>
               <StatsPanel sessions={sessions} />
             </div>
@@ -793,8 +813,8 @@ export default function ShadowTimer() {
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 28, textAlign: "center", opacity: 0.2 }}>
-          <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 9, letterSpacing: "1.2em", color: "#22d3ee", textTransform: "uppercase" }}>
+        <div style={{ marginTop: 40, textAlign: "center", opacity: 0.2 }}>
+          <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: "1.5em", color: "#22d3ee", textTransform: "uppercase", fontWeight: 900 }}>
             RankPush · Shadow Focus · 2026
           </p>
         </div>

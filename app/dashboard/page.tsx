@@ -12,8 +12,10 @@ import {
   Sword, LogOut, X, CheckCircle, Lock,
   TrendingUp, Calendar, Award, Sparkles,
   ChevronUp, BarChart2, Clock, Crosshair,
-  GitBranch, Layers, Medal, Wifi, Timer
+  GitBranch, Layers, Medal, Wifi, Timer,
+  ChevronDown, User
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ============================================================
 // TYPES
@@ -176,6 +178,7 @@ export default function RankPushDashboard() {
   const [showProModal, setShowProModal]   = useState(false);
   const [showRivalModal, setShowRivalModal] = useState(false);
   const [showNotif, setShowNotif]         = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 🆕 For Mobile Logo Menu
   const [animXP, setAnimXP]              = useState(0);
   const router = useRouter();
 
@@ -208,13 +211,20 @@ export default function RankPushDashboard() {
     router.push("/");
   };
 
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const closeMenu = () => setIsMobileMenuOpen(false);
+    if (isMobileMenuOpen) {
+      window.addEventListener('click', closeMenu);
+    }
+    return () => window.removeEventListener('click', closeMenu);
+  }, [isMobileMenuOpen]);
+
   return (
     <>
-      {/* ── GOOGLE FONTS + TAILWIND ── */}
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet" />
       <script src="https://cdn.tailwindcss.com" async />
 
-      {/* ── GLOBAL STYLES ── */}
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
@@ -416,16 +426,60 @@ export default function RankPushDashboard() {
         <header className="flex justify-between items-center mb-8 md:mb-10">
           {/* Logo + Nav */}
           <div className="flex items-center gap-6 md:gap-10">
-            <div className="flex items-center gap-3 cursor-pointer">
-              <div className="p-2 md:p-2.5 bg-sky-500 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.5)] border border-white/20">
-                <Swords size={18} color="white" />
+            
+            {/* 🆕 INTERACTIVE LOGO WITH MOBILE DROPDOWN */}
+            <div className="relative">
+              <div 
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={(e) => { e.stopPropagation(); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+              >
+                <div className="p-2 md:p-2.5 bg-sky-500 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.5)] border border-white/20 group-hover:scale-105 transition-transform">
+                  <Swords size={18} color="white" />
+                </div>
+                <span className="font-logo text-lg md:text-[22px] tracking-tight">RANKPUSH</span>
+                
+                {/* Dropdown Indicator (Visible mostly on mobile/tablet to show it's clickable) */}
+                <ChevronDown size={16} className={`text-white/50 transition-transform duration-300 xl:hidden ${isMobileMenuOpen ? "rotate-180" : ""}`} />
               </div>
-              <span className="font-logo text-lg md:text-[22px] tracking-tight">RANKPUSH</span>
+
+              {/* MOBILE DROPDOWN MENU */}
+              <AnimatePresence>
+                {isMobileMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 mt-4 w-64 bg-[#0a0f1e]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-50 flex flex-col gap-1 xl:hidden"
+                    onClick={(e) => e.stopPropagation()} // Prevent clicking inside from closing it
+                  >
+                    <button onClick={() => { router.push('/'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-cyan-400/10 text-cyan-400 font-black text-xs tracking-widest uppercase transition-colors">
+                      <LayoutDashboard size={16} /> Dashboard
+                    </button>
+                    <button onClick={() => { router.push('/profile'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-xs tracking-widest uppercase transition-colors">
+                      <User size={16} /> Profile & Settings
+                    </button>
+                    <button onClick={() => { router.push(`/arena/${selectedSub.toLowerCase()}`); setIsMobileMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-xs tracking-widest uppercase transition-colors">
+                      <Swords size={16} /> Battle Arena
+                    </button>
+                    <button onClick={() => { router.push('/timer'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-xs tracking-widest uppercase transition-colors">
+                      <Timer size={16} /> Shadow Focus
+                    </button>
+                    <button className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-xs tracking-widest uppercase transition-colors">
+                      <Trophy size={16} /> Leaderboards
+                    </button>
+                    <button className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-xs tracking-widest uppercase transition-colors">
+                      <BarChart2 size={16} /> Analytics
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+
+            {/* Desktop Nav */}
             <nav className="hidden xl:flex gap-7">
               <a href="#" className="nav-link active">Dashboard</a>
               <a href="#" className="nav-link" onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)}>Battle Arena</a>
-              {/* 🆕 NEW TIMER LINK */}
               <a href="#" className="nav-link flex items-center gap-1.5" onClick={() => router.push('/timer')}>
                 <Timer size={12} className="text-cyan-400" /> Shadow Focus
               </a>
@@ -510,11 +564,13 @@ export default function RankPushDashboard() {
 
             {/* Player Card */}
             <div className="card p-6 md:p-7 text-center relative overflow-hidden" style={{ borderTop: `3px solid ${rank.color}` }}>
-              {/* Rank glow BG */}
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none opacity-10 blur-3xl" style={{ background: rank.color }} />
 
-              {/* Avatar */}
-              <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-5 rounded-full p-1" style={{ border: `2px solid ${rank.color}`, boxShadow: `0 0 20px ${rank.glowColor}` }}>
+              <div 
+                className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-5 rounded-full p-1 cursor-pointer transition-transform hover:scale-105" 
+                style={{ border: `2px solid ${rank.color}`, boxShadow: `0 0 20px ${rank.glowColor}` }}
+                onClick={() => router.push('/profile')}
+              >
                 <img
                   src={user?.photoURL || "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg"}
                   className="w-full h-full rounded-full object-cover"
@@ -525,24 +581,20 @@ export default function RankPushDashboard() {
                 </div>
               </div>
 
-              {/* Name */}
               <h2 className="font-logo text-base md:text-lg tracking-wide mb-2 text-white">
                 {user?.displayName || "Cyber Hunter"}
               </h2>
 
-              {/* Rank Badge */}
               <div className="inline-flex items-center gap-1.5 mb-4">
                 <span className="text-xs md:text-sm">{rank.icon}</span>
                 <span className="shimmer-text text-[10px] md:text-[11px] font-black tracking-widest uppercase">{rank.name} Rank</span>
               </div>
 
-              {/* XP Counter */}
               <div className="bg-white/5 border border-white/10 rounded-full px-4 py-2 md:px-5 md:py-2 inline-block mb-5">
                 <span className="font-black text-sm md:text-base text-white">{animXP.toLocaleString()}</span>
                 <span className="text-cyan-400 font-black ml-1 text-[10px] md:text-xs">EXP</span>
               </div>
 
-              {/* XP Progress */}
               <div className="mb-2">
                 <div className="flex justify-between mb-1.5">
                   <span className="text-[9px] md:text-[10px] font-extrabold opacity-50 uppercase tracking-widest">
@@ -581,7 +633,7 @@ export default function RankPushDashboard() {
               </div>
             </div>
 
-            {/* 🔥 Daily Streak */}
+            {/* Daily Streak */}
             <div className="card p-5 md:p-6 border-l-[3px] border-amber-500 bg-amber-500/5">
               <div className="flex items-center gap-2 mb-4">
                 <Flame size={16} color="#f59e0b" />
@@ -617,6 +669,18 @@ export default function RankPushDashboard() {
                 ))}
               </div>
             </div>
+
+            {/* Daily Directive */}
+            <div className="card p-5 md:p-6 border-l-[3px] border-emerald-400 bg-emerald-400/5 hidden lg:block">
+              <div className="flex items-center gap-2 mb-3 opacity-70">
+                <Quote size={14} color="#34d399" />
+                <h3 className="text-[9px] md:text-[10px] font-black tracking-widest uppercase">Daily Directive</h3>
+              </div>
+              <p className="text-xs md:text-[13px] italic font-semibold leading-relaxed text-white/80 mb-2">
+                "Seek knowledge from the cradle to the grave."
+              </p>
+              <p className="text-[8px] md:text-[9px] font-black text-emerald-400 tracking-widest uppercase">— PROPHET MUHAMMAD (PBUH)</p>
+            </div>
             
           </div>
 
@@ -639,7 +703,7 @@ export default function RankPushDashboard() {
                   <span className="text-cyan-400 shadow-cyan-400/40" style={{ textShadow: "0 0 30px rgba(34,211,238,0.4)" }}>THE META</span>
                 </h1>
                 
-                {/* Hero Stats Grid - responsive */}
+                {/* Hero Stats Grid */}
                 <div className="grid grid-cols-2 md:flex flex-wrap gap-3 md:gap-5 mt-4 md:mt-0">
                   {[
                     { label: "Total Battles", value: stats.totalBattles, icon: Swords,     color: "#22d3ee" },
@@ -658,7 +722,7 @@ export default function RankPushDashboard() {
               </div>
             </div>
 
-            {/* 🆕 SHADOW FOCUS TIMER CARD (ADDED HERE) */}
+            {/* SHADOW FOCUS TIMER CARD */}
             <div className="card p-6 md:p-8 border-l-[4px] border-l-purple-500 bg-gradient-to-r from-purple-500/10 to-transparent flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-[0_0_30px_rgba(168,85,247,0.1)]">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30">
@@ -693,7 +757,7 @@ export default function RankPushDashboard() {
                 </div>
               </div>
 
-              {/* Subject Grid - Responsive */}
+              {/* Subject Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 md:mb-6">
                 {SUBJECTS.map(sub => {
                   const isActive = selectedSub === sub.name;
@@ -733,7 +797,7 @@ export default function RankPushDashboard() {
               </button>
             </div>
 
-            {/* 🆕 PERFORMANCE ANALYTICS */}
+            {/* PERFORMANCE ANALYTICS */}
             <div className="card p-5 md:p-7">
               <div className="flex items-center gap-2 mb-4 md:mb-5">
                 <BarChart2 size={14} className="md:w-4 md:h-4" color="#22d3ee" />
