@@ -9,6 +9,7 @@ import {
   Swords, Brain, Star, Users, Coffee, BookOpen,
   Moon, Sunrise, Lock, Award, ArrowLeft
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -97,7 +98,7 @@ function TimerRing({
   const cx = size / 2;
 
   return (
-    <div style={{ position: "relative", width: size, height: size }}>
+    <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         {/* Outer deco ring */}
         <circle cx={cx} cy={cx} r={r + stroke + 6}
@@ -210,10 +211,10 @@ function FreeTimer({
   const color = running ? "#22d3ee" : elapsed > 0 ? "#f59e0b" : "#444466";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, width: "100%", margin: "0 auto" }}>
 
       {/* Subject Selector (Bigger & Softer) */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", maxWidth: "600px" }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", maxWidth: "600px", margin: "0 auto" }}>
         {SUBJECTS.map(s => (
           <button key={s} onClick={() => { if (!running) setSubject(s); }}
             style={{
@@ -255,7 +256,7 @@ function FreeTimer({
       </TimerRing>
 
       {/* Controls (Bigger & Softer) */}
-      <div style={{ display: "flex", gap: 14 }}>
+      <div style={{ display: "flex", gap: 14, justifyContent: "center" }}>
         <button onClick={handleStartStop} style={{
           padding: "16px 40px", borderRadius: 16,
           fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900,
@@ -290,7 +291,7 @@ function FreeTimer({
 
       {/* Laps */}
       {laps.length > 0 && (
-        <div style={{ width: "100%", maxWidth: 400, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ width: "100%", maxWidth: 400, display: "flex", flexDirection: "column", gap: 8, margin: "0 auto" }}>
           {laps.map((l, i) => (
             <div key={i} style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -350,12 +351,15 @@ function PomodoroTimer({
     if (phase === "focus") setStreak(newStreak);
     if (newStreak >= 3 && phase === "focus") xp = Math.round(xp * 1.5);
     onSessionComplete(p.mins, xp, subject, p.label);
+    
     if (phase === "focus") {
       const nextCycle = cycle + 1;
       setCycle(nextCycle);
       setPhase(nextCycle % 4 === 0 ? "long" : "short");
+      setRemaining(POMODORO_PRESETS[nextCycle % 4 === 0 ? "long" : "short"].mins * 60);
     } else {
       setPhase("focus");
+      setRemaining(POMODORO_PRESETS.focus.mins * 60);
     }
   };
 
@@ -376,22 +380,23 @@ function PomodoroTimer({
   const displayXP   = bonusActive ? Math.round(preset.xp * 1.5) : preset.xp;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, width: "100%", margin: "0 auto" }}>
 
       {/* Phase tabs (Bigger & Softer) */}
-      <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: "600px" }}>
+      <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: "600px", margin: "0 auto" }}>
         {(["focus", "short", "long"] as PomodoroPhase[]).map(p => {
           const pr = POMODORO_PRESETS[p];
+          const isActive = phase === p;
           return (
             <button key={p} onClick={() => switchPhase(p)} style={{
               flex: 1, padding: "16px 8px", borderRadius: 16, cursor: running ? "not-allowed" : "pointer",
               fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 800,
               letterSpacing: "0.1em", textTransform: "uppercase",
-              background: phase === p ? `rgba(${p === "focus" ? "34,211,238" : p === "short" ? "52,211,153" : "168,85,247"},0.15)` : "rgba(255,255,255,0.03)",
-              border: phase === p ? `2px solid ${pr.color}66` : "1px solid rgba(255,255,255,0.1)",
-              color: phase === p ? pr.color : "rgba(255,255,255,0.4)",
+              background: isActive ? `rgba(${p === "focus" ? "34,211,238" : p === "short" ? "52,211,153" : "168,85,247"},0.15)` : "rgba(255,255,255,0.03)",
+              border: isActive ? `2px solid ${pr.color}66` : "1px solid rgba(255,255,255,0.1)",
+              color: isActive ? pr.color : "rgba(255,255,255,0.4)",
               transition: "all 0.2s",
-              opacity: running && phase !== p ? 0.4 : 1,
+              opacity: running && !isActive ? 0.4 : 1,
             }}>
               {pr.label}<br />
               <span style={{ fontSize: 10, opacity: 0.7, marginTop: 4, display: "inline-block" }}>{pr.mins}M</span>
@@ -401,7 +406,7 @@ function PomodoroTimer({
       </div>
 
       {/* Subject (Bigger & Softer) */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", maxWidth: "500px" }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", maxWidth: "500px", margin: "0 auto" }}>
         {SUBJECTS.slice(0, 4).map(s => (
           <button key={s} onClick={() => { if (!running) setSubject(s); }}
             style={{
@@ -411,6 +416,7 @@ function PomodoroTimer({
               border: subject === s ? `2px solid ${preset.color}66` : "1px solid rgba(255,255,255,0.1)",
               color: subject === s ? preset.color : "rgba(255,255,255,0.5)",
               transition: "all 0.2s",
+              opacity: running && subject !== s ? 0.3 : 1,
             }}>
             {s}
           </button>
@@ -425,8 +431,9 @@ function PomodoroTimer({
             {[1, 2, 3, 4].map(i => (
               <div key={i} style={{
                 width: 8, height: 8, borderRadius: "50%",
-                background: i < cycle % 4 + 1 ? preset.color : "rgba(255,255,255,0.15)",
-                boxShadow: i < cycle % 4 + 1 ? `0 0 10px ${preset.color}` : "none",
+                background: i <= (cycle % 4 === 0 && phase !== "focus" ? 4 : cycle % 4) ? preset.color : "rgba(255,255,255,0.15)",
+                boxShadow: i <= (cycle % 4 === 0 && phase !== "focus" ? 4 : cycle % 4) ? `0 0 10px ${preset.color}` : "none",
+                transition: "all 0.5s"
               }} />
             ))}
           </div>
@@ -454,6 +461,7 @@ function PomodoroTimer({
           display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", borderRadius: 24,
           background: bonusActive ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)",
           border: bonusActive ? "2px solid rgba(245,158,11,0.4)" : "1px solid rgba(255,255,255,0.1)",
+          margin: "0 auto"
         }}>
           <Flame size={16} color={bonusActive ? "#f59e0b" : "rgba(255,255,255,0.4)"} />
           <span style={{ fontSize: 12, fontWeight: 800, fontFamily: "'Orbitron', sans-serif", color: bonusActive ? "#f59e0b" : "rgba(255,255,255,0.5)", letterSpacing: "0.1em" }}>
@@ -463,7 +471,7 @@ function PomodoroTimer({
       )}
 
       {/* Controls (Bigger) */}
-      <div style={{ display: "flex", gap: 14 }}>
+      <div style={{ display: "flex", gap: 14, justifyContent: "center" }}>
         <button onClick={toggleTimer} style={{
           padding: "16px 44px", borderRadius: 16,
           fontFamily: "'Orbitron', sans-serif", fontSize: 15, fontWeight: 900,
@@ -485,7 +493,7 @@ function PomodoroTimer({
       </div>
 
       {/* Pomodoro tip */}
-      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", lineHeight: 1.6, maxWidth: 300, fontStyle: "italic", fontWeight: 600 }}>
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", lineHeight: 1.6, maxWidth: 300, fontStyle: "italic", fontWeight: 600, margin: "0 auto" }}>
         {phase === "focus" ? `Cycle ${cycle} · Focus for ${preset.mins}min → short break` : `Rest up Hunter · Next: Focus session`}
       </p>
     </div>
@@ -501,7 +509,7 @@ function StudyLeaderboard({ todayMinutes }: { todayMinutes: number }) {
   ).sort((a, b) => b.todayMinutes - a.todayMinutes).map((e, i) => ({ ...e, rank: i + 1 }));
 
   return (
-    <div>
+    <div style={{ width: "100%", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Trophy size={18} color="#f59e0b" />
@@ -586,7 +594,7 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
   const avgMins     = sessions.length ? Math.round(todayMins / sessions.length) : 0;
 
   return (
-    <div>
+    <div style={{ width: "100%", margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <BarChart2 size={18} color="#22d3ee" />
         <h3 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.8)", letterSpacing: "0.15em" }}>
@@ -675,12 +683,17 @@ export default function ShadowTimer() {
   };
 
   return (
-    <>
+    <div className="min-h-screen font-sans text-white pb-12 px-4 md:px-8" style={{
+      background: "#02010a",
+      backgroundImage: "radial-gradient(ellipse 60% 40% at 20% 0%, rgba(14,165,233,0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 80% 100%, rgba(124,58,237,0.05) 0%, transparent 60%)",
+      overflowX: "hidden"
+    }}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
+      
+      {/* ── GLOBAL STYLES ── */}
       <style>{`
-        @keyframes slideInRight { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
-        @keyframes glowPulse { 0%,100%{box-shadow:0 0 12px rgba(34,211,238,0.3)} 50%{box-shadow:0 0 24px rgba(34,211,238,0.6)} }
+        .font-logo { font-family: 'Orbitron', sans-serif; }
+        body { font-family: 'Outfit', sans-serif; background-color: #02010a; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -691,55 +704,48 @@ export default function ShadowTimer() {
         <XPNotif xp={xpNotif} onDone={() => setXpNotif(null)} />
       )}
 
-      <div style={{
-        background: "#02010a", minHeight: "100vh",
-        fontFamily: "'Outfit', sans-serif", color: "white",
-        padding: "32px 24px",
-        backgroundImage: "radial-gradient(ellipse 60% 40% at 20% 0%, rgba(14,165,233,0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 80% 100%, rgba(124,58,237,0.05) 0%, transparent 60%)",
-      }}>
+      <div className="max-w-[1400px] mx-auto pt-6 md:pt-10 w-full">
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {/* ═══════════════════════════════════════════════════
+            HEADER (FIXED FOR MOBILE & DESKTOP)
+        ═══════════════════════════════════════════════════ */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 w-full">
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-5 w-full md:w-auto">
             
-            {/* 🆕 BACK BUTTON ADDED HERE (Bigger) */}
+            {/* Title Block - On mobile this is Order 1, Desktop Order 2 */}
+            <div className="flex items-center gap-3 md:gap-4 order-1 md:order-2 w-full md:w-auto">
+              <div className="p-2.5 md:p-3 bg-cyan-400/10 border border-cyan-400/30 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+                <Timer size={22} className="text-cyan-400" />
+              </div>
+              <div>
+                <h1 className="font-logo text-2xl md:text-3xl font-black tracking-widest uppercase leading-none">
+                  SHADOW <span className="text-cyan-400">FOCUS</span>
+                </h1>
+                <p className="text-[10px] md:text-xs text-white/40 tracking-[0.2em] mt-1.5 font-bold uppercase">Study Timer System</p>
+              </div>
+            </div>
+
+            {/* Back Button - On mobile this is Order 2, Desktop Order 1 */}
             <button
               onClick={() => router.push('/')}
-              style={{
-                display: "flex", alignItems: "center", gap: 8,
-                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 12, padding: "10px 16px", cursor: "pointer",
-                color: "rgba(255,255,255,0.7)", transition: "all 0.2s"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+              className="order-2 md:order-1 flex items-center justify-center md:justify-start gap-2 bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-white/70 hover:bg-white/10 hover:text-white transition-all cursor-pointer w-full md:w-auto shadow-sm"
             >
-              <ArrowLeft size={18} color="#22d3ee" />
-              <span style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>Back</span>
+              <ArrowLeft size={16} className="text-cyan-400" />
+              <span className="text-[11px] md:text-xs font-black uppercase tracking-widest">Back to Dashboard</span>
             </button>
 
-            <div style={{ padding: 10, background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.3)", borderRadius: 12, display: "flex", alignItems: "center" }}>
-              <Timer size={20} color="#22d3ee" />
-            </div>
-            <div>
-              <h1 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 22, fontWeight: 900, letterSpacing: "0.15em" }}>
-                SHADOW <span style={{ color: "#22d3ee" }}>FOCUS</span>
-              </h1>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em", marginTop: 4, fontWeight: 800 }}>STUDY TIMER SYSTEM</p>
-            </div>
           </div>
 
-          {/* Live stats pills */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 24, padding: "8px 16px" }}>
-              <Clock size={14} color="#f59e0b" />
-              <span style={{ fontSize: 13, fontWeight: 900, color: "#f59e0b", fontFamily: "'Orbitron', sans-serif" }}>{formatMinutes(todayMins)}</span>
+          {/* Live stats pills - Order 3 */}
+          <div className="flex gap-3 flex-wrap order-3 w-full md:w-auto mt-2 md:mt-0 justify-start md:justify-end">
+            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-2.5 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+              <Clock size={14} className="text-amber-500" />
+              <span className="font-logo text-xs md:text-sm font-black text-amber-500">{formatMinutes(todayMins)}</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 24, padding: "8px 16px" }}>
-              <Zap size={14} color="#22d3ee" />
-              <span style={{ fontSize: 13, fontWeight: 900, color: "#22d3ee", fontFamily: "'Orbitron', sans-serif" }}>
-                +{sessions.reduce((a, s) => a + s.xp, 0)} XP
-              </span>
+            <div className="flex items-center gap-2 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-4 py-2.5 shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+              <Zap size={14} className="text-cyan-400" />
+              <span className="font-logo text-xs md:text-sm font-black text-cyan-400">+{sessions.reduce((a, s) => a + s.xp, 0)} XP</span>
             </div>
           </div>
         </div>
@@ -748,7 +754,7 @@ export default function ShadowTimer() {
         <div style={{
           background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
           borderLeft: "4px solid #22d3ee", borderRadius: 12, padding: "14px 20px",
-          marginBottom: 32,
+          marginBottom: 32, width: "100%", margin: "0 auto 32px auto"
         }}>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontStyle: "italic", letterSpacing: "0.06em", fontWeight: 600 }}>
             ⚔️ {motiveLine}
@@ -756,7 +762,7 @@ export default function ShadowTimer() {
         </div>
 
         {/* Mode Switcher */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 32, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 6, maxWidth: 500 }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 32, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 6, maxWidth: 500, margin: "0 auto 32px auto" }}>
           {(["pomodoro", "free"] as TimerMode[]).map(m => (
             <button key={m} onClick={() => setMode(m)} style={{
               flex: 1, padding: "14px", borderRadius: 12, cursor: "pointer",
@@ -773,13 +779,13 @@ export default function ShadowTimer() {
         </div>
 
         {/* Main layout: Timer | Leaderboard + Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24, maxWidth: 1400, margin: "0 auto" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
 
           {/* Timer Card */}
-          <div style={{
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col items-center justify-center w-full" style={{
             background: "rgba(255,255,255,0.025)", backdropFilter: "blur(16px)",
             border: "1px solid rgba(255,255,255,0.07)", borderTop: "4px solid #22d3ee",
-            borderRadius: 24, padding: "40px 30px",
+            borderRadius: 24, padding: "40px 30px", margin: "0 auto"
           }}>
             {mode === "pomodoro" ? (
               <PomodoroTimer onSessionComplete={handleSessionComplete} />
@@ -789,13 +795,13 @@ export default function ShadowTimer() {
           </div>
 
           {/* Right column: Leaderboard + Stats */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6 w-full">
 
             {/* Leaderboard */}
             <div style={{
               background: "rgba(255,255,255,0.025)", backdropFilter: "blur(16px)",
               border: "1px solid rgba(255,255,255,0.07)", borderLeft: "4px solid rgba(34,211,238,0.6)",
-              borderRadius: 24, padding: "28px",
+              borderRadius: 24, padding: "28px", width: "100%", margin: "0 auto"
             }}>
               <StudyLeaderboard todayMinutes={todayMins} />
             </div>
@@ -804,7 +810,7 @@ export default function ShadowTimer() {
             <div style={{
               background: "rgba(255,255,255,0.025)", backdropFilter: "blur(16px)",
               border: "1px solid rgba(255,255,255,0.07)", borderLeft: "4px solid rgba(168,85,247,0.6)",
-              borderRadius: 24, padding: "28px",
+              borderRadius: 24, padding: "28px", width: "100%", margin: "0 auto"
             }}>
               <StatsPanel sessions={sessions} />
             </div>
@@ -820,6 +826,6 @@ export default function ShadowTimer() {
         </div>
 
       </div>
-    </>
+    </div>
   );
 }
