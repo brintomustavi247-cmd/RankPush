@@ -7,7 +7,8 @@ import {
   Flame, Crown, ChevronRight, Clock, Target,
   CheckCircle, BarChart2, TrendingUp, Medal,
   Swords, Brain, Star, Users, Coffee, BookOpen,
-  Moon, Sunrise, Lock, Award, ArrowLeft
+  Moon, Sunrise, Lock, Award, ArrowLeft,
+  ChevronDown, LayoutDashboard, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -662,6 +663,7 @@ export default function ShadowTimer() {
   const [sessions, setSessions]     = useState<Session[]>([]);
   const [xpNotif, setXpNotif]       = useState<number | null>(null);
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   const sessionIdRef                = useRef(0);
 
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
@@ -681,6 +683,14 @@ export default function ShadowTimer() {
     setSessions(prev => [...prev, newSession]);
     setXpNotif(xp);
   };
+
+  useEffect(() => {
+    const closeMenu = () => setIsMobileMenuOpen(false);
+    if (isMobileMenuOpen) {
+      window.addEventListener('click', closeMenu);
+    }
+    return () => window.removeEventListener('click', closeMenu);
+  }, [isMobileMenuOpen]);
 
   return (
     <div className="min-h-screen font-sans text-white pb-12 px-4 md:px-8" style={{
@@ -709,12 +719,59 @@ export default function ShadowTimer() {
         {/* ═══════════════════════════════════════════════════
             HEADER (FIXED FOR MOBILE & DESKTOP)
         ═══════════════════════════════════════════════════ */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 w-full relative z-50">
           
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-5 w-full md:w-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-5 md:gap-8 w-full md:w-auto">
             
-            {/* Title Block - On mobile this is Order 1, Desktop Order 2 */}
-            <div className="flex items-center gap-3 md:gap-4 order-1 md:order-2 w-full md:w-auto">
+            {/* 🆕 INTERACTIVE LOGO WITH DROPDOWN (Replacing Back Button) */}
+            <div className="relative order-1">
+              <div 
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={(e) => { e.stopPropagation(); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+              >
+                <div className="p-2 md:p-2.5 bg-sky-500 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.5)] border border-white/20 group-hover:scale-105 transition-transform">
+                  <Swords size={18} color="white" />
+                </div>
+                <span className="font-logo text-lg md:text-[22px] tracking-tight">RANKPUSH</span>
+                <ChevronDown size={16} className={`text-white/50 transition-transform duration-300 ${isMobileMenuOpen ? "rotate-180" : ""}`} />
+              </div>
+
+              {/* DROPDOWN MENU */}
+              <AnimatePresence>
+                {isMobileMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 mt-4 w-64 bg-[#0a0f1e]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-[100] flex flex-col gap-1.5"
+                    onClick={(e) => e.stopPropagation()} 
+                  >
+                    <button onClick={() => { router.push('/dashboard'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3.5 px-4 py-4 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-[13px] tracking-widest uppercase transition-colors">
+                      <LayoutDashboard size={18} /> Dashboard
+                    </button>
+                    <button onClick={() => { router.push('/profile'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3.5 px-4 py-4 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-[13px] tracking-widest uppercase transition-colors">
+                      <User size={18} /> Profile
+                    </button>
+                    <button onClick={() => { router.push('/arena/physics'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3.5 px-4 py-4 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-[13px] tracking-widest uppercase transition-colors">
+                      <Swords size={18} /> Battle Arena
+                    </button>
+                    <button onClick={() => { setIsMobileMenuOpen(false); }} className="flex items-center gap-3.5 px-4 py-4 rounded-xl bg-cyan-400/10 text-cyan-400 font-black text-[13px] tracking-widest uppercase transition-colors">
+                      <Timer size={18} /> Shadow Focus
+                    </button>
+                    <button className="flex items-center gap-3.5 px-4 py-4 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-[13px] tracking-widest uppercase transition-colors">
+                      <Trophy size={18} /> Leaderboards
+                    </button>
+                    <button className="flex items-center gap-3.5 px-4 py-4 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-[13px] tracking-widest uppercase transition-colors">
+                      <BarChart2 size={18} /> Analytics
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Title Block */}
+            <div className="flex items-center gap-3 md:gap-4 order-2 w-full md:w-auto mt-2 md:mt-0 pt-4 md:pt-0 border-t border-white/10 md:border-none md:pl-6 md:border-l">
               <div className="p-2.5 md:p-3 bg-cyan-400/10 border border-cyan-400/30 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.15)]">
                 <Timer size={22} className="text-cyan-400" />
               </div>
@@ -725,15 +782,6 @@ export default function ShadowTimer() {
                 <p className="text-[10px] md:text-xs text-white/40 tracking-[0.2em] mt-1.5 font-bold uppercase">Study Timer System</p>
               </div>
             </div>
-
-            {/* Back Button - On mobile this is Order 2, Desktop Order 1 */}
-            <button
-              onClick={() => router.push('/')}
-              className="order-2 md:order-1 flex items-center justify-center md:justify-start gap-2 bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-white/70 hover:bg-white/10 hover:text-white transition-all cursor-pointer w-full md:w-auto shadow-sm"
-            >
-              <ArrowLeft size={16} className="text-cyan-400" />
-              <span className="text-[11px] md:text-xs font-black uppercase tracking-widest">Back to Dashboard</span>
-            </button>
 
           </div>
 
