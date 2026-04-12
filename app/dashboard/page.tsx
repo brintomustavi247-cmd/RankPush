@@ -1,8 +1,9 @@
 "use client";
-
+import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase"; // db ইমপোর্ট করতে ভুলবেন না
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
+
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   Zap, Trophy, Swords, Bell, Target,
@@ -614,24 +615,62 @@ export default function RankPushDashboard() {
   const [showProfile, setShowProfile]       = useState(false);
   const [showNotif, setShowNotif]           = useState(false);
   const [isMobileMenuOpen, setMobileMenu]   = useState(false);
-  const [animXP, setAnimXP]                = useState(0);
+  const [animXP, setAnimXP]                 = useState(0);
+  
+  // 🔥 ১. MOCK_STATS এর বদলে স্টেট ব্যবহার করছি
+  const [stats, setStats]                   = useState<any>(MOCK_STATS);
+  const [liveLeaderboard, setLiveLeaderboard] = useState<any[]>(LEADERBOARD);
+  
   const router = useRouter();
 
-  const stats    = MOCK_STATS;
   const rank     = getRankByXP(stats.xp);
   const nextRank = getNextRank(rank);
   const xpPct    = getXPProgress(stats.xp, rank);
 
+  // 🔥 ২. ফায়ারবেস রিয়েল-টাইম লিসেনার (User Data & Leaderboard)
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => setUser(u));
-    return () => unsub();
-  }, []);
+    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+      if (!u) { router.push("/"); return; }
+      setUser(u);
 
+      // ইউজারের রিয়েল-টাইম ডেটা লিসেনার
+      const userRef = doc(db, "users", u.uid);
+      const unsubUser = onSnapshot(userRef, (snap) => {
+        if (snap.exists()) {
+          setStats(snap.data() as any);
+        } else {
+          // নতুন ইউজার হলে ডাটাবেসে বেসিক ডেটা সেভ করা
+          const initialData = { ...MOCK_STATS, xp: 0, level: 1, displayName: u.displayName || "Hunter" };
+          setDoc(userRef, initialData);
+          setStats(initialData);
+        }
+      });
+
+      // লিডারবোর্ডের রিয়েল-টাইম ডেটা লিসেনার
+      const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(5));
+      const unsubLeaderboard = onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const topPlayers = snap.docs.map((d, i) => ({
+            ...d.data(),
+            rank: String(i + 1).padStart(2, "0"),
+            id: d.id,
+            rankInfo: getRankByXP(d.data().xp || 0)
+          }));
+          setLiveLeaderboard(topPlayers);
+        }
+      });
+
+      return () => { unsubUser(); unsubLeaderboard(); };
+    });
+    return () => unsubAuth();
+  }, [router]);
+
+  // XP এনিমেশন
   useEffect(() => {
     let start = 0; const end = stats.xp; const step = end / (1200 / 16);
     const t = setInterval(() => { start = Math.min(start + step, end); setAnimXP(Math.round(start)); if (start >= end) clearInterval(t); }, 16);
     return () => clearInterval(t);
-  }, []);
+  }, [stats.xp]);
 
   useEffect(() => {
     const close = () => setMobileMenu(false);
@@ -641,6 +680,7 @@ export default function RankPushDashboard() {
 
   const handleSignOut = async () => { await signOut(auth); router.push("/"); };
 
+ 
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -1050,7 +1090,7 @@ export default function RankPushDashboard() {
                 <span className="text-[8px] font-black text-cyan-400 border border-cyan-400/30 px-2 py-0.5 rounded-full">LIVE</span>
               </div>
               <div className="flex flex-col gap-1.5">
-                {LEADERBOARD.map((p,i) => (
+              {(liveLeaderboard.length > 0 ? liveLeaderboard : LEADERBOARD).map((p, i) => (
                   <div key={p.name} className="flex items-center gap-2.5 p-2 md:p-2.5 rounded-xl cursor-pointer transition-all"
                     style={{ background:i===0?"rgba(34,211,238,0.05)":"transparent", border:i===0?"1px solid rgba(34,211,238,0.1)":"1px solid transparent" }}
                     onMouseEnter={e => { if(i!==0)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)"; }}
