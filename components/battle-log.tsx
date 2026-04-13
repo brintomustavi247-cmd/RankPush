@@ -1,29 +1,47 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Swords, Trophy, Skull, Clock, ChevronRight } from "lucide-react"
 import { useTheme } from "@/contexts/theme-context"
+import { onAuthStateChanged } from "firebase/auth"
+import { auth } from "@/app/firebase"
+import { subscribeToBattleHistory, type BattleHistoryEntry } from "@/lib/xp-utils"
 
-interface Battle {
-  id: string
-  opponent: string
-  subject: string
-  result: "victory" | "defeat"
-  score: string
-  xpGained: number
-  coinsGained: number
-  timeAgo: string
-}
-
-const mockBattles: Battle[] = [
-  { id: "1", opponent: "QuizMaster99", subject: "Physics", result: "victory", score: "8-5", xpGained: 250, coinsGained: 100, timeAgo: "2m ago" },
-  { id: "2", opponent: "MathGenius_BD", subject: "Math", result: "defeat", score: "4-7", xpGained: 50, coinsGained: 20, timeAgo: "15m ago" },
-  { id: "3", opponent: "ChemWizard01", subject: "Chemistry", result: "victory", score: "9-3", xpGained: 300, coinsGained: 150, timeAgo: "1h ago" },
-  { id: "4", opponent: "SciencePro_BD", subject: "Biology", result: "victory", score: "7-6", xpGained: 200, coinsGained: 80, timeAgo: "2h ago" },
-  { id: "5", opponent: "BrainStorm123", subject: "Physics", result: "defeat", score: "5-8", xpGained: 40, coinsGained: 15, timeAgo: "3h ago" },
+const mockBattles: BattleHistoryEntry[] = [
+  { id: "1", opponent: "QuizMaster99", subject: "Physics", result: "victory", score: "8/10", xpGained: 250, coinsGained: 100, timeAgo: "2m ago" },
+  { id: "2", opponent: "MathGenius_BD", subject: "Math", result: "defeat", score: "4/10", xpGained: 50, coinsGained: 20, timeAgo: "15m ago" },
+  { id: "3", opponent: "ChemWizard01", subject: "Chemistry", result: "victory", score: "9/10", xpGained: 300, coinsGained: 150, timeAgo: "1h ago" },
 ]
 
 export function BattleLog() {
   const { theme } = useTheme()
+  const [battles, setBattles] = useState<BattleHistoryEntry[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    let unsubBattles: (() => void) | null = null
+
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (unsubBattles) unsubBattles()
+      if (user) {
+        unsubBattles = subscribeToBattleHistory(user.uid, (data) => {
+          setBattles(data)
+          setLoaded(true)
+        })
+      } else {
+        setBattles([])
+        setLoaded(true)
+      }
+    })
+
+    return () => {
+      unsubAuth()
+      if (unsubBattles) unsubBattles()
+    }
+  }, [])
+
+  // Show mock data while loading or if no real battles yet
+  const displayBattles = loaded && battles.length > 0 ? battles : mockBattles
 
   return (
     <div className={`theme-card overflow-hidden h-full ${theme === "pixel" ? "" : "rounded-xl"}`}>
@@ -52,7 +70,7 @@ export function BattleLog() {
 
       {/* Battle List */}
       <div className="p-4 space-y-3 max-h-[350px] overflow-y-auto custom-scrollbar">
-        {mockBattles.map((battle) => (
+        {displayBattles.map((battle) => (
           <div
             key={battle.id}
             className={`

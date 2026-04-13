@@ -7,46 +7,114 @@ import {
   Shield, Zap, Trophy, Save, Edit3, ShieldAlert
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { auth, db } from "@/app/firebase";
 
 // ============================================================
-// MOCK DATA & CONSTANTS (Replace with Firebase later)
+// CONSTANTS
 // ============================================================
-const MOCK_USER = {
-  uid: "hunter_123",
-  displayName: "Cyber Hunter",
-  email: "hunter@rankpush.com",
-  phone: "+880 1700-000000",
+const CRANK_XP_REQUIREMENT = 5000;
+
+const DEFAULT_USER = {
+  uid: "",
+  displayName: "Hunter",
+  email: "",
+  phone: "",
   bio: "Leveling up in the shadows.",
   photoURL: "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg",
-  xp: 3200, // Change to 5000+ to test the unlock feature
+  xp: 0,
 };
-
-const CRANK_XP_REQUIREMENT = 5000;
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState(MOCK_USER);
+  const [user, setUser] = useState(DEFAULT_USER);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    displayName: user.displayName,
-    phone: user.phone,
-    bio: user.bio,
+    displayName: DEFAULT_USER.displayName,
+    phone: DEFAULT_USER.phone,
+    bio: DEFAULT_USER.bio,
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Rank Logic
   const isCRankUnlocked = user.xp >= CRANK_XP_REQUIREMENT;
   const progressToCRank = Math.min((user.xp / CRANK_XP_REQUIREMENT) * 100, 100);
 
-  const handleSave = () => {
+  // Connect to Firebase — real-time user data
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        router.push("/");
+        return;
+      }
+
+      const userRef = doc(db, "users", currentUser.uid);
+      const unsubUser = onSnapshot(userRef, (snap) => {
+        setIsLoading(false);
+        if (snap.exists()) {
+          const data = snap.data();
+          const merged = {
+            uid: currentUser.uid,
+            displayName: data.displayName || currentUser.displayName || "Hunter",
+            email: currentUser.email || "",
+            phone: data.phone || "",
+            bio: data.bio || "Leveling up in the shadows.",
+            photoURL: data.photoURL || currentUser.photoURL || DEFAULT_USER.photoURL,
+            xp: data.xp || 0,
+          };
+          setUser(merged);
+          setFormData({
+            displayName: merged.displayName,
+            phone: merged.phone,
+            bio: merged.bio,
+          });
+        } else {
+          // User doc doesn't exist yet — use auth info
+          const merged = {
+            uid: currentUser.uid,
+            displayName: currentUser.displayName || "Hunter",
+            email: currentUser.email || "",
+            phone: "",
+            bio: "Leveling up in the shadows.",
+            photoURL: currentUser.photoURL || DEFAULT_USER.photoURL,
+            xp: 0,
+          };
+          setUser(merged);
+          setFormData({
+            displayName: merged.displayName,
+            phone: merged.phone,
+            bio: merged.bio,
+          });
+        }
+      });
+
+      return () => unsubUser();
+    });
+
+    return () => unsubAuth();
+  }, [router]);
+
+  const handleSave = async () => {
+    if (!user.uid) return;
     setIsSaving(true);
-    // Simulate API/Firebase call
-    setTimeout(() => {
+    try {
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        displayName: formData.displayName,
+        phone: formData.phone,
+        bio: formData.bio,
+      });
+      setIsEditing(false);
+    } catch {
+      // fallback: update local state only
       setUser({ ...user, ...formData });
       setIsEditing(false);
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   };
 
   const handleImageClick = () => {
@@ -54,6 +122,16 @@ export default function ProfilePage() {
       fileInputRef.current.click();
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#02010a] flex items-center justify-center">
+        <p style={{ fontFamily: "'Orbitron', sans-serif", color: "#22d3ee", fontSize: 14, letterSpacing: "0.3em" }}>
+          LOADING...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#02010a] text-white font-sans overflow-x-hidden pb-12">
@@ -187,7 +265,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Email (Always disabled/Read-only usually) */}
+                {/* Email (Always disabled/Read-only) */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">
                     <Mail size={12} /> Sync Email
