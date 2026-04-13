@@ -3,9 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { physicsQuestions } from "@/lib/questions";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { awardBattleXP, saveBattleHistory } from "@/lib/xp-utils";
+import { useAuthUid } from "@/hooks/use-auth-uid";
 import {
   Swords, ChevronRight, Sparkles, Target, Zap, Clock,
   Heart, Flame, Shield, ArrowLeft, CheckCircle, XCircle,
@@ -92,7 +91,7 @@ export default function ArenaPage() {
 
   const fbId            = useRef(0);
   const xpSavedRef      = useRef(false); // prevent double-save
-  const uidRef          = useRef<string | null>(null); // store auth uid
+  const uidRef          = useAuthUid();  // cached auth uid
   // Snapshot of final battle values so the save effect only needs [gameState]
   const battleSnapRef   = useRef({ idx: 0, correctCount: 0, exp: 0, maxCombo: 0 });
 
@@ -106,14 +105,6 @@ export default function ArenaPage() {
   useEffect(() => {
     battleSnapRef.current = { idx, correctCount, exp, maxCombo };
   }, [idx, correctCount, exp, maxCombo]);
-
-  // Store the current user's UID once on mount
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      uidRef.current = u ? u.uid : null;
-    });
-    return () => unsub();
-  }, []);
 
   // EXP count-up on result
   useEffect(() => {
@@ -132,7 +123,6 @@ export default function ArenaPage() {
   useEffect(() => {
     if (gameState === "playing" || xpSavedRef.current) return;
     if (!uidRef.current) return;
-    xpSavedRef.current = true;
     const uid = uidRef.current;
     const won = gameState === "won";
     const { idx: finalIdx, correctCount: finalCC, exp: finalExp, maxCombo: finalMax } = battleSnapRef.current;
@@ -141,6 +131,7 @@ export default function ArenaPage() {
     (async () => {
       try {
         const awarded = await awardBattleXP(uid, won, acc);
+        xpSavedRef.current = true; // mark saved only after success
         setXpAwarded(awarded);
         await saveBattleHistory(uid, {
           subject,
@@ -156,7 +147,7 @@ export default function ArenaPage() {
         console.error(`Failed to save battle to Firebase (uid=${uid}, subject=${subject}, won=${won}, acc=${acc}):`, err);
       }
     })();
-  }, [gameState, subject, total]);
+  }, [gameState, subject, total, uidRef]);
 
   // Timer
   useEffect(() => {

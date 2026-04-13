@@ -11,9 +11,8 @@ import {
   ChevronDown, LayoutDashboard, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
+import { useAuthUid } from "@/hooks/use-auth-uid";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -668,17 +667,9 @@ export default function ShadowTimer() {
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   const sessionIdRef = useRef(0);
-  const uidRef       = useRef<string | null>(null); // store auth uid
+  const uidRef       = useAuthUid(); // cached auth uid
 
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
-
-  // Store the current user's UID once on mount
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      uidRef.current = u ? u.uid : null;
-    });
-    return () => unsub();
-  }, []);
 
   useEffect(() => {
     const t = setInterval(() => {

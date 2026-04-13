@@ -33,7 +33,8 @@ export async function updateUserXP(uid: string, xpAmount: number): Promise<void>
     const snap = await tx.get(userRef);
     const currentXP: number = snap.data()?.xp ?? 0;
     const newXP = currentXP + xpAmount;
-    tx.update(userRef, { xp: newXP, level: calculateLevel(newXP) });
+    // Use set+merge so it works even when the document doesn't exist yet
+    tx.set(userRef, { xp: newXP, level: calculateLevel(newXP) }, { merge: true });
   });
 }
 
