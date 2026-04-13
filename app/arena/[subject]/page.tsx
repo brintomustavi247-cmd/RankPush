@@ -11,6 +11,8 @@ import {
   BarChart2, Crosshair, BookOpen, ChevronDown, ChevronUp
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Toaster } from "sonner";
+import { showNotification } from "@/lib/notification-utils";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -133,6 +135,14 @@ export default function ArenaPage() {
         const awarded = await awardBattleXP(uid, won, acc);
         xpSavedRef.current = true; // mark saved only after success
         setXpAwarded(awarded);
+        // Show battle result notification
+        showNotification({
+          type: "battle",
+          message: won
+            ? `VICTORY! +${awarded} XP earned!`
+            : `Defeat — +${awarded} XP. Train harder!`,
+          duration: 4000,
+        });
         await saveBattleHistory(uid, {
           subject,
           won,
@@ -283,6 +293,8 @@ export default function ArenaPage() {
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet" />
+      {/* Sonner toaster for battle notifications */}
+      <Toaster position="top-right" richColors={false} />
 
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
