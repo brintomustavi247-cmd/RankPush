@@ -20,8 +20,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
 import { useAuthUid } from "@/hooks/use-auth-uid";
-import { useXPNotifications } from "@/lib/notification-utils";
-import { getRankBadgeByXP } from "@/components/rank-badge";
+import { useXPNotifications, useSessionNotifications, pushNotification } from "@/lib/notification-utils";
+import { RankBadgeSVG } from "@/app/dashboard/UIComponents";
+import { getRankByXP } from "@/app/dashboard/Ranksystem";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -46,7 +47,7 @@ interface LeaderboardEntry {
   todayMinutes: number;
   totalXP: number;
   rankColor: string;
-  badgeImage: string;
+  rankId: string;
   isCurrentUser?: boolean;
 }
 
@@ -530,15 +531,10 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: Leaderb
           style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }}
           alt={p.name}
         />
-        {/* Rank badge icon */}
-        <img
-          src={p.badgeImage}
-          loading="lazy"
-          width={18}
-          height={18}
-          style={{ position: "absolute", bottom: -2, right: -2, borderRadius: "50%" }}
-          alt="rank"
-        />
+      {/* Rank badge — SVG */}
+        <div style={{ position: "absolute", bottom: -3, right: -3, width: 20, height: 20, display:"flex", alignItems:"center", justifyContent:"center", filter:"drop-shadow(0 0 4px rgba(0,0,0,0.9))" }}>
+          <RankBadgeSVG rankId={p.rankId || "e"} size={18} />
+        </div>
       </div>
 
       {/* Name + bar */}
@@ -704,8 +700,9 @@ export default function ShadowTimer() {
 
   const uidRef       = useAuthUid(); // cached auth uid
 
-  // XP / Level-up real-time notifications via Firestore
+  // XP / Level-up + Session real-time notifications via Firestore
   useXPNotifications(currentUid);
+  useSessionNotifications(currentUid);
 
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
 
@@ -764,7 +761,7 @@ export default function ShadowTimer() {
         snap.docs.map(async (d, i) => {
           const data      = d.data();
           const uid       = d.id;
-          const rankInfo  = getRankBadgeByXP(data.xp || 0);
+          const rankInfo  = getRankByXP(data.xp || 0);
 
           // Fetch today's sessions for this user
           let todayMinutes = 0;
@@ -790,7 +787,7 @@ export default function ShadowTimer() {
             todayMinutes,
             totalXP:       data.xp || 0,
             rankColor:     rankInfo.color,
-            badgeImage:    rankInfo.badgeImage,
+            rankId:        rankInfo.id || "e",
             isCurrentUser: uid === currentUid,
           };
         })
@@ -823,6 +820,13 @@ export default function ShadowTimer() {
         try {
           const actualXP = await awardTimerXP(uid, mins, type);
           await saveSessionHistory(uid, { type, duration: mins, xp: actualXP, subject });
+          // Push Firestore notification so bell panel updates
+          await pushNotification(
+            uid,
+            "session",
+            `Session Complete! +${actualXP} XP`,
+            `${mins} min · ${subject}`
+          );
         } catch (err) {
           console.error(`Failed to save session to Firebase (uid=${uid}, type=${type}, mins=${mins}, subject=${subject}):`, err);
         }

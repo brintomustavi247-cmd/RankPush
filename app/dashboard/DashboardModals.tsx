@@ -28,7 +28,7 @@ import {
   UserStats,
   RankInfo,
 } from "./RankSystem";
-import { RankBadge, StatBar } from "./UIComponents";
+import { RankBadge, StatBar, RankBadgeSVG } from "./UIComponents";
 
 // ============================================================
 // RANK MODAL — Full rank progression overview
@@ -144,15 +144,9 @@ export function RankModal({ onClose, currentXP }: RankModalProps) {
                     gap: 14,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 22,
-                      width: 32,
-                      textAlign: "center",
-                    }}
-                  >
-                    {r.icon}
-                  </span>
+                  <div style={{ width: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <RankBadgeSVG rankId={r.id} size={32} />
+                  </div>
                   <div style={{ flex: 1 }}>
                     <div
                       style={{
@@ -680,8 +674,8 @@ export function ProfileModal({ onClose, user, stats }: ProfileModalProps) {
                         >
                           <div
                             style={{
-                              width: isCurrent ? 34 : 26,
-                              height: isCurrent ? 34 : 26,
+                              width: isCurrent ? 38 : 28,
+                              height: isCurrent ? 38 : 28,
                               borderRadius: "50%",
                               display: "flex",
                               alignItems: "center",
@@ -694,14 +688,15 @@ export function ProfileModal({ onClose, user, stats }: ProfileModalProps) {
                                 : unlocked
                                 ? `1px solid ${r.color}55`
                                 : "1px solid rgba(255,255,255,0.08)",
-                              fontSize: isCurrent ? 16 : 12,
                               boxShadow: isCurrent
                                 ? `0 0 14px ${r.glowColor}`
                                 : "none",
                               transition: "all 0.3s",
+                              overflow: "hidden",
+                              opacity: unlocked ? 1 : 0.4,
                             }}
                           >
-                            {r.icon}
+                            <RankBadgeSVG rankId={r.id} size={isCurrent ? 28 : 20} />
                           </div>
                           {isCurrent && (
                             <div

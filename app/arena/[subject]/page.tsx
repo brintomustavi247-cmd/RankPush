@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
-import { showNotification } from "@/lib/notification-utils";
+import { showNotification, pushNotification } from "@/lib/notification-utils";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -133,16 +133,23 @@ export default function ArenaPage() {
     (async () => {
       try {
         const awarded = await awardBattleXP(uid, won, acc);
-        xpSavedRef.current = true; // mark saved only after success
+        xpSavedRef.current = true;
         setXpAwarded(awarded);
-        // Show battle result notification
+        // Toast — real-time visual feedback
         showNotification({
-          type: "battle",
+          type: won ? "battle_win" : "battle_loss",
           message: won
             ? `VICTORY! +${awarded} XP earned!`
             : `Defeat — +${awarded} XP. Train harder!`,
-          duration: 4000,
+          duration: 4500,
         });
+        // Firestore notification — appears in dashboard bell panel
+        await pushNotification(
+          uid,
+          won ? "battle_win" : "battle_loss",
+          won ? `Victory! +${awarded} XP` : `Battle Lost — +${awarded} XP`,
+          `${subject} · Accuracy: ${acc}%`
+        );
         await saveBattleHistory(uid, {
           subject,
           won,
