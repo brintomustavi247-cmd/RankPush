@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fcd34d"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="35%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer golden aura -->
+  <ellipse cx="60" cy="66" rx="52" ry="56" fill="rgba(245,158,11,0.22)" filter="url(#glow)"/>
+
+  <!-- Wing shapes (wider for S-rank) -->
+  <path d="M25 62 Q6 46 10 22 L20 40 Q22 54 28 58 Z" fill="rgba(252,211,77,0.35)"/>
+  <path d="M95 62 Q114 46 110 22 L100 40 Q98 54 92 58 Z" fill="rgba(252,211,77,0.35)"/>
+
+  <!-- Crown at top (above shield) -->
+  <!-- Crown base -->
+  <rect x="42" y="2" width="36" height="10" rx="2" fill="#f59e0b" stroke="#fcd34d" stroke-width="0.8"/>
+  <!-- Crown points -->
+  <polygon points="42,12 46,2 50,10 54,2 58,12" fill="#f59e0b" stroke="#fcd34d" stroke-width="0.8"/>
+  <polygon points="50,12 54,2 58,8 62,2 66,12" fill="#fcd34d" stroke="#fcd34d" stroke-width="0.8"/>
+  <polygon points="58,12 62,2 66,8 70,2 74,12" fill="#f59e0b" stroke="#fcd34d" stroke-width="0.8"/>
+  <!-- Crown diamonds -->
+  <circle cx="50" cy="7" r="1.5" fill="#fef3c7"/>
+  <circle cx="60" cy="5" r="2" fill="#fef3c7"/>
+  <circle cx="70" cy="7" r="1.5" fill="#fef3c7"/>
+
+  <!-- Shield body -->
+  <path d="M60 14 L95 26 L95 66 Q95 90 60 112 Q25 90 25 66 L25 26 Z"
+        fill="url(#shieldGrad)" stroke="#fcd34d" stroke-width="2.2"/>
+
+  <!-- Shine overlay -->
+  <path d="M60 14 L95 26 L95 66 Q95 90 60 112 Q25 90 25 66 L25 26 Z"
+        fill="url(#shine)"/>
+
+  <!-- Inner border (elaborate) -->
+  <path d="M60 22 L87 33 L87 65 Q87 84 60 104 Q33 84 33 65 L33 33 Z"
+        fill="none" stroke="rgba(254,243,199,0.35)" stroke-width="1.2"/>
+  <path d="M60 26 L83 36 L83 64 Q83 82 60 100 Q37 82 37 64 L37 36 Z"
+        fill="none" stroke="rgba(254,243,199,0.15)" stroke-width="0.6"/>
+
+  <!-- Star side accents -->
+  <polygon points="16,60 20,54 24,60 20,66" fill="rgba(252,211,77,0.7)" stroke="rgba(254,243,199,0.6)" stroke-width="0.8"/>
+  <polygon points="104,60 100,54 96,60 100,66" fill="rgba(252,211,77,0.7)" stroke="rgba(254,243,199,0.6)" stroke-width="0.8"/>
+  <polygon points="16,74 20,70 24,74 20,78" fill="rgba(252,211,77,0.45)"/>
+  <polygon points="104,74 100,70 96,74 100,78" fill="rgba(252,211,77,0.45)"/>
+  <polygon points="18,46 22,42 26,46 22,50" fill="rgba(252,211,77,0.45)"/>
+  <polygon points="102,46 98,42 94,46 98,50" fill="rgba(252,211,77,0.45)"/>
+
+  <!-- Rank letter -->
+  <text x="60" y="66" text-anchor="middle" dominant-baseline="central"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="44" font-weight="900" fill="rgba(255,251,235,0.96)">S</text>
+
+  <!-- Rank name -->
+  <text x="60" y="93" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="7.5" font-weight="700"
+        fill="rgba(254,243,199,0.7)" letter-spacing="2.5">S-RANK</text>
+</svg>

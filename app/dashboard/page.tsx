@@ -34,6 +34,7 @@ interface RankInfo {
   glowColor: string;
   bgColor: string;
   icon: string;
+  badgeImage: string;
   minXP: number;
   maxXP: number;
   description: string;
@@ -43,49 +44,49 @@ const RANKS: RankInfo[] = [
   {
     id: "e", name: "E-Rank", title: "Weakest Hunter",
     color: "#6b7280", glowColor: "rgba(107,114,128,0.4)", bgColor: "rgba(107,114,128,0.08)",
-    icon: "🪨", minXP: 0, maxXP: 1999,
+    icon: "🪨", badgeImage: "/rank-badges/bronze-badge.svg", minXP: 0, maxXP: 1999,
     description: "The starting point. Every Shadow Lord began here."
   },
   {
     id: "d", name: "D-Rank", title: "Awakened Hunter",
     color: "#b45309", glowColor: "rgba(180,83,9,0.4)", bgColor: "rgba(180,83,9,0.08)",
-    icon: "🔰", minXP: 2000, maxXP: 5999,
+    icon: "🔰", badgeImage: "/rank-badges/silver-badge.svg", minXP: 2000, maxXP: 5999,
     description: "Awakening confirmed. The system acknowledges your power."
   },
   {
     id: "c", name: "C-Rank", title: "Gate Raider",
     color: "#0ea5e9", glowColor: "rgba(14,165,233,0.4)", bgColor: "rgba(14,165,233,0.08)",
-    icon: "🌀", minXP: 6000, maxXP: 13999,
+    icon: "🌀", badgeImage: "/rank-badges/gold-badge.svg", minXP: 6000, maxXP: 13999,
     description: "You raid dungeons others fear. Gates tremble at your approach."
   },
   {
     id: "b", name: "B-Rank", title: "Elite Fighter",
     color: "#22d3ee", glowColor: "rgba(34,211,238,0.4)", bgColor: "rgba(34,211,238,0.08)",
-    icon: "⚡", minXP: 14000, maxXP: 27999,
+    icon: "⚡", badgeImage: "/rank-badges/platinum-badge.svg", minXP: 14000, maxXP: 27999,
     description: "Elite class. Guild leaders take notice of your strength."
   },
   {
     id: "a", name: "A-Rank", title: "Dungeon Breaker",
     color: "#a855f7", glowColor: "rgba(168,85,247,0.4)", bgColor: "rgba(168,85,247,0.08)",
-    icon: "💜", minXP: 28000, maxXP: 49999,
+    icon: "💜", badgeImage: "/rank-badges/diamond-badge.svg", minXP: 28000, maxXP: 49999,
     description: "Ranked among the nation's finest. Dungeons fall before you."
   },
   {
     id: "s", name: "S-Rank", title: "Sovereign Hunter",
     color: "#f59e0b", glowColor: "rgba(245,158,11,0.5)", bgColor: "rgba(245,158,11,0.08)",
-    icon: "👑", minXP: 50000, maxXP: 79999,
+    icon: "👑", badgeImage: "/rank-badges/master-badge.svg", minXP: 50000, maxXP: 79999,
     description: "The pinnacle of mankind. Only the chosen few reach this rank."
   },
   {
     id: "national", name: "National Level", title: "Absolute Monarch",
     color: "#ec4899", glowColor: "rgba(236,72,153,0.5)", bgColor: "rgba(236,72,153,0.08)",
-    icon: "🔱", minXP: 80000, maxXP: 119999,
+    icon: "🔱", badgeImage: "/rank-badges/grandmaster-badge.svg", minXP: 80000, maxXP: 119999,
     description: "Transcends all ranks. A force capable of protecting nations."
   },
   {
     id: "shadow_monarch", name: "Shadow Monarch", title: "Arise.",
     color: "#c084fc", glowColor: "rgba(192,132,252,0.6)", bgColor: "rgba(192,132,252,0.08)",
-    icon: "⚔️", minXP: 120000, maxXP: Infinity,
+    icon: "⚔️", badgeImage: "/rank-badges/shadow-badge.svg", minXP: 120000, maxXP: Infinity,
     description: "The king of all shadows. None stand above you."
   },
 ];
@@ -267,23 +268,36 @@ const GLOBAL_CSS = `
 // RANK BADGE COMPONENT
 // ============================================================
 function RankBadge({ rank, size = "md" }: { rank: RankInfo; size?: "sm" | "md" | "lg" }) {
-  const sizes = { sm: { px: "8px 12px", fs: 9, icon: 14 }, md: { px: "10px 16px", fs: 11, icon: 18 }, lg: { px: "14px 22px", fs: 14, icon: 24 } };
+  const sizes = {
+    sm: { imgSize: 40, px: "6px 10px", fs: 8,  gap: 6 },
+    md: { imgSize: 56, px: "8px 14px", fs: 10, gap: 8 },
+    lg: { imgSize: 80, px: "12px 20px", fs: 13, gap: 10 },
+  };
   const s = sizes[size];
   return (
     <div style={{
-      display: "inline-flex", alignItems: "center", gap: 8,
+      display: "inline-flex", alignItems: "center", gap: s.gap,
       padding: s.px, borderRadius: 30,
       background: rank.bgColor, border: `1px solid ${rank.color}44`,
       boxShadow: `0 0 16px ${rank.glowColor}`,
     }}>
-      <span style={{ fontSize: s.icon }}>{rank.icon}</span>
+      <img
+        src={rank.badgeImage}
+        alt={rank.name}
+        style={{
+          width: s.imgSize,
+          height: s.imgSize,
+          objectFit: "contain",
+          filter: `drop-shadow(0 0 6px ${rank.glowColor})`,
+        }}
+      />
       <div>
         <p style={{
           fontFamily: "'Orbitron', sans-serif", fontSize: s.fs, fontWeight: 900,
           letterSpacing: "0.12em", color: rank.color, lineHeight: 1,
         }}>{rank.name}</p>
-        {size === "lg" && (
-          <p style={{ fontSize: 10, color: `${rank.color}99`, marginTop: 2, letterSpacing: "0.06em" }}>{rank.title}</p>
+        {size !== "sm" && (
+          <p style={{ fontSize: s.fs - 2, color: `${rank.color}99`, marginTop: 2, letterSpacing: "0.06em" }}>{rank.title}</p>
         )}
       </div>
     </div>
@@ -320,8 +334,18 @@ function RankModal({ onClose, currentXP }: { onClose: () => void; currentXP: num
                 opacity: isUnlocked ? 1 : 0.45,
                 boxShadow: isCurrent ? `0 0 20px ${r.glowColor}` : "none",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <span style={{ fontSize: 22, width: 32, textAlign: "center" }}>{r.icon}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <img
+                    src={r.badgeImage}
+                    alt={r.name}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      objectFit: "contain",
+                      filter: `drop-shadow(0 0 4px ${r.glowColor})`,
+                      flexShrink: 0,
+                    }}
+                  />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                       <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 900, color: r.color, letterSpacing: "0.1em" }}>{r.name}</p>

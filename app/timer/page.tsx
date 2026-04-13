@@ -36,7 +36,7 @@ interface LeaderboardEntry {
   todayMinutes: number;
   totalXP: number;
   streak: number;
-  rankIcon: string;
+  rankBadge: string;
   rankColor: string;
   isCurrentUser?: boolean;
 }
@@ -55,12 +55,12 @@ const SUBJECTS = ["Physics", "Chemistry", "Math", "Biology", "English", "ICT"];
 const XP_PER_MINUTE = 2; // free timer: 2 XP per minute
 
 const LEADERBOARD_DATA: LeaderboardEntry[] = [
-  { rank: 1, name: "S-Rank_Slayer", avatar: "https://i.pravatar.cc/150?u=slayer",  todayMinutes: 185, totalXP: 24500, streak: 12, rankIcon: "⚔️", rankColor: "#ec4899" },
-  { rank: 2, name: "ZeroOne",       avatar: "https://i.pravatar.cc/150?u=zeroone", todayMinutes: 162, totalXP: 22100, streak: 8,  rankIcon: "👑", rankColor: "#a855f7" },
-  { rank: 3, name: "GhostVibes",    avatar: "https://i.pravatar.cc/150?u=ghost",   todayMinutes: 140, totalXP: 19850, streak: 6,  rankIcon: "💠", rankColor: "#3b82f6" },
-  { rank: 4, name: "YOU",           avatar: "https://i.pravatar.cc/150?u=you",     todayMinutes: 0,   totalXP: 15420, streak: 4,  rankIcon: "🥇", rankColor: "#f59e0b", isCurrentUser: true },
-  { rank: 5, name: "NightCrawler",  avatar: "https://i.pravatar.cc/150?u=night",   todayMinutes: 98,  totalXP: 17200, streak: 5,  rankIcon: "💠", rankColor: "#3b82f6" },
-  { rank: 6, name: "PhantomX",      avatar: "https://i.pravatar.cc/150?u=phantom", todayMinutes: 75,  totalXP: 15900, streak: 3,  rankIcon: "🥈", rankColor: "#9ca3af" },
+  { rank: 1, name: "S-Rank_Slayer", avatar: "https://i.pravatar.cc/150?u=slayer",  todayMinutes: 185, totalXP: 24500, streak: 12, rankBadge: "/rank-badges/shadow-badge.svg",      rankColor: "#ec4899" },
+  { rank: 2, name: "ZeroOne",       avatar: "https://i.pravatar.cc/150?u=zeroone", todayMinutes: 162, totalXP: 22100, streak: 8,  rankBadge: "/rank-badges/grandmaster-badge.svg", rankColor: "#a855f7" },
+  { rank: 3, name: "GhostVibes",    avatar: "https://i.pravatar.cc/150?u=ghost",   todayMinutes: 140, totalXP: 19850, streak: 6,  rankBadge: "/rank-badges/master-badge.svg",      rankColor: "#f59e0b" },
+  { rank: 4, name: "YOU",           avatar: "https://i.pravatar.cc/150?u=you",     todayMinutes: 0,   totalXP: 15420, streak: 4,  rankBadge: "/rank-badges/diamond-badge.svg",     rankColor: "#a855f7", isCurrentUser: true },
+  { rank: 5, name: "NightCrawler",  avatar: "https://i.pravatar.cc/150?u=night",   todayMinutes: 98,  totalXP: 17200, streak: 5,  rankBadge: "/rank-badges/diamond-badge.svg",     rankColor: "#a855f7" },
+  { rank: 6, name: "PhantomX",      avatar: "https://i.pravatar.cc/150?u=phantom", todayMinutes: 75,  totalXP: 15900, streak: 3,  rankBadge: "/rank-badges/platinum-badge.svg",    rankColor: "#22d3ee" },
 ];
 
 const MOTIVATIONAL_LINES = [
@@ -542,7 +542,16 @@ function StudyLeaderboard({ todayMinutes }: { todayMinutes: number }) {
             {/* Avatar (Bigger) */}
             <div style={{ position: "relative", flexShrink: 0 }}>
               <img src={p.avatar} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }} alt={p.name} />
-              <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 12 }}>{p.rankIcon}</span>
+              <img
+                src={p.rankBadge}
+                alt="rank"
+                style={{
+                  position: "absolute", bottom: -4, right: -4,
+                  width: 24, height: 24,
+                  objectFit: "contain",
+                  filter: `drop-shadow(0 0 4px ${p.rankColor}aa)`,
+                }}
+              />
             </div>
 
             {/* Name + bar */}

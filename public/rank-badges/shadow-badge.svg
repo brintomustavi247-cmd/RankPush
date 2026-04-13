@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4c1d95"/>
+      <stop offset="30%" stop-color="#2e1065"/>
+      <stop offset="100%" stop-color="#0f0720"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#6d28d9" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="innerGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#e879f9" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark outer aura rings -->
+  <ellipse cx="60" cy="62" rx="58" ry="60" fill="rgba(192,132,252,0.06)"/>
+  <ellipse cx="60" cy="62" rx="52" ry="54" fill="rgba(192,132,252,0.08)" filter="url(#strongGlow)"/>
+  <ellipse cx="60" cy="62" rx="46" ry="48" fill="rgba(192,132,252,0.1)"/>
+
+  <!-- Wide dark wings -->
+  <path d="M25 64 Q2 44 6 14 L16 36 Q18 54 28 60 Z" fill="rgba(192,132,252,0.25)"/>
+  <path d="M95 64 Q118 44 114 14 L104 36 Q102 54 92 60 Z" fill="rgba(192,132,252,0.25)"/>
+  <!-- Extra wing layers -->
+  <path d="M10 52 Q2 34 8 18 L14 38 Z" fill="rgba(192,132,252,0.15)"/>
+  <path d="M110 52 Q118 34 112 18 L106 38 Z" fill="rgba(192,132,252,0.15)"/>
+
+  <!-- Shield body (dark base) -->
+  <path d="M60 10 L95 24 L95 66 Q95 90 60 112 Q25 90 25 66 L25 24 Z"
+        fill="url(#shieldGrad)" stroke="#7c3aed" stroke-width="2.5"/>
+
+  <!-- Purple aura overlay on shield -->
+  <path d="M60 10 L95 24 L95 66 Q95 90 60 112 Q25 90 25 66 L25 24 Z"
+        fill="url(#aura)"/>
+
+  <!-- Inner glow overlay -->
+  <path d="M60 10 L95 24 L95 66 Q95 90 60 112 Q25 90 25 66 L25 24 Z"
+        fill="url(#innerGlow)"/>
+
+  <!-- Glowing border -->
+  <path d="M60 10 L95 24 L95 66 Q95 90 60 112 Q25 90 25 66 L25 24 Z"
+        fill="none" stroke="#c084fc" stroke-width="1.8" filter="url(#glow)"/>
+
+  <!-- Inner border (glowing) -->
+  <path d="M60 18 L87 30 L87 65 Q87 85 60 104 Q33 85 33 65 L33 30 Z"
+        fill="none" stroke="rgba(192,132,252,0.4)" stroke-width="1.2"/>
+  <path d="M60 22 L83 33 L83 64 Q83 83 60 100 Q37 83 37 64 L37 33 Z"
+        fill="none" stroke="rgba(192,132,252,0.18)" stroke-width="0.7"/>
+
+  <!-- Sword symbol (center decoration) -->
+  <!-- Blade -->
+  <polygon points="60,20 63,55 60,62 57,55" fill="rgba(232,121,249,0.9)" filter="url(#glow)"/>
+  <!-- Crossguard -->
+  <rect x="46" y="53" width="28" height="4" rx="2" fill="rgba(192,132,252,0.9)"/>
+  <!-- Handle -->
+  <rect x="58.5" y="57" width="3" height="12" rx="1.5" fill="rgba(167,139,250,0.8)"/>
+  <!-- Handle pommel -->
+  <ellipse cx="60" cy="71" rx="4" ry="3" fill="rgba(192,132,252,0.7)"/>
+
+  <!-- Shadow aura particles (small glowing dots) -->
+  <circle cx="38" cy="40" r="1.5" fill="rgba(232,121,249,0.7)" filter="url(#glow)"/>
+  <circle cx="82" cy="40" r="1.5" fill="rgba(232,121,249,0.7)" filter="url(#glow)"/>
+  <circle cx="34" cy="70" r="1" fill="rgba(192,132,252,0.6)"/>
+  <circle cx="86" cy="70" r="1" fill="rgba(192,132,252,0.6)"/>
+  <circle cx="42" cy="85" r="1.2" fill="rgba(216,180,254,0.5)"/>
+  <circle cx="78" cy="85" r="1.2" fill="rgba(216,180,254,0.5)"/>
+
+  <!-- Orbiting diamond accents -->
+  <polygon points="12,58 18,52 24,58 18,64" fill="rgba(192,132,252,0.7)" stroke="rgba(232,121,249,0.5)" stroke-width="0.8" filter="url(#glow)"/>
+  <polygon points="108,58 102,52 96,58 102,64" fill="rgba(192,132,252,0.7)" stroke="rgba(232,121,249,0.5)" stroke-width="0.8" filter="url(#glow)"/>
+  <polygon points="10,74 14,70 18,74 14,78" fill="rgba(167,139,250,0.5)"/>
+  <polygon points="110,74 106,70 102,74 106,78" fill="rgba(167,139,250,0.5)"/>
+  <polygon points="14,44 18,40 22,44 18,48" fill="rgba(167,139,250,0.5)"/>
+  <polygon points="106,44 102,40 98,44 102,48" fill="rgba(167,139,250,0.5)"/>
+
+  <!-- Shadow Monarch rank name -->
+  <text x="60" y="95" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="6.5" font-weight="700"
+        fill="rgba(216,180,254,0.75)" letter-spacing="1">SHADOW MONARCH</text>
+</svg>

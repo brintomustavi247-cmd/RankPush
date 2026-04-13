@@ -26,32 +26,35 @@ export function calculateLevel(xp: number): number {
 // Add XP to a user and update their level.
 // Uses a Firestore transaction to prevent race conditions
 // when called from multiple sources.
+// Returns the new total XP after the update.
 // ─────────────────────────────────────────────
-export async function updateUserXP(uid: string, xpAmount: number): Promise<void> {
+export async function updateUserXP(uid: string, xpAmount: number): Promise<number> {
   const userRef = doc(db, "users", uid);
+  let newXP = 0;
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(userRef);
     const currentXP: number = snap.data()?.xp ?? 0;
-    const newXP = currentXP + xpAmount;
+    newXP = currentXP + xpAmount;
     // Use set+merge so it works even when the document doesn't exist yet
     tx.set(userRef, { xp: newXP, level: calculateLevel(newXP) }, { merge: true });
   });
+  return newXP;
 }
 
 // ─────────────────────────────────────────────
 // Award XP for a battle result.
-// Returns the total XP awarded.
+// Returns the XP awarded and the new total XP.
 // ─────────────────────────────────────────────
 export async function awardBattleXP(
   uid: string,
   won: boolean,
   accuracy: number
-): Promise<number> {
+): Promise<{ awarded: number; newTotalXP: number }> {
   const baseXP = won ? 200 : 50;
   const accuracyBonus = Math.round(accuracy * 1.5);
-  const totalXP = baseXP + accuracyBonus;
-  await updateUserXP(uid, totalXP);
-  return totalXP;
+  const awarded = baseXP + accuracyBonus;
+  const newTotalXP = await updateUserXP(uid, awarded);
+  return { awarded, newTotalXP };
 }
 
 // ─────────────────────────────────────────────

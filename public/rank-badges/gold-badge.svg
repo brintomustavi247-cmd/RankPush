@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="35%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="#bae6fd" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Ambient glow -->
+  <ellipse cx="60" cy="68" rx="42" ry="46" fill="rgba(14,165,233,0.3)" filter="url(#glow)"/>
+
+  <!-- Shield body -->
+  <path d="M60 8 L95 22 L95 64 Q95 90 60 112 Q25 90 25 64 L25 22 Z"
+        fill="url(#shieldGrad)" stroke="#38bdf8" stroke-width="2"/>
+
+  <!-- Shine overlay -->
+  <path d="M60 8 L95 22 L95 64 Q95 90 60 112 Q25 90 25 64 L25 22 Z"
+        fill="url(#shine)"/>
+
+  <!-- Inner border -->
+  <path d="M60 16 L87 28 L87 63 Q87 84 60 103 Q33 84 33 63 L33 28 Z"
+        fill="none" stroke="rgba(186,230,253,0.25)" stroke-width="1"/>
+
+  <!-- Arc accent lines -->
+  <path d="M 30 50 Q 60 40 90 50" fill="none" stroke="rgba(186,230,253,0.2)" stroke-width="1"/>
+  <path d="M 30 68 Q 60 58 90 68" fill="none" stroke="rgba(186,230,253,0.15)" stroke-width="0.8"/>
+
+  <!-- Corner dots -->
+  <circle cx="30" cy="35" r="2" fill="rgba(186,230,253,0.4)"/>
+  <circle cx="90" cy="35" r="2" fill="rgba(186,230,253,0.4)"/>
+
+  <!-- Rank letter -->
+  <text x="60" y="58" text-anchor="middle" dominant-baseline="central"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="46" font-weight="900" fill="rgba(240,249,255,0.92)">C</text>
+
+  <!-- Rank name -->
+  <text x="60" y="88" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="7.5" font-weight="700"
+        fill="rgba(186,230,253,0.65)" letter-spacing="2.5">C-RANK</text>
+</svg>

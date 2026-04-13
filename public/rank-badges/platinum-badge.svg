@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="50%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="35%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="#cffafe" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer aura -->
+  <ellipse cx="60" cy="66" rx="46" ry="50" fill="rgba(34,211,238,0.18)" filter="url(#glow)"/>
+
+  <!-- Shield body -->
+  <path d="M60 8 L95 22 L95 64 Q95 90 60 112 Q25 90 25 64 L25 22 Z"
+        fill="url(#shieldGrad)" stroke="#67e8f9" stroke-width="2.2"/>
+
+  <!-- Shine overlay -->
+  <path d="M60 8 L95 22 L95 64 Q95 90 60 112 Q25 90 25 64 L25 22 Z"
+        fill="url(#shine)"/>
+
+  <!-- Inner border (double) -->
+  <path d="M60 16 L87 28 L87 63 Q87 84 60 103 Q33 84 33 63 L33 28 Z"
+        fill="none" stroke="rgba(207,250,254,0.3)" stroke-width="1.2"/>
+  <path d="M60 20 L83 31 L83 62 Q83 81 60 99 Q37 81 37 62 L37 31 Z"
+        fill="none" stroke="rgba(207,250,254,0.12)" stroke-width="0.6"/>
+
+  <!-- Side diamond accents -->
+  <polygon points="18,60 24,55 30,60 24,65" fill="rgba(103,232,249,0.5)" stroke="rgba(207,250,254,0.4)" stroke-width="0.5"/>
+  <polygon points="102,60 96,55 90,60 96,65" fill="rgba(103,232,249,0.5)" stroke="rgba(207,250,254,0.4)" stroke-width="0.5"/>
+
+  <!-- Lightning bolt accents (top area) -->
+  <path d="M46 28 L40 44 L47 44 L41 60 L48 46 L42 46 Z" fill="rgba(207,250,254,0.25)"/>
+  <path d="M74 28 L80 44 L73 44 L79 60 L72 46 L78 46 Z" fill="rgba(207,250,254,0.25)"/>
+
+  <!-- Rank letter -->
+  <text x="60" y="58" text-anchor="middle" dominant-baseline="central"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="46" font-weight="900" fill="rgba(240,253,255,0.94)">B</text>
+
+  <!-- Rank name -->
+  <text x="60" y="88" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="7.5" font-weight="700"
+        fill="rgba(207,250,254,0.7)" letter-spacing="2.5">B-RANK</text>
+</svg>
