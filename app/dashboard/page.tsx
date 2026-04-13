@@ -123,11 +123,11 @@ const DAILY_QUESTS = [
 ];
 
 const LEADERBOARD = [
-  { name: "S-Rank_Slayer", score: "24,500", rank: "01", avatar: "https://i.pravatar.cc/150?u=slayer",  rankInfo: RANKS[7] },
-  { name: "ZeroOne",       score: "22,100", rank: "02", avatar: "https://i.pravatar.cc/150?u=zeroone", rankInfo: RANKS[6] },
-  { name: "GhostVibes",    score: "19,850", rank: "03", avatar: "https://i.pravatar.cc/150?u=ghost",   rankInfo: RANKS[5] },
-  { name: "NightCrawler",  score: "17,200", rank: "04", avatar: "https://i.pravatar.cc/150?u=night",   rankInfo: RANKS[4] },
-  { name: "PhantomX",      score: "15,900", rank: "05", avatar: "https://i.pravatar.cc/150?u=phantom", rankInfo: RANKS[3] },
+  { name: "S-Rank_Slayer", xp: 24500, avatar: "https://i.pravatar.cc/150?u=slayer",  rankInfo: RANKS[7] },
+  { name: "ZeroOne",       xp: 22100, avatar: "https://i.pravatar.cc/150?u=zeroone", rankInfo: RANKS[6] },
+  { name: "GhostVibes",    xp: 19850, avatar: "https://i.pravatar.cc/150?u=ghost",   rankInfo: RANKS[5] },
+  { name: "NightCrawler",  xp: 17200, avatar: "https://i.pravatar.cc/150?u=night",   rankInfo: RANKS[4] },
+  { name: "PhantomX",      xp: 15900, avatar: "https://i.pravatar.cc/150?u=phantom", rankInfo: RANKS[3] },
 ];
 
 const ACHIEVEMENTS = [
@@ -139,8 +139,6 @@ const ACHIEVEMENTS = [
   { title: "Shadow Army",  desc: "7-day streak",           icon: "👥", unlocked: false, xp: 800  },
 ];
 
-const STREAK_DAYS = ["M","T","W","T","F","S","S"];
-const STREAK_DONE = [true,true,true,true,false,false,false];
 
 const MOCK_STATS = {
   xp: 15420, level: 47,
@@ -905,6 +903,30 @@ export default function RankPushDashboard() {
   const nextRank = useMemo(() => getNextRank(rank),             [rank]);
   const xpPct    = useMemo(() => getXPProgress(stats.xp, rank),[stats.xp, rank]);
 
+  // Real streak calculation
+  const { streakDays, streakDone } = useMemo(() => {
+    const days = ["M","T","W","T","F","S","S"];
+    const done = Array(7).fill(false);
+    const streak = stats.streak || 0;
+    
+    // Fill backwards from today based on streak count (cap at 7 for UI)
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const count = Math.min(streak, 7);
+    
+    const lastStudyTimestamp = stats.lastStudyDate?.toMillis?.() || 0;
+    const isToday = new Date().toDateString() === new Date(lastStudyTimestamp).toDateString();
+    
+    // If not studied today, the streak boxes end at yesterday
+    const endIdx = isToday ? todayIdx : (todayIdx - 1 + 7) % 7;
+    
+    for (let i = 0; i < count; i++) {
+        const idx = (endIdx - i + 7) % 7;
+        done[idx] = true;
+    }
+    
+    return { streakDays: days, streakDone: done };
+  }, [stats.streak, stats.lastStudyDate]);
+
   // 🔥 Firebase Real-Time Listeners (User + Leaderboard + Online Count + Quests)
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, async (u) => {
@@ -933,30 +955,45 @@ export default function RankPushDashboard() {
         }
       });
 
-      // ── লিডারবোর্ড (XP অনুযায়ী Top 5) ──
+      // ── লিডারবোর্ড (Gamified Mix of Real + Mock Users) ──
       const lbQuery = query(collection(db, "users"), orderBy("xp", "desc"), limit(5));
       const unsubLeaderboard = onSnapshot(lbQuery, (snap) => {
         setLeaderboardLoading(false);
-        if (!snap.empty) {
-          setLiveLeaderboard(snap.docs.map((d, i) => {
-            const data = d.data();
-            return {
-              id:            d.id,
-              name:          data.displayName || data.name || "Hunter",
-              score:         (data.xp || 0).toLocaleString(),
-              rank:          String(i + 1).padStart(2, "0"),
-              avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${d.id}`,
-              rankInfo:      getRankByXP(data.xp || 0),
-              xp:            data.xp || 0,
-              isCurrentUser: d.id === u.uid,
-            };
+        
+        const realUsers = snap.empty ? [] : snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id:            d.id,
+            name:          data.displayName || data.name || "Hunter",
+            xp:            data.xp || 0,
+            avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${d.id}`,
+            rankInfo:      getRankByXP(data.xp || 0),
+            isCurrentUser: d.id === u.uid,
+          };
+        });
+
+        const mockUsers = LEADERBOARD.map((p, i) => ({
+          id: `mock-${i}`,
+          name: p.name,
+          xp: p.xp,
+          avatar: p.avatar,
+          rankInfo: p.rankInfo,
+          isCurrentUser: false
+        }));
+
+        // Mix real and mock users, sort by XP, and take Top 5
+        const combined = [...realUsers, ...mockUsers]
+          .sort((a, b) => b.xp - a.xp)
+          .slice(0, 5)
+          .map((p, i) => ({
+             ...p,
+             score: p.xp.toLocaleString(),
+             rank: String(i + 1).padStart(2, "0")
           }));
-        } else {
-          setLiveLeaderboard([]);
-        }
+
+        setLiveLeaderboard(combined);
       }, () => {
         setLeaderboardLoading(false);
-        setLiveLeaderboard(LEADERBOARD.map((p, i) => ({ ...p, id: `mock-${i}`, isCurrentUser: false })));
       });
 
       // ── Online Count ──
@@ -1323,13 +1360,13 @@ export default function RankPushDashboard() {
               <div className="flex items-center gap-2 mb-4">
                 <Flame size={16} color="#f59e0b" />
                 <h3 className="text-[9px] font-black tracking-widest uppercase opacity-70">Daily Streak</h3>
-                <span className="ml-auto text-lg font-black text-amber-500">{stats.streak} 🔥</span>
+                <span className="ml-auto text-lg font-black text-amber-500">{stats.streak || 0} 🔥</span>
               </div>
               <div className="flex gap-1.5 md:gap-2">
-                {STREAK_DAYS.map((d,i) => (
+                {streakDays.map((d,i) => (
                   <div key={i} className="streak-pip flex-1 text-center" style={{ animationDelay:`${i*80}ms` }}>
-                    <div className="h-7 md:h-8 rounded-lg flex items-center justify-center mb-1" style={{ background:STREAK_DONE[i]?"#f59e0b":"rgba(255,255,255,0.05)", border:STREAK_DONE[i]?"none":"1px solid rgba(255,255,255,0.08)", boxShadow:STREAK_DONE[i]?"0 0 10px rgba(245,158,11,0.4)":"none" }}>
-                      {STREAK_DONE[i] && <span className="text-[10px]">✓</span>}
+                    <div className="h-7 md:h-8 rounded-lg flex items-center justify-center mb-1" style={{ background:streakDone[i]?"#f59e0b":"rgba(255,255,255,0.05)", border:streakDone[i]?"none":"1px solid rgba(255,255,255,0.08)", boxShadow:streakDone[i]?"0 0 10px rgba(245,158,11,0.4)":"none" }}>
+                      {streakDone[i] && <span className="text-[10px]">✓</span>}
                     </div>
                     <span className="text-[8px] font-bold opacity-40 uppercase">{d}</span>
                   </div>
@@ -1524,7 +1561,7 @@ export default function RankPushDashboard() {
                     </div>
                   ))}
                 </div>
-              ) : (liveLeaderboard.length > 0 ? liveLeaderboard : LEADERBOARD.map((p,i) => ({...p, id:`mock-${i}`, isCurrentUser:false}))).map((p, i) => (
+              ) : liveLeaderboard.map((p, i) => (
                   <div key={p.id || p.name}
                     className="flex items-center gap-2.5 p-2 md:p-2.5 rounded-xl cursor-pointer transition-all"
                     style={{

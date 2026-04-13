@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { physicsQuestions } from "@/lib/questions";
+import { mockQuestions } from "@/lib/questions";
 import { awardBattleXP, saveBattleHistory } from "@/lib/xp-utils";
 import { useAuthUid } from "@/hooks/use-auth-uid";
 import {
@@ -58,7 +58,7 @@ export default function ArenaPage() {
   const router  = useRouter();
   const subject = ((params?.subject as string) || "physics").toLowerCase();
   const meta    = SUBJECT_META[subject] || SUBJECT_META.physics;
-  const questions = physicsQuestions || [];
+  const questions = mockQuestions[subject] || mockQuestions.physics || [];
   const total     = questions.length;
 
   // Core state

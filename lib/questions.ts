@@ -6,68 +6,122 @@ export interface Question {
   options: string[];
   correctAnswer: string;
   exam: string;
-  explanation?: string; // 🆕 নতুন ফিল্ড অ্যাড করা হলো
+  explanation?: string;
 }
 
+// ============================================================================
+// ⚛️ PHYSICS QUESTIONS (50 Questions)
+// ============================================================================
 export const physicsQuestions: Question[] = [
-  {
-    id: 1,
-    subject: "Physics",
-    topic: "মহাকর্ষ ও অভিকর্ষ",
-    questionText: "ভূ-পৃষ্ঠ হতে কত গভীরে অভিকর্ষীয় ত্বরণের মান ভূ-পৃষ্ঠের মানের এক-চতুর্থাংশ হবে? (R = পৃথিবীর ব্যাসার্ধ)",
-    options: [
-      "A. R/4",
-      "B. R/2",
-      "C. 3R/4",
-      "D. R"
-    ],
-    correctAnswer: "C. 3R/4",
-    exam: "GST: 24-25",
-    explanation: "আমরা জানি, h গভীরে অভিকর্ষজ ত্বরণ g' = g(1 - h/R)। প্রশ্নমতে, g' = g/4। সুতরাং, g/4 = g(1 - h/R) ➞ 1/4 = 1 - h/R ➞ h/R = 1 - 1/4 = 3/4 ➞ h = 3R/4।"
-  },
-  {
-    id: 2,
-    subject: "Physics",
-    topic: "মহাকর্ষ ও অভিকর্ষ",
-    questionText: "একটি কৃত্রিম উপগ্রহ নিজ অক্ষে 10 ঘণ্টায় আবর্তন করে। এর ব্যাস 14×10^3 m; 10^4 kg ভরবিশিষ্ট একটি নভোযান উপগ্রহটিতে অবতরণ করলে উপগ্রহের নিজ অক্ষের ঘূর্ণনের কারণে নভোযানের ওজন কত হ্রাস পাবে?",
-    options: [
-      "A. 21.44N",
-      "B. 24.21N",
-      "C. 21.24N",
-      "D. 24.44N"
-    ],
-    correctAnswer: "C. 21.24N",
-    exam: "GST: 23-24",
-    explanation: "ঘূর্ণনের কারণে ওজন হ্রাস = কেন্দ্রমুখী বল (F_c) = mrω² = m × r × (2π/T)²। এখানে m=10⁴ kg, r=(14×10³)/2 = 7000 m, T=10×3600 s। মান বসালে: 10⁴ × 7000 × (2π/36000)² ≈ 21.24 N।"
-  },
-  {
-    id: 3,
-    subject: "Physics",
-    topic: "মহাকর্ষ ও অভিকর্ষ",
-    questionText: "ভূ-পৃষ্ঠ থেকে R/2 (R = পৃথিবীর ব্যাসার্ধ) উচ্চতায় ও একই গভীরতায় অভিকর্ষজ ত্বরণের অনুপাত-",
-    options: [
-      "A. 1:9",
-      "B. 2:9",
-      "C. 4:9",
-      "D. 8:9"
-    ],
-    correctAnswer: "D. 8:9",
-    exam: "GST: 22-23",
-    explanation: "h=R/2 উচ্চতায়: g_h = g / (1 + h/R)² = g / (1 + 1/2)² = 4g/9। আবার h=R/2 গভীরতায়: g_d = g(1 - h/R) = g(1 - 1/2) = g/2। অনুপাত: (4g/9) ÷ (g/2) = 8/9।"
-  },
-  {
-    id: 4,
-    subject: "Physics",
-    topic: "মহাকর্ষ ও অভিকর্ষ",
-    questionText: "মহাকর্ষীয় ধুবকের মাত্রা কোনটি?",
-    options: [
-      "A. M^-1L^3T^-2",
-      "B. ML^2T^-2",
-      "C. M^-2L^3T^-2",
-      "D. ML^3T^-2"
-    ],
-    correctAnswer: "A. M^-1L^3T^-2",
-    exam: "GST: 21-22",
-    explanation: "নিউটনের মহাকর্ষ সূত্রানুসারে, F = G(m₁m₂)/r² ➞ G = Fr² / (m₁m₂)। মাত্রা বসালে: [G] = (MLT⁻²)(L²) / M² = M⁻¹L³T⁻²।"
-  }
+  { id: 1, subject: "Physics", topic: "মহাকর্ষ ও অভিকর্ষ", questionText: "ভূ-পৃষ্ঠ হতে কত গভীরে অভিকর্ষীয় ত্বরণের মান ভূ-পৃষ্ঠের মানের এক-চতুর্থাংশ হবে? (R = পৃথিবীর ব্যাসার্ধ)", options: ["A. R/4", "B. R/2", "C. 3R/4", "D. R"], correctAnswer: "C. 3R/4", exam: "GST: 24-25", explanation: "g' = g(1 - h/R). g'= g/4 হলে h = 3R/4" },
+  { id: 2, subject: "Physics", topic: "মহাকর্ষ ও অভিকর্ষ", questionText: "পৃথিবীর কেন্দ্রে অভিকর্ষজ ত্বরণের মান কত?", options: ["A. 9.8", "B. 0", "C. 9.78", "D. অসীম"], correctAnswer: "B. 0", exam: "General", explanation: "পৃথিবীর কেন্দ্রে g এর মান 0।" },
+  { id: 3, subject: "Physics", topic: "মহাকর্ষ ও অভিকর্ষ", questionText: "মহাকর্ষীয় ধ্রুবক (G) এর একক কোনটি?", options: ["A. N m kg⁻²", "B. N m² kg⁻²", "C. N m² kg", "D. N m kg"], correctAnswer: "B. N m² kg⁻²", exam: "General", explanation: "F = G m₁m₂ / r². G = Fr² / m₁m₂" },
+  { id: 4, subject: "Physics", topic: "মহাকর্ষ ও অভিকর্ষ", questionText: "মুক্তিবেগের সমীকরণ কোনটি?", options: ["A. √(gR)", "B. √(2gR)", "C. √(gR/2)", "D. √(2GM/R²)"], correctAnswer: "B. √(2gR)", exam: "DU: 22-23", explanation: "v = √(2gR)" },
+  { id: 5, subject: "Physics", topic: "মহাকর্ষ ও অভিকর্ষ", questionText: "পৃথিবী পৃষ্ঠে মুক্তিবেগের মান কত?", options: ["A. 11.2 km/s", "B. 9.8 km/s", "C. 7.9 km/s", "D. 11.2 m/s"], correctAnswer: "A. 11.2 km/s", exam: "General", explanation: "পৃথিবী পৃষ্ঠে v = 11.2 km/s" },
+  { id: 6, subject: "Physics", topic: "ভেক্টর", questionText: "দুটি সমান মানের ভেক্টরের লব্ধির মান এদের যেকোনো একটির সমান হলে, এদের মধ্যবর্তী কোণ কত?", options: ["A. 60°", "B. 90°", "C. 120°", "D. 180°"], correctAnswer: "C. 120°", exam: "DU: 18-19", explanation: "cos(-1/2) = 120°" },
+  { id: 7, subject: "Physics", topic: "ভেক্টর", questionText: "A = 2i + 2j - k ভেক্টরটির মান কত?", options: ["A. 1", "B. 3", "C. 5", "D. 9"], correctAnswer: "B. 3", exam: "RU: 20-21", explanation: "√(4+4+1) = √9 = 3" },
+  { id: 8, subject: "Physics", topic: "ভেক্টর", questionText: "দুটি ভেক্টরের স্কেলার গুণফল শূন্য হলে ভেক্টরদ্বয় পরস্পর কেমন হবে?", options: ["A. সমান্তরাল", "B. লম্ব", "C. 45° কোণে", "D. 180° কোণে"], correctAnswer: "B. লম্ব", exam: "General", explanation: "A.B = AB cosθ = 0. cos90 = 0" },
+  { id: 9, subject: "Physics", topic: "ভেক্টর", questionText: "ক্রস গুণফল বিনিময় সূত্র মেনে চলে কি?", options: ["A. হ্যাঁ", "B. না", "C. মাঝে মাঝে", "D. বলা অসম্ভব"], correctAnswer: "B. না", exam: "General", explanation: "A×B = -(B×A)" },
+  { id: 10, subject: "Physics", topic: "ভেক্টর", questionText: "i × i এর মান কত?", options: ["A. 1", "B. 0", "C. -1", "D. j"], correctAnswer: "B. 0", exam: "General", explanation: "একই ভেক্টরের ক্রস গুণফল শূন্য" },
+  { id: 11, subject: "Physics", topic: "কাজ, শক্তি ও ক্ষমতা", questionText: "কাজ এর মাত্রা কোনটি?", options: ["A. ML²T⁻²", "B. MLT⁻²", "C. ML²T⁻³", "D. MLT⁻¹"], correctAnswer: "A. ML²T⁻²", exam: "General", explanation: "W = F.d = (MLT⁻²).L" },
+  { id: 12, subject: "Physics", topic: "কাজ, শক্তি ও ক্ষমতা", questionText: "100g ভরের একটি বস্তুকে খাড়া উপরের দিকে 10 m/s বেগে ছুঁড়ে দিলে সর্বোচ্চ উচ্চতায় তার বিভব শক্তি কত হবে? (g=10 m/s²)", options: ["A. 5 J", "B. 10 J", "C. 100 J", "D. 50 J"], correctAnswer: "A. 5 J", exam: "JU: 19-20", explanation: "E = 1/2 m v² = 1/2 * 0.1 * 100 = 5J" },
+  { id: 13, subject: "Physics", topic: "কাজ, শক্তি ও ক্ষমতা", questionText: "1 HP (অশ্বক্ষমতা) = কত ওয়াট?", options: ["A. 746 W", "B. 1000 W", "C. 500 W", "D. 764 W"], correctAnswer: "A. 746 W", exam: "General", explanation: "1 HP = 746 Watts" },
+  { id: 14, subject: "Physics", topic: "কাজ, শক্তি ও ক্ষমতা", questionText: "গতিশক্তি ৪ গুণ হলে ভরবেগ কত গুণ হবে?", options: ["A. ২ গুণ", "B. ৪ গুণ", "C. ১৬ গুণ", "D. ৮ গুণ"], correctAnswer: "A. ২ গুণ", exam: "General", explanation: "E = p²/2m" },
+  { id: 15, subject: "Physics", topic: "কাজ, শক্তি ও ক্ষমতা", questionText: "2 kg ভরের বস্তুকে 10 m উপরে তুললে বিভব শক্তি কত? (g=9.8)", options: ["A. 19.6", "B. 196", "C. 98", "D. 2"], correctAnswer: "B. 196", exam: "General", explanation: "E = mgh = 2 * 9.8 * 10 = 196 J" },
+  { id: 16, subject: "Physics", topic: "গতিবিদ্যা", questionText: "প্রক্ষেপকের সর্বাধিক উচ্চতায় বেগ কত?", options: ["A. 0", "B. v₀ sinθ₀", "C. v₀ cosθ₀", "D. v₀"], correctAnswer: "C. v₀ cosθ₀", exam: "GST: 23-24", explanation: "সর্বোচ্চ উচ্চতায় উলম্ব বেগ শূন্য।" },
+  { id: 17, subject: "Physics", topic: "গতিবিদ্যা", questionText: "প্রাসের গতিপথ কেমন?", options: ["A. সরলরৈখিক", "B. বৃত্তাকার", "C. উপবৃত্তাকার", "D. পরাবৃত্তাকার"], correctAnswer: "D. পরাবৃত্তাকার", exam: "General", explanation: "প্রাসের গতিপথ সর্বদা Parabolic." },
+  { id: 18, subject: "Physics", topic: "গতিবিদ্যা", questionText: "কোন কোণে নিক্ষেপ করলে অনুভূমিক পাল্লা সর্বোচ্চ হয়?", options: ["A. 30°", "B. 45°", "C. 60°", "D. 90°"], correctAnswer: "B. 45°", exam: "General", explanation: "sin(2*45) = 1" },
+  { id: 19, subject: "Physics", topic: "গতিবিদ্যা", questionText: "সমবেগে চলমান বস্তুর ত্বরণ কত?", options: ["A. ধনাত্মক", "B. ঋণাত্মক", "C. শূন্য", "D. অসীম"], correctAnswer: "C. শূন্য", exam: "General", explanation: "বেগের পরিবর্তন না থাকলে ত্বরণ শূন্য।" },
+  { id: 20, subject: "Physics", topic: "গতিবিদ্যা", questionText: "v = u + at সমীকরণটিতে কোনটি ধ্রুবক?", options: ["A. u", "B. v", "C. a", "D. t"], correctAnswer: "C. a", exam: "General", explanation: "এটি সমত্বরণে গতির সমীকরণ।" },
+  { id: 21, subject: "Physics", topic: "নিউটনের বলবিদ্যা", questionText: "বলের ঘাত এর মাত্রা কোনটি?", options: ["A. MLT⁻¹", "B. MLT⁻²", "C. ML²T⁻¹", "D. ML²T⁻²"], correctAnswer: "A. MLT⁻¹", exam: "General", explanation: "ঘাত = বল × সময় = ভরবেগের পরিবর্তন।" },
+  { id: 22, subject: "Physics", topic: "নিউটনের বলবিদ্যা", questionText: "ভরবেগের সংরক্ষণশীলতার নীতি কোন সূত্র থেকে আসে?", options: ["A. নিউটনের ১ম সূত্র", "B. নিউটনের ২য় সূত্র", "C. নিউটনের ৩য় সূত্র", "D. মহাকর্ষ সূত্র"], correctAnswer: "C. নিউটনের ৩য় সূত্র", exam: "General", explanation: "ক্রিয়া ও প্রতিক্রিয়া বল থেকে ভরবেগ সংরক্ষিত হয়।" },
+  { id: 23, subject: "Physics", topic: "নিউটনের বলবিদ্যা", questionText: "জড়তার ভ্রামক এর একক কী?", options: ["A. kg.m", "B. kg.m²", "C. N.m", "D. kg/m²"], correctAnswer: "B. kg.m²", exam: "General", explanation: "I = mr²" },
+  { id: 24, subject: "Physics", topic: "নিউটনের বলবিদ্যা", questionText: "কৌণিক ভরবেগ L = ?", options: ["A. r × p", "B. p × r", "C. r . p", "D. mvr"], correctAnswer: "A. r × p", exam: "General", explanation: "L = r × p (ভেক্টর রূপ)" },
+  { id: 25, subject: "Physics", topic: "নিউটনের বলবিদ্যা", questionText: "ঘর্ষণ গুণাঙ্ক কিসের ওপর নির্ভর করে?", options: ["A. তলের ক্ষেত্রফল", "B. তলের প্রকৃতি", "C. বস্তুর ভর", "D. অভিলম্ব প্রতিক্রিয়া"], correctAnswer: "B. তলের প্রকৃতি", exam: "General", explanation: "ঘর্ষণ গুণাঙ্ক শুধুমাত্র তলদ্বয়ের প্রকৃতির ওপর নির্ভর করে।" },
+  { id: 26, subject: "Physics", topic: "পর্যাবৃত্ত গতি", questionText: "সরল দোলকের দোলনকাল দৈর্ঘ্যের সাথে কীভাবে পরিবর্তিত হয়?", options: ["A. সমানুপাতিক", "B. ব্যস্তানুপাতিক", "C. বর্গমূলের সমানুপাতিক", "D. বর্গের সমানুপাতিক"], correctAnswer: "C. বর্গমূলের সমানুপাতিক", exam: "General", explanation: "T = 2π√(L/g)" },
+  { id: 27, subject: "Physics", topic: "পর্যাবৃত্ত গতি", questionText: "সেকেন্ড দোলকের দোলনকাল কত?", options: ["A. 1s", "B. 2s", "C. 0.5s", "D. 4s"], correctAnswer: "B. 2s", exam: "General", explanation: "যে দোলকের দোলনকাল 2 সেকেন্ড তাকে সেকেন্ড দোলক বলে।" },
+  { id: 28, subject: "Physics", topic: "পর্যাবৃত্ত গতি", questionText: "সরল ছন্দিত স্পন্দনের ক্ষেত্রে সর্বোচ্চ বেগের সমীকরণ কোনটি?", options: ["A. v = ωA", "B. v = ω²A", "C. v = A/ω", "D. v = ω/A"], correctAnswer: "A. v = ωA", exam: "General", explanation: "সাম্যাবস্থানে বেগ সর্বোচ্চ হয়, v = ω√(A² - 0) = ωA।" },
+  { id: 29, subject: "Physics", topic: "পর্যাবৃত্ত গতি", questionText: "দশা পার্থক্য π হলে পথ পার্থক্য কত?", options: ["A. λ", "B. λ/2", "C. λ/4", "D. 2λ"], correctAnswer: "B. λ/2", exam: "General", explanation: "দশা পার্থক্য = (2π/λ) * পথ পার্থক্য।" },
+  { id: 30, subject: "Physics", topic: "পর্যাবৃত্ত গতি", questionText: "একটি স্প্রিংকে কেটে দুই টুকরো করলে প্রতিটি অংশের স্প্রিং ধ্রুবক কী হবে?", options: ["A. অর্ধেক হবে", "B. দ্বিগুণ হবে", "C. অপরিবর্তিত থাকবে", "D. চারগুণ হবে"], correctAnswer: "B. দ্বিগুণ হবে", exam: "General", explanation: "k ∝ 1/L. দৈর্ঘ্য অর্ধেক হলে k দ্বিগুণ হয়।" },
+  { id: 31, subject: "Physics", topic: "আদর্শ গ্যাস", questionText: "বয়েলের সূত্রে কোনটি ধ্রুবক থাকে?", options: ["A. চাপ", "B. আয়তন", "C. তাপমাত্রা", "D. মোল সংখ্যা"], correctAnswer: "C. তাপমাত্রা", exam: "General", explanation: "বয়েল: T ধ্রুবক।" },
+  { id: 32, subject: "Physics", topic: "আদর্শ গ্যাস", questionText: "PV = nRT এ R এর মান SI এককে কত?", options: ["A. 0.0821", "B. 8.314", "C. 1.987", "D. 8.314 × 10⁷"], correctAnswer: "B. 8.314", exam: "General", explanation: "R = 8.314 J/(mol.K)" },
+  { id: 33, subject: "Physics", topic: "আদর্শ গ্যাস", questionText: "পরম শূন্য তাপমাত্রা কত?", options: ["A. 0°C", "B. 273°C", "C. -273°C", "D. 100°C"], correctAnswer: "C. -273°C", exam: "General", explanation: "0 K = -273.15°C" },
+  { id: 34, subject: "Physics", topic: "আদর্শ গ্যাস", questionText: "অ্যাভোগ্যাড্রো সংখ্যা কত?", options: ["A. 6.02 × 10²³", "B. 6.02 × 10⁻²³", "C. 6.02 × 10²²", "D. 6.02 × 10²⁴"], correctAnswer: "A. 6.02 × 10²³", exam: "General", explanation: "NA = 6.022 × 10²³ per mole" },
+  { id: 35, subject: "Physics", topic: "আদর্শ গ্যাস", questionText: "স্বাভাবিক তাপমাত্রা ও চাপে (STP) 1 মোল গ্যাসের আয়তন কত?", options: ["A. 24.4 L", "B. 22.4 L", "C. 22.4 m³", "D. 100 L"], correctAnswer: "B. 22.4 L", exam: "General", explanation: "STP তে V = 22.414 L" },
+  { id: 36, subject: "Physics", topic: "স্থির তড়িৎ", questionText: "তড়িৎ ফ্লাক্সের একক কোনটি?", options: ["A. N.C⁻¹", "B. N.m².C⁻¹", "C. V.m", "D. B ও C উভয়ই"], correctAnswer: "D. B ও C উভয়ই", exam: "General", explanation: "Φ = E.A. E এর একক V/m বা N/C" },
+  { id: 37, subject: "Physics", topic: "স্থির তড়িৎ", questionText: "ক্যাপাসিটরের (ধারক) কাজ কী?", options: ["A. ভোল্টেজ কমানো", "B. কারেন্ট বাড়ানো", "C. চার্জ সঞ্চয় করা", "D. রোধ কমানো"], correctAnswer: "C. চার্জ সঞ্চয় করা", exam: "General", explanation: "ক্যাপাসিটর বৈদ্যুতিক ক্ষেত্রের মাধ্যমে শক্তি সঞ্চয় করে।" },
+  { id: 38, subject: "Physics", topic: "স্থির তড়িৎ", questionText: "সমবিভব তলে চার্জ সরাতে কৃতকাজ কত?", options: ["A. ধনাত্মক", "B. ঋণাত্মক", "C. শূন্য", "D. নির্ভর করে"], correctAnswer: "C. শূন্য", exam: "General", explanation: "W = qΔV = 0" },
+  { id: 39, subject: "Physics", topic: "স্থির তড়িৎ", questionText: "কুলম্ব ধ্রুবক k এর মান কত বায়ু মাধ্যমে?", options: ["A. 9 × 10⁹", "B. 8.85 × 10⁻¹²", "C. 1.6 × 10⁻¹⁹", "D. 9.1 × 10⁻³¹"], correctAnswer: "A. 9 × 10⁹", exam: "General", explanation: "k = 1 / (4πε₀) ≈ 9 × 10⁹" },
+  { id: 40, subject: "Physics", topic: "স্থির তড়িৎ", questionText: "ধারকত্ব C = ?", options: ["A. V/Q", "B. Q/V", "C. QV", "D. W/Q"], correctAnswer: "B. Q/V", exam: "General", explanation: "C = Q/V" },
+  { id: 41, subject: "Physics", topic: "চল তড়িৎ", questionText: "ওহমের সূত্র কোনটি?", options: ["A. I = VR", "B. V = I/R", "C. V = IR", "D. R = VI"], correctAnswer: "C. V = IR", exam: "General", explanation: "ভি = আই আর" },
+  { id: 42, subject: "Physics", topic: "চল তড়িৎ", questionText: "রোধের মাত্রা কোনটি?", options: ["A. ML²T⁻³I⁻²", "B. MLT⁻³I⁻¹", "C. ML²T⁻²I⁻¹", "D. MLT⁻²I⁻²"], correctAnswer: "A. ML²T⁻³I⁻²", exam: "General", explanation: "R = V/I = W/(QI) = ML²T⁻² / (IT * I) = ML²T⁻³I⁻²" },
+  { id: 43, subject: "Physics", topic: "চল তড়িৎ", questionText: "কির্শফের প্রথম সূত্র (KCL) কিসের সংরক্ষণ সূত্র?", options: ["A. শক্তি", "B. ভরবেগ", "C. বৈদ্যুতিক চার্জ", "D. ভর"], correctAnswer: "C. বৈদ্যুতিক চার্জ", exam: "General", explanation: "KCL চার্জ সংরক্ষণের নীতি।" },
+  { id: 44, subject: "Physics", topic: "চল তড়িৎ", questionText: "1 kWh = কত জুল?", options: ["A. 3.6 × 10⁵", "B. 3.6 × 10⁶", "C. 36 × 10⁶", "D. 1000"], correctAnswer: "B. 3.6 × 10⁶", exam: "General", explanation: "1 kWh = 1000 W × 3600 s = 3.6 × 10⁶ J" },
+  { id: 45, subject: "Physics", topic: "চল তড়িৎ", questionText: "বর্তনীতে সমান্তরাল সমবায়ে কোনটি ধ্রুব থাকে?", options: ["A. প্রবাহ", "B. বিভব পার্থক্য", "C. রোধ", "D. ক্ষমতা"], correctAnswer: "B. বিভব পার্থক্য", exam: "General", explanation: "সমান্তরালে ভোল্টেজ সমান থাকে।" },
+  { id: 46, subject: "Physics", topic: "আধুনিক পদার্থবিজ্ঞান", questionText: "ফোটনের স্থির ভর কত?", options: ["A. 0", "B. 1 AMU", "C. 9.1 × 10⁻³¹ kg", "D. ଅসীম"], correctAnswer: "A. 0", exam: "General", explanation: "ফোটনের স্থির ভর শূন্য।" },
+  { id: 47, subject: "Physics", topic: "আধুনিক পদার্থবিজ্ঞান", questionText: "E = mc² সমীকরণটি কে প্রদান করেন?", options: ["A. নিউটন", "B. আইনস্টাইন", "C. প্ল্যাঙ্ক", "D. বোর"], correctAnswer: "B. আইনস্টাইন", exam: "General", explanation: "আলবার্ট আইনস্টাইন (Mass-energy equivalence)" },
+  { id: 48, subject: "Physics", topic: "আধুনিক পদার্থবিজ্ঞান", questionText: "প্ল্যাঙ্কের ধ্রুবক (h) এর মান কত?", options: ["A. 6.63 × 10⁻³⁴ J.s", "B. 6.63 × 10⁻³⁴ J/s", "C. 1.6 × 10⁻¹⁹ J", "D. 3 × 10⁸ m/s"], correctAnswer: "A. 6.63 × 10⁻³⁴ J.s", exam: "General", explanation: "h = 6.626 × 10⁻³⁴ J s" },
+  { id: 49, subject: "Physics", topic: "আধুনিক পদার্থবিজ্ঞান", questionText: "আলোক তড়িৎ ক্রিয়ায় নিঃসৃত ইলেকট্রনের গতিশক্তি কিসের ওপর নির্ভর করে?", options: ["A. আলোর তীব্রতা", "B. আলোর ফ্রিকোয়েন্সি (কম্পাঙ্ক)", "C. বিকিরণের সময়", "D. আলোর বেগ"], correctAnswer: "B. আলোর ফ্রিকোয়েন্সি (কম্পাঙ্ক)", exam: "General", explanation: "K_max = hf - Φ" },
+  { id: 50, subject: "Physics", topic: "আধুনিক পদার্থবিজ্ঞান", questionText: "ডি-ব্রগলি তরঙ্গের সমীকরণ কোনটি?", options: ["A. λ = h/p", "B. λ = p/h", "C. λ = h/E", "D. λ = hc/E"], correctAnswer: "A. λ = h/p", exam: "General", explanation: "লুই ডি-ব্রগলির মতে λ = h/p" },
 ];
+
+// ============================================================================
+// 🧪 CHEMISTRY QUESTIONS (50 Questions)
+// ============================================================================
+export const chemistryQuestions: Question[] = [
+  { id: 1, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "নিচের কোন অরবিটালটি অসম্ভব?", options: ["A. 2s", "B. 2p", "C. 2d", "D. 3d"], correctAnswer: "C. 2d", exam: "DU: 22-23", explanation: "n=2 হলে l=0,1 (s,p)। 2d হয় না।" },
+  { id: 2, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "হাইড্রোজেনের কোন আইসোটোপে নিউট্রন নেই?", options: ["A. প্রোটিয়াম", "B. ডিউটেরিয়াম", "C. ট্রিটিয়াম", "D. কোনটিই নয়"], correctAnswer: "A. প্রোটিয়াম", exam: "General", explanation: "প্রোটিয়াম (1H1) এ নিউট্রন 0." },
+  { id: 3, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "রাদারফোর্ডের α-কণা বিচ্ছুরণ পরীক্ষায় কী ব্যবহৃত হয়েছিল?", options: ["A. সোনার পাত", "B. রূপার পাত", "C. তামার পাত", "D. পলিথিন"], correctAnswer: "A. সোনার পাত", exam: "General", explanation: "Au foil ব্যবহৃত হয়েছিল নিউক্লিয়াস আবিষ্কারে।" },
+  { id: 4, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "কোয়ান্টাম সংখ্যা কয় প্রকার?", options: ["A. ২", "B. ৩", "C. ৪", "D. ৫"], correctAnswer: "C. ৪", exam: "General", explanation: "n, l, m, s" },
+  { id: 5, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "অরবিটালের আকৃতি নির্দেশ করে কোন কোয়ান্টাম সংখ্যা?", options: ["A. প্রধান", "B. সহকারী", "C. চুম্বকীয়", "D. স্পিন"], correctAnswer: "B. সহকারী", exam: "General", explanation: "সহকারী (Azimuthal, l) আকৃতি নির্ধারণ করে।" },
+  { id: 6, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "আলফা কণা মূলত কী?", options: ["A. প্রোটন", "B. ইলেকট্রন", "C. হিলিয়াম নিউক্লিয়াস", "D. নিউট্রন"], correctAnswer: "C. হিলিয়াম নিউক্লিয়াস", exam: "General", explanation: "He²⁺ আয়ন" },
+  { id: 7, subject: "Chemistry", topic: "পরিবেশ রসায়ন", questionText: "বয়েলের সূত্রের গাণিতিক রূপ কোনটি?", options: ["A. V ∝ T", "B. V ∝ 1/P", "C. P ∝ T", "D. V ∝ n"], correctAnswer: "B. V ∝ 1/P", exam: "RU: 23-24", explanation: "স্থির T এ আয়তন চাপের ব্যস্তানুপাতিক।" },
+  { id: 8, subject: "Chemistry", topic: "পরিবেশ রসায়ন", questionText: "চার্লসের সূত্র অনুসারে পরম শূন্য তাপমাত্রায় গ্যাসের আয়তন কী হয়?", options: ["A. দ্বিগুণ", "B. অর্ধেক", "C. শূন্য", "D. অসীম"], correctAnswer: "C. শূন্য", exam: "General", explanation: "V ∝ T. T=0 K হলে V=0." },
+  { id: 9, subject: "Chemistry", topic: "পরিবেশ রসায়ন", questionText: "আদর্শ গ্যাস সমীকরণ কোনটি?", options: ["A. PV = nRT", "B. PM = dRT", "C. P = F/A", "D. V = kT"], correctAnswer: "A. PV = nRT", exam: "General", explanation: "সব সূত্র একত্রিত করে PV = nRT হয়।" },
+  { id: 10, subject: "Chemistry", topic: "পরিবেশ রসায়ন", questionText: "গ্রিনহাউস গ্যাসের মধ্যে সবচেয়ে দায়ী কোনটি?", options: ["A. CH₄", "B. N₂O", "C. CO₂", "D. CFC"], correctAnswer: "C. CO₂", exam: "General", explanation: "কার্বন ডাই অক্সাইডের পরিমাণ সবচেয়ে বেশি বলে এটি মূল দায়ী।" },
+  { id: 11, subject: "Chemistry", topic: "পরিবেশ রসায়ন", questionText: "Ozone (O₃) স্তর কোথায় অবস্থিত?", options: ["A. ট্রপোস্ফিয়ার", "B. স্ট্র্যাটোস্ফিয়ার", "C. মেসোস্ফিয়ার", "D. থার্মোস্ফিয়ার"], correctAnswer: "B. স্ট্র্যাটোস্ফিয়ার", exam: "General", explanation: "স্ট্র্যাটোস্ফিয়ারে ওজোন স্তর থাকে।" },
+  { id: 12, subject: "Chemistry", topic: "রাসায়নিক বন্ধন", questionText: "নিচের কোন অণুতে SP³ সংকরায়ণ নেই?", options: ["A. CH₄", "B. C₂H₄", "C. NH₃", "D. H₂O"], correctAnswer: "B. C₂H₄", exam: "General", explanation: "C₂H₄ (অ্যালকিন) তে SP² সংকরায়ণ থাকে।" },
+  { id: 13, subject: "Chemistry", topic: "রাসায়নিক বন্ধন", questionText: "H₂O অণুর আকৃতি কেমন?", options: ["A. সরলরৈখিক", "B. চতুস্তলকীয়", "C. ভি-আকৃতি (V-shape)", "D. সমতলীয় ত্রিকোণাকার"], correctAnswer: "C. ভি-আকৃতি (V-shape)", exam: "General", explanation: "২ টি লোন পেয়ারের প্রভাবে চতুস্তলকীয় আকৃতি বিকৃত হয়ে V-আকৃতি হয়।" },
+  { id: 14, subject: "Chemistry", topic: "রাসায়নিক বন্ধন", questionText: "অ্যামোনিয়া (NH₃) অণুতে বন্ধন কোণ কত?", options: ["A. 109.5°", "B. 107°", "C. 104.5°", "D. 120°"], correctAnswer: "B. 107°", exam: "General", explanation: "১ টি লোন পেয়ার থাকায় কোণ ১০৯.৫° থেকে কমে ১০৭° হয়।" },
+  { id: 15, subject: "Chemistry", topic: "রাসায়নিক বন্ধন", questionText: "জলের উচ্চ স্ফুটনাঙ্কের মূল কারণ কী?", options: ["A. সমযোজী বন্ধন", "B. আয়নিক বন্ধন", "C. হাইড্রোজেন বন্ধন", "D. ভ্যান ডার ওয়ালস বল"], correctAnswer: "C. হাইড্রোজেন বন্ধন", exam: "General", explanation: "আন্তঃআণবিক H-বন্ধনের কারণে স্ফুটনাঙ্ক বেশি হয়।" },
+  { id: 16, subject: "Chemistry", topic: "রাসায়নিক রদবদল", questionText: "বিশুদ্ধ পানির pH কত?", options: ["A. 0", "B. 7", "C. 14", "D. 1"], correctAnswer: "B. 7", exam: "GST: 21-22", explanation: "[H+] = [OH-] = 10^-7 M." },
+  { id: 17, subject: "Chemistry", topic: "রাসায়নিক রদবদল", questionText: "রক্তের স্বাভাবিক pH কত?", options: ["A. 7.0", "B. 7.4", "C. 6.8", "D. 8.2"], correctAnswer: "B. 7.4", exam: "General", explanation: "মানুষের রক্তের pH ৭.৩৫-৭.৪৫ এর মধ্যে থাকে।" },
+  { id: 18, subject: "Chemistry", topic: "রাসায়নিক রদবদল", questionText: "অ্যাসিড দ্রবণে লিটমাসের বর্ণ কী হয়?", options: ["A. লাল", "B. নীল", "C. সবুজ", "D. বর্ণহীন"], correctAnswer: "A. লাল", exam: "General", explanation: "অ্যাসিড নীল লিটমাসকে লাল করে।" },
+  { id: 19, subject: "Chemistry", topic: "রাসায়নিক রদবদল", questionText: "বাফার দ্রবণ কী কাজ করে?", options: ["A. pH বাড়ায়", "B. pH কমায়", "C. pH স্থির রাখে", "D. তাপমাত্রা স্থির রাখে"], correctAnswer: "C. pH স্থির রাখে", exam: "General", explanation: "সামান্য এসিড বা ক্ষার যোগ করলেও pH অপরিবর্তিত রাখার চেষ্টা করে।" },
+  { id: 20, subject: "Chemistry", topic: "রাসায়নিক রদবদল", questionText: "Kp এবং Kc এর মধ্যে সম্পর্ক কী?", options: ["A. Kp = Kc(RT)^Δn", "B. Kp = Kc / (RT)", "C. Kp = Kc + RT", "D. Kc = Kp(RT)^Δn"], correctAnswer: "A. Kp = Kc(RT)^Δn", exam: "General", explanation: "আদর্শ গ্যাস সমীকরণ থেকে এটি প্রতিপাদিত।" },
+  { id: 21, subject: "Chemistry", topic: "তড়িৎ রসায়ন", questionText: "অ্যানোডে কোন বিক্রিয়া ঘটে?", options: ["A. জারণ (Oxidation)", "B. বিজারণ (Reduction)", "C. উভয়ই", "D. কোনোটিই নয়"], correctAnswer: "A. জারণ (Oxidation)", exam: "General", explanation: "Anode-এ জারণ (ইলেকট্রন ত্যাগ) ঘটে।" },
+  { id: 22, subject: "Chemistry", topic: "তড়িৎ রসায়ন", questionText: "গ্যালভানিক কোষে ক্যাথোড কোন মেরু?", options: ["A. ধনাত্মক (+)", "B. ঋণাত্মক (-)", "C. নিস্তড়িৎ", "D. পরিবর্তনশীল"], correctAnswer: "A. ধনাত্মক (+)", exam: "General", explanation: "গ্যালভানিক কোষে অ্যানোড ঋণাত্মক এবং ক্যাথোড ধনাত্মক।" },
+  { id: 23, subject: "Chemistry", topic: "তড়িৎ রসায়ন", questionText: "১ ফ্যারাডে = কত কুলম্ব?", options: ["A. 96500 C", "B. 1 C", "C. 6.02 C", "D. 9.65 C"], correctAnswer: "A. 96500 C", exam: "General", explanation: "১ মোল ইলেকট্রনের চার্জ 96485 C, যা প্রায় 96500 C." },
+  { id: 24, subject: "Chemistry", topic: "তড়িৎ রসায়ন", questionText: "সিলভার নাইট্রেট (AgNO3) দ্রবণ থেকে ১ মোল Ag জমা করতে কত ফ্যারাডে বিদ্যুৎ লাগবে?", options: ["A. 1 F", "B. 2 F", "C. 3 F", "D. 0.5 F"], correctAnswer: "A. 1 F", exam: "General", explanation: "Ag+ + e- -> Ag. ১ মোল আদান প্রদান।" },
+  { id: 25, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "অ্যালকাইনের সাধারণ সংকেত কোনটি?", options: ["A. CnH2n+2", "B. CnH2n", "C. CnH2n-2", "D. CnH2n-1"], correctAnswer: "C. CnH2n-2", exam: "CU: 20-21", explanation: "অ্যালকাইন = ত্রিবন্ধন, CnH2n-2." },
+  { id: 26, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "মিথেন (CH₄) গ্যাসে H-C-H বন্ধন কোণ কত?", options: ["A. 90°", "B. 109.5°", "C. 120°", "D. 180°"], correctAnswer: "B. 109.5°", exam: "General", explanation: "চতুস্তলকীয় জ্যামিতির কারণে কোণ 109.5°।" },
+  { id: 27, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "বেঞ্জিন অণুতে π (পাই) ইলেকট্রনের সংখ্যা কত?", options: ["A. 3", "B. 6", "C. 12", "D. 4"], correctAnswer: "B. 6", exam: "General", explanation: "৩ টি পাই বন্ডে ৩×২ = ৬ টি ডি-লকালাইজড π ইলেক্ট্রন।" },
+  { id: 28, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "মারকনিকভের সূত্র কোন ধরনের বিক্রিয়ার জন্য প্রযোজ্য?", options: ["A. প্রতিস্থাপন", "B. অপসারণ", "C. যুত (Addition)", "D. সমানুকরণ"], correctAnswer: "C. যুত (Addition)", exam: "General", explanation: "অপ্রতিসম অ্যালকিনের সাথে অপ্রতিসম বিকারকের যুত বিক্রিয়া।" },
+  { id: 29, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "ফরমালিনের মূল উপাদান কী?", options: ["A. ইথান্যাল", "B. প্রোপানোন", "C. মিথান্যাল", "D. বেঞ্জালডিহাইড"], correctAnswer: "C. মিথান্যাল", exam: "General", explanation: "মিথান্যাল (Formaldehyde) এর ৩০-৪০% জলীয় দ্রবণ।" },
+  { id: 30, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "ফল পাকাতে কোনটি ব্যবহৃত হয়?", options: ["A. ইথিলিন", "B. মিথেন", "C. ইথেন", "D. বেনজিন"], correctAnswer: "A. ইথিলিন", exam: "General", explanation: "ইথিন বা ইথিলিন হরমোন ফল পাকতে সাহায্য করে।" },
+  { id: 31, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "লুকাস বিকারক কী কাজে লাগে?", options: ["A. কার্বক্সিলিক অ্যাসিড শনাক্তকরণে", "B. অ্যালকোহল শনাক্তকরণে", "C. অ্যালডিহাইড শনাক্তকরণে", "D. অ্যামিন শনাক্তকরণে"], correctAnswer: "B. অ্যালকোহল শনাক্তকরণে", exam: "General", explanation: "অ্যানহাইড্রাস ZnCl₂ ও ঘন HCl এর মিশ্রণ দিয়ে অ্যালকোহল (১°, ২°, ৩°) শনাক্ত করা হয়।" },
+  { id: 32, subject: "Chemistry", topic: " পরিমাণগত রসায়ন", questionText: "মোলারিটির একক কী?", options: ["A. মোল/কেজি", "B. মোল/লিটার", "C. গ্রাম/লিটার", "D. গ্রাম/মোল"], correctAnswer: "B. মোল/লিটার", exam: "General", explanation: "এক লিটার দ্রবণে কত মোল দ্রব আছে তা মোলারিটি।" },
+  { id: 33, subject: "Chemistry", topic: "পরিমাণগত রসায়ন", questionText: "মোলারিটি কিসের ওপর নির্ভরশীল?", options: ["A. চাপ", "B. তাপমাত্রা", "C. উভয়ই", "D. কোনটিই নয়"], correctAnswer: "B. তাপমাত্রা", exam: "General", explanation: "তাপমাত্রার সাথে আয়তন পরিবর্তিত হয়, তাই মোলারিটি পরিবর্তিত হয়।" },
+  { id: 34, subject: "Chemistry", topic: "পরিমাণগত রসায়ন", questionText: "অক্সিজেন অণুর ভর কত?", options: ["A. 16 g", "B. 32 g", "C. 8 g", "D. 1 g"], correctAnswer: "B. 32 g", exam: "General", explanation: "O₂ অণুর আণবিক ভর 16×2 = 32 amu বা 32 g/mol." },
+  { id: 35, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "শিখা পরীক্ষায় सोडियम (Na) কী বর্ণ দেয়?", options: ["A. সোনালী হলুদ", "B. ইটের মতো লাল", "C. বেগুনি", "D. সবুজ"], correctAnswer: "A. সোনালী হলুদ", exam: "General", explanation: "Na+ সোনালী হলুদ (Golden yellow) বর্ণ প্রদর্শন করে।" },
+  { id: 36, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "শিখা পরীক্ষায় পটাশিয়াম (K) কী বর্ণ দেয়?", options: ["A. সোনালী হলুদ", "B. লাল", "C. হালকা বেগুনি", "D. নীল"], correctAnswer: "C. হালকা বেগুনি", exam: "General", explanation: "K+ আয়ন হালকা বেগুনি (Lilac) বর্ণ দেয়।" },
+  { id: 37, subject: "Chemistry", topic: "ল্যাবরেটরি নিরাপদ ব্যবহার", questionText: "নিচের কোন কাঁচের যন্ত্রপাতিটি তাপসহনীয়?", options: ["A. সফট গ্লাস", "B. পাইরেক্স গ্লাস", "C. সিলিকা গ্লাস", "D. ফাইবার গ্লাস"], correctAnswer: "B. পাইরেক্স গ্লাস", exam: "General", explanation: "বরোসিলিকেট বা পাইরেক্স গ্লাসের তাপ ধারণ ক্ষমতা বেশি।" },
+  { id: 38, subject: "Chemistry", topic: "ল্যাবরেটরি নিরাপদ ব্যবহার", questionText: "ক্ষতস্থানে এসিড পড়লে কী দিয়ে ধোয়া উচিত?", options: ["A. গাঢ় ক্ষার", "B. NaHCO3 এর লঘু দ্রবণ", "C. গরম পানি", "D. সাবান"], correctAnswer: "B. NaHCO3 এর লঘু দ্রবণ", exam: "General", explanation: "ক্ষতস্থানে এসিড প্রশমিত করার জন্য 5% NaHCO3 ব্যবহার করা হয়।" },
+  { id: 39, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "TNT এর পুরো নাম কী?", options: ["A. ট্রাই-নাইট্রো-টলুইন", "B. টেট্রা-নাইট্রো-টলুইন", "C. ট্রাই-নাইট্রো-ফেনল", "D. ট্রাই-অ্যামিনো-টলুইন"], correctAnswer: "A. ট্রাই-নাইট্রো-টলুইন", exam: "General", explanation: "TNT = Trinitrotoluene, একটি বিস্ফোরক।" },
+  { id: 40, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "উডজ বিক্রিয়া (Wurtz Reaction) দিয়ে কী তৈরি করা হয়?", options: ["A. অ্যালকেন", "B. অ্যালকিন", "C. অ্যালকাইন", "D. অ্যালকোহল"], correctAnswer: "A. অ্যালকেন", exam: "General", explanation: "অ্যালকাইল হ্যালাইড থেকে উচ্চতর অ্যালকেন প্রস্তুতি।" },
+  { id: 41, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "ইথিন (C2H4) গ্যাসে ব্রোমিন দ্রবণ যোগ করলে বর্ণের কী পরিবর্তন হয়?", options: ["A. লাল থেকে বর্ণহীন", "B. বর্ণহীন থেকে লাল", "C. সবুজ থেকে নীল", "D. অপরিবর্তিত"], correctAnswer: "A. লাল থেকে বর্ণহীন", exam: "General", explanation: "অসম্পৃক্ততার পরীক্ষায় ব্রোমিনের লাল বর্ণ অপসারিত হয়।" },
+  { id: 42, subject: "Chemistry", topic: "জৈব রসায়ন", questionText: "প্রাইমারি স্পিরিট বলতে কী বোঝায়?", options: ["A. 100% ইথানল", "B. 95.6% ইথানল", "C. 99% মিথানল", "D. ফরমালিন"], correctAnswer: "B. 95.6% ইথানল", exam: "General", explanation: "রেক্টিফায়েড স্পিরিট বা প্রাইমারি স্পিরিটে প্রায় 95.6% ইথানল এবং 4.4% পানি থাকে।" },
+  { id: 43, subject: "Chemistry", topic: "পরিবেশ রসায়ন", questionText: "পানির খরতার (Hardness) মূল কারণ কোন আয়ন?", options: ["A. Na+, K+", "B. Ca2+, Mg2+", "C. Cl-, SO4(2-)", "D. Fe3+, Cu2+"], correctAnswer: "B. Ca2+, Mg2+", exam: "General", explanation: "ক্যালসিয়াম ও ম্যাগনেসিয়াম আয়নের বাইকার্বনেট ও সালফেট লবণ পানির খরতা তৈরি করে।" },
+  { id: 44, subject: "Chemistry", topic: "পরিবেশ রসায়ন", questionText: "BOD এর পূর্ণরূপ কী?", options: ["A. Biological Oxygen Demand", "B. Biochemical Oxygen Demand", "C. Basic Oxygen Demand", "D. Both A & B"], correctAnswer: "B. Biochemical Oxygen Demand", exam: "General", explanation: "পানিতে উপস্থিত জৈব পদার্থ ভাঙতে জীবাণুর যে পরিমাণ O2 প্রয়োজন।" },
+  { id: 45, subject: "Chemistry", topic: "রাসায়নিক পরিবর্তন", questionText: "প্রভাবক বিক্রিয়ায় কী পরিবর্তন করে?", options: ["A. বিক্রিয়কের পরিমাণ", "B. ডেল্টা H (ΔH)", "C. সক্রিয়ণ শক্তি (Ea)", "D. সাম্যাবস্থা"], correctAnswer: "C. সক্রিয়ণ শক্তি (Ea)", exam: "General", explanation: "প্রভাবক বিক্রিয়ার বিকল্প পথ তৈরি করে অ্যাক্টিভেশন এনার্জি কমায় বা বাড়ায়।" },
+  { id: 46, subject: "Chemistry", topic: "রাসায়নিক পরিবর্তন", questionText: "লা-শাতেলিয়ের নীতি কোন বিক্রিয়ার ক্ষেত্রে প্রযোজ্য?", options: ["A. একমুখী বিক্রিয়া", "B. উপমুখী বিক্রিয়া ও সাম্যাবস্থা", "C. প্রশমন বিক্রিয়া", "D. দহন বিক্রিয়া"], correctAnswer: "B. উপমুখী বিক্রিয়া ও সাম্যাবস্থা", exam: "General", explanation: "সাম্যাবস্থায় থাকা সিস্টেমের নিয়ন্ত্রক পরিবর্তন করলে সাম্য কোন দিকে যাবে তা নির্দেশ করে।" },
+  { id: 47, subject: "Chemistry", topic: "রাসায়নিক পরিবর্তন", questionText: "হেস এর সূত্র (Hess's Law) কিসের সাথে সম্পর্কিত?", options: ["A. বিক্রিয়ার হার", "B. সাম্য ধ্রুবক", "C. এনথালপি পরিবর্তন (ΔH)", "D. ইলেকট্রন বিন্যাস"], correctAnswer: "C. এনথালপি পরিবর্তন (ΔH)", exam: "General", explanation: "কোনো বিক্রিয়া এক বা একাধিক ধাপে হলে মোট এনথালপি পরিবর্তন সমান থাকে।" },
+  { id: 48, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "কোন সিরিজের রেখা দৃশ্যমান অঞ্চলে পড়ে?", options: ["A. লাইম্যান", "B. বামার", "C. প্যাসচেন", "D. ব্র্যাকেট"], correctAnswer: "B. বামার", exam: "General", explanation: "হাইড্রোজেন বর্ণালিতে বামার সিরিজ দৃশ্যমান (Visible region) অঞ্চলে থাকে।" },
+  { id: 49, subject: "Chemistry", topic: "গুণগত রসায়ন", questionText: "Pauli's Exclusion Principle অনুযায়ী একটি অরবিটালে সর্বোচ্চ কয়টি ইলেকট্রন থাকতে পারে?", options: ["A. ১", "B. ২", "C. ৪", "D. ৬"], correctAnswer: "B. ২", exam: "General", explanation: "একই অরবিটালে থাকা ২ টি ইলেকট্রনের ৪টি কোয়ান্টাম সংখ্যার মান এক হতে পারে না। তাই সর্বোচ্চ ২টি স্থান পায়।" },
+  { id: 50, subject: "Chemistry", topic: "পরিমাণগত রসায়ন", questionText: "জারণ সংখ্যা নির্ণয়: KMnO4 এ Mn এর জারণ সংখ্যা কত?", options: ["A. +5", "B. +6", "C. +7", "D. +8"], correctAnswer: "C. +7", exam: "General", explanation: "K(+1) + Mn(x) + O(-2*4) = 0 => 1 + x - 8 = 0 => x = +7." },
+];
+
+export const mockQuestions: Record<string, Question[]> = {
+  physics: physicsQuestions,
+  chemistry: chemistryQuestions,
+};
