@@ -667,9 +667,18 @@ export default function ShadowTimer() {
   const [xpNotif, setXpNotif]       = useState<number | null>(null);
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
-  const sessionIdRef                = useRef(0);
+  const sessionIdRef = useRef(0);
+  const uidRef       = useRef<string | null>(null); // store auth uid
 
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
+
+  // Store the current user's UID once on mount
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      uidRef.current = u ? u.uid : null;
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -686,22 +695,18 @@ export default function ShadowTimer() {
     setSessions(prev => [...prev, newSession]);
     setXpNotif(xp);
 
-    // Persist to Firebase
-    const unsubAuth = onAuthStateChanged(auth, async (u) => {
-      if (!u) return;
-      try {
-        await awardTimerXP(u.uid, mins, type);
-        await saveSessionHistory(u.uid, {
-          type,
-          duration: mins,
-          xp,
-          subject,
-        });
-      } catch (err) {
-        console.error("Failed to save session to Firebase:", err);
-      }
-      unsubAuth();
-    });
+    // Persist to Firebase using the cached uid
+    const uid = uidRef.current;
+    if (uid) {
+      (async () => {
+        try {
+          await awardTimerXP(uid, mins, type);
+          await saveSessionHistory(uid, { type, duration: mins, xp, subject });
+        } catch (err) {
+          console.error("Failed to save session to Firebase:", err);
+        }
+      })();
+    }
   };
 
   useEffect(() => {

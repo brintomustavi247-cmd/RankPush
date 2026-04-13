@@ -92,11 +92,21 @@ export default function ArenaPage() {
 
   const fbId   = useRef(0);
   const xpSavedRef = useRef(false); // prevent double-save
+  const uidRef     = useRef<string | null>(null); // store auth uid
+
   const currentQ = questions[idx] || null;
   const multiplier = getMultiplier(combo);
   const comboInfo  = getCombo(combo);
   const accuracy   = idx > 0 ? Math.round((correctCount / idx) * 100) : 0;
   const hpColor    = hp > 60 ? "#22c55e" : hp > 30 ? "#f97316" : "#ef4444";
+
+  // Store the current user's UID once on mount
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      uidRef.current = u ? u.uid : null;
+    });
+    return () => unsub();
+  }, []);
 
   // EXP count-up on result
   useEffect(() => {
@@ -109,21 +119,22 @@ export default function ArenaPage() {
       if (cur >= exp) clearInterval(t);
     }, 20);
     return () => clearInterval(t);
-  }, [gameState]);
+  }, [gameState, exp]);
 
   // Save battle result to Firebase when game ends
   useEffect(() => {
     if (gameState === "playing" || xpSavedRef.current) return;
+    if (!uidRef.current) return;
     xpSavedRef.current = true;
+    const uid = uidRef.current;
     const won = gameState === "won";
     const acc = idx > 0 ? Math.round((correctCount / idx) * 100) : 0;
 
-    const unsubAuth = onAuthStateChanged(auth, async (u) => {
-      if (!u) return;
+    (async () => {
       try {
-        const awarded = await awardBattleXP(u.uid, won, acc);
+        const awarded = await awardBattleXP(uid, won, acc);
         setXpAwarded(awarded);
-        await saveBattleHistory(u.uid, {
+        await saveBattleHistory(uid, {
           subject,
           won,
           exp,
@@ -136,9 +147,8 @@ export default function ArenaPage() {
       } catch (err) {
         console.error("Failed to save battle to Firebase:", err);
       }
-      unsubAuth();
-    });
-  }, [gameState]); // eslint-disable-line react-hooks/exhaustive-deps
+    })();
+  }, [gameState, idx, correctCount, subject, exp, maxCombo, total]);
 
   // Timer
   useEffect(() => {

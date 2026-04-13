@@ -59,7 +59,7 @@ export default function ProfilePage() {
     const unsubDoc = onSnapshot(userRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        const updated = {
+        setUser({
           uid: authUid,
           displayName: data.displayName ?? DEFAULT_USER.displayName,
           email: data.email ?? "",
@@ -67,20 +67,19 @@ export default function ProfilePage() {
           bio: data.bio ?? DEFAULT_USER.bio,
           photoURL: data.photoURL ?? DEFAULT_USER.photoURL,
           xp: data.xp ?? 0,
-        };
-        setUser(updated);
-        // Keep form in sync only when not actively editing
-        setFormData((prev) =>
-          isEditing
-            ? prev
-            : { displayName: updated.displayName, phone: updated.phone, bio: updated.bio }
-        );
+        });
       }
       setIsLoading(false);
     });
     return () => unsubDoc();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUid]);
+
+  // ── Sync form data when user data changes, but only when not editing ──
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData({ displayName: user.displayName, phone: user.phone, bio: user.bio });
+    }
+  }, [user, isEditing]);
 
   // Rank Logic
   const isCRankUnlocked = user.xp >= CRANK_XP_REQUIREMENT;
