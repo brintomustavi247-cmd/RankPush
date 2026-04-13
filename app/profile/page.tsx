@@ -108,7 +108,8 @@ export default function ProfilePage() {
         bio: formData.bio,
       });
       setIsEditing(false);
-    } catch {
+    } catch (err) {
+      console.error("Failed to save profile to Firebase:", err);
       // fallback: update local state only
       setUser({ ...user, ...formData });
       setIsEditing(false);

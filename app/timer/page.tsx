@@ -698,7 +698,7 @@ export default function ShadowTimer() {
     // Save XP to Firebase if user is logged in
     const uid = currentUidRef.current;
     if (uid) {
-      awardTimerXP(uid, mins, xp, subject, type).catch(() => {/* silently fail */});
+      awardTimerXP(uid, mins, xp, subject, type).catch((err) => console.error("Failed to save timer XP:", err));
     }
   };
 

@@ -11,6 +11,7 @@ import {
   getDocs,
   onSnapshot,
   Unsubscribe,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -137,9 +138,9 @@ export interface BattleHistoryEntry {
   timeAgo: string;
 }
 
-function timeAgoFromTimestamp(ts: any): string {
+function timeAgoFromTimestamp(ts: Timestamp | Date | null | undefined): string {
   if (!ts) return "just now";
-  const date = ts.toDate ? ts.toDate() : new Date(ts);
+  const date = ts instanceof Timestamp ? ts.toDate() : ts instanceof Date ? ts : new Date();
   const diffMs = Date.now() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   if (diffMins < 1) return "just now";

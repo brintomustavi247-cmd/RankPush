@@ -129,7 +129,7 @@ export default function ArenaPage() {
     setXpSaved(true);
     awardBattleXP(uid, won, correctCount, total, meta.label, exp)
       .then((awarded) => setSavedXP(awarded))
-      .catch(() => {/* silently fail */});
+      .catch((err) => console.error("Failed to save battle XP:", err));
   }, [gameState]);
 
   // Timer
