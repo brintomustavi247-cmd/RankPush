@@ -25,6 +25,7 @@ export interface RankInfo {
   glowColor: string;
   bgColor: string;
   icon: string;
+  badgeImage: string;
   minXP: number;
   maxXP: number;
   description: string;
@@ -96,6 +97,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(107,114,128,0.4)",
     bgColor: "rgba(107,114,128,0.08)",
     icon: "🪨",
+    badgeImage: "/rank-badges/bronze-badge.svg",
     minXP: 0,
     maxXP: 1999,
     description: "The starting point. Every Shadow Lord began here.",
@@ -108,6 +110,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(180,83,9,0.4)",
     bgColor: "rgba(180,83,9,0.08)",
     icon: "🔰",
+    badgeImage: "/rank-badges/silver-badge.svg",
     minXP: 2000,
     maxXP: 5999,
     description: "Awakening confirmed. The system acknowledges your power.",
@@ -120,6 +123,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(14,165,233,0.4)",
     bgColor: "rgba(14,165,233,0.08)",
     icon: "🌀",
+    badgeImage: "/rank-badges/gold-badge.svg",
     minXP: 6000,
     maxXP: 13999,
     description: "You raid dungeons others fear. Gates tremble at your approach.",
@@ -132,6 +136,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(34,211,238,0.4)",
     bgColor: "rgba(34,211,238,0.08)",
     icon: "⚡",
+    badgeImage: "/rank-badges/platinum-badge.svg",
     minXP: 14000,
     maxXP: 27999,
     description: "Elite class. Guild leaders take notice of your strength.",
@@ -144,6 +149,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(168,85,247,0.4)",
     bgColor: "rgba(168,85,247,0.08)",
     icon: "💜",
+    badgeImage: "/rank-badges/diamond-badge.svg",
     minXP: 28000,
     maxXP: 49999,
     description: "Ranked among the nation's finest. Dungeons fall before you.",
@@ -156,6 +162,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(245,158,11,0.5)",
     bgColor: "rgba(245,158,11,0.08)",
     icon: "👑",
+    badgeImage: "/rank-badges/master-badge.svg",
     minXP: 50000,
     maxXP: 79999,
     description: "The pinnacle of mankind. Only the chosen few reach this rank.",
@@ -168,6 +175,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(236,72,153,0.5)",
     bgColor: "rgba(236,72,153,0.08)",
     icon: "🔱",
+    badgeImage: "/rank-badges/grandmaster-badge.svg",
     minXP: 80000,
     maxXP: 119999,
     description: "Transcends all ranks. A force capable of protecting nations.",
@@ -180,6 +188,7 @@ export const RANKS: RankInfo[] = [
     glowColor: "rgba(192,132,252,0.6)",
     bgColor: "rgba(192,132,252,0.08)",
     icon: "⚔️",
+    badgeImage: "/rank-badges/shadow-badge.svg",
     minXP: 120000,
     maxXP: Infinity,
     description: "The king of all shadows. None stand above you.",

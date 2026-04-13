@@ -49,6 +49,21 @@ const getCombo = (n: number) => COMBO_TIERS.find(t => n >= t.min)!;
 const getMultiplier = (n: number) => n >= 10 ? 4 : n >= 7 ? 3 : n >= 5 ? 2.5 : n >= 3 ? 2 : n >= 1 ? 1.5 : 1;
 
 // ─────────────────────────────────────────────
+// RANK UTILITIES (badge display on result screen)
+// ─────────────────────────────────────────────
+const RANK_DATA = [
+  { id: "e",             name: "E-Rank",        color: "#6b7280", glowColor: "rgba(107,114,128,0.5)", badgeImage: "/rank-badges/bronze-badge.svg",      minXP: 0,      maxXP: 1999   },
+  { id: "d",             name: "D-Rank",        color: "#b45309", glowColor: "rgba(180,83,9,0.5)",    badgeImage: "/rank-badges/silver-badge.svg",      minXP: 2000,   maxXP: 5999   },
+  { id: "c",             name: "C-Rank",        color: "#0ea5e9", glowColor: "rgba(14,165,233,0.5)",  badgeImage: "/rank-badges/gold-badge.svg",        minXP: 6000,   maxXP: 13999  },
+  { id: "b",             name: "B-Rank",        color: "#22d3ee", glowColor: "rgba(34,211,238,0.5)",  badgeImage: "/rank-badges/platinum-badge.svg",    minXP: 14000,  maxXP: 27999  },
+  { id: "a",             name: "A-Rank",        color: "#a855f7", glowColor: "rgba(168,85,247,0.5)",  badgeImage: "/rank-badges/diamond-badge.svg",     minXP: 28000,  maxXP: 49999  },
+  { id: "s",             name: "S-Rank",        color: "#f59e0b", glowColor: "rgba(245,158,11,0.6)",  badgeImage: "/rank-badges/master-badge.svg",      minXP: 50000,  maxXP: 79999  },
+  { id: "national",      name: "National Level",color: "#ec4899", glowColor: "rgba(236,72,153,0.6)",  badgeImage: "/rank-badges/grandmaster-badge.svg", minXP: 80000,  maxXP: 119999 },
+  { id: "shadow_monarch",name: "Shadow Monarch",color: "#c084fc", glowColor: "rgba(192,132,252,0.7)", badgeImage: "/rank-badges/shadow-badge.svg",      minXP: 120000, maxXP: Infinity },
+];
+const getRankForXP = (xp: number) => RANK_DATA.find(r => xp >= r.minXP && xp <= r.maxXP) || RANK_DATA[0];
+
+// ─────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────
 export default function ArenaPage() {
@@ -88,6 +103,7 @@ export default function ArenaPage() {
   const [animExp,      setAnimExp]      = useState(0);
   const [expandedLog,  setExpandedLog]  = useState<number | null>(null);
   const [xpAwarded,    setXpAwarded]    = useState<number | null>(null);
+  const [userTotalXP,  setUserTotalXP]  = useState<number | null>(null);
 
   const fbId            = useRef(0);
   const xpSavedRef      = useRef(false); // prevent double-save
@@ -130,9 +146,10 @@ export default function ArenaPage() {
 
     (async () => {
       try {
-        const awarded = await awardBattleXP(uid, won, acc);
+        const { awarded, newTotalXP } = await awardBattleXP(uid, won, acc);
         xpSavedRef.current = true; // mark saved only after success
         setXpAwarded(awarded);
+        setUserTotalXP(newTotalXP);
         await saveBattleHistory(uid, {
           subject,
           won,
@@ -908,8 +925,60 @@ export default function ArenaPage() {
                 ))}
               </div>
 
+              {/* ── RANK BADGE ── */}
+              {userTotalXP !== null && (() => {
+                const userRank = getRankForXP(userTotalXP);
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: 0.45, type: "spring", bounce: 0.4 }}
+                    style={{
+                      margin: "0 16px 16px",
+                      padding: "18px 20px",
+                      borderRadius: 20,
+                      background: "rgba(255,255,255,0.04)",
+                      border: `1px solid ${userRank.color}33`,
+                      boxShadow: `0 0 24px ${userRank.glowColor}`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                    }}
+                  >
+                    <img
+                      src={userRank.badgeImage}
+                      alt={userRank.name}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        objectFit: "contain",
+                        filter: `drop-shadow(0 0 10px ${userRank.glowColor})`,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div>
+                      <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 4 }}>
+                        Current Rank
+                      </p>
+                      <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: "0.1em", color: userRank.color, lineHeight: 1 }}>
+                        {userRank.name}
+                      </p>
+                      <p style={{ fontSize: 10, color: `${userRank.color}88`, marginTop: 4 }}>
+                        {userTotalXP.toLocaleString()} XP total
+                      </p>
+                    </div>
+                    {xpAwarded !== null && (
+                      <div style={{ marginLeft: "auto", textAlign: "right", flexShrink: 0 }}>
+                        <span className="font-logo" style={{ fontSize: 22, fontWeight: 900, color: "#f59e0b" }}>+{xpAwarded}</span>
+                        <p style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>XP Earned</p>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })()}
+
               {/* ── FIREBASE XP BADGE ── */}
-              {xpAwarded !== null && (
+              {xpAwarded !== null && userTotalXP === null && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}

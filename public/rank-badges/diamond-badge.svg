@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="35%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="#e9d5ff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7e22ce" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer aura -->
+  <ellipse cx="60" cy="66" rx="50" ry="54" fill="rgba(168,85,247,0.2)" filter="url(#glow)"/>
+
+  <!-- Wing shapes (behind shield) -->
+  <path d="M25 64 Q8 50 12 30 Q20 50 28 55 Z" fill="rgba(192,132,252,0.3)"/>
+  <path d="M95 64 Q112 50 108 30 Q100 50 92 55 Z" fill="rgba(192,132,252,0.3)"/>
+
+  <!-- Shield body -->
+  <path d="M60 8 L95 22 L95 64 Q95 90 60 112 Q25 90 25 64 L25 22 Z"
+        fill="url(#shieldGrad)" stroke="#c084fc" stroke-width="2.2"/>
+
+  <!-- Shine overlay -->
+  <path d="M60 8 L95 22 L95 64 Q95 90 60 112 Q25 90 25 64 L25 22 Z"
+        fill="url(#shine)"/>
+
+  <!-- Inner border (triple for diamond feel) -->
+  <path d="M60 16 L87 28 L87 63 Q87 84 60 103 Q33 84 33 63 L33 28 Z"
+        fill="none" stroke="rgba(233,213,255,0.3)" stroke-width="1.2"/>
+  <path d="M60 20 L83 31 L83 62 Q83 81 60 99 Q37 81 37 62 L37 31 Z"
+        fill="none" stroke="rgba(233,213,255,0.12)" stroke-width="0.6"/>
+
+  <!-- Diamond accents on sides -->
+  <polygon points="18,58 24,52 30,58 24,64" fill="rgba(192,132,252,0.6)" stroke="rgba(233,213,255,0.5)" stroke-width="0.8"/>
+  <polygon points="102,58 96,52 90,58 96,64" fill="rgba(192,132,252,0.6)" stroke="rgba(233,213,255,0.5)" stroke-width="0.8"/>
+
+  <!-- Small diamonds (below main diamonds) -->
+  <polygon points="18,72 22,68 26,72 22,76" fill="rgba(192,132,252,0.35)"/>
+  <polygon points="102,72 98,68 94,72 98,76" fill="rgba(192,132,252,0.35)"/>
+
+  <!-- Top diamond accent -->
+  <polygon points="60,10 66,18 60,26 54,18" fill="none" stroke="rgba(233,213,255,0.35)" stroke-width="0.8"/>
+
+  <!-- Rank letter -->
+  <text x="60" y="57" text-anchor="middle" dominant-baseline="central"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="46" font-weight="900" fill="rgba(250,245,255,0.94)">A</text>
+
+  <!-- Rank name -->
+  <text x="60" y="87" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="7.5" font-weight="700"
+        fill="rgba(233,213,255,0.7)" letter-spacing="2.5">A-RANK</text>
+</svg>

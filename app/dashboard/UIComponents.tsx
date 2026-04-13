@@ -16,9 +16,9 @@ interface RankBadgeProps {
 
 export function RankBadge({ rank, size = "md" }: RankBadgeProps) {
   const sizes = {
-    sm: { px: "8px 12px", fs: 9,  icon: 14 },
-    md: { px: "10px 16px", fs: 11, icon: 18 },
-    lg: { px: "14px 22px", fs: 14, icon: 24 },
+    sm: { imgSize: 40, px: "6px 10px", fs: 8,  gap: 6 },
+    md: { imgSize: 56, px: "8px 14px", fs: 10, gap: 8 },
+    lg: { imgSize: 80, px: "12px 20px", fs: 13, gap: 10 },
   };
   const s = sizes[size];
 
@@ -27,7 +27,7 @@ export function RankBadge({ rank, size = "md" }: RankBadgeProps) {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 8,
+        gap: s.gap,
         padding: s.px,
         borderRadius: 30,
         background: rank.bgColor,
@@ -35,7 +35,16 @@ export function RankBadge({ rank, size = "md" }: RankBadgeProps) {
         boxShadow: `0 0 16px ${rank.glowColor}`,
       }}
     >
-      <span style={{ fontSize: s.icon }}>{rank.icon}</span>
+      <img
+        src={rank.badgeImage}
+        alt={rank.name}
+        style={{
+          width: s.imgSize,
+          height: s.imgSize,
+          objectFit: "contain",
+          filter: `drop-shadow(0 0 6px ${rank.glowColor})`,
+        }}
+      />
       <div>
         <p
           style={{
@@ -49,10 +58,10 @@ export function RankBadge({ rank, size = "md" }: RankBadgeProps) {
         >
           {rank.name}
         </p>
-        {size === "lg" && (
+        {size !== "sm" && (
           <p
             style={{
-              fontSize: 10,
+              fontSize: s.fs - 2,
               color: `${rank.color}99`,
               marginTop: 2,
               letterSpacing: "0.06em",

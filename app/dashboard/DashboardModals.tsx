@@ -151,7 +151,16 @@ export function RankModal({ onClose, currentXP }: RankModalProps) {
                       textAlign: "center",
                     }}
                   >
-                    {r.icon}
+                    <img
+                      src={r.badgeImage}
+                      alt={r.name}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        objectFit: "contain",
+                        filter: `drop-shadow(0 0 4px ${r.glowColor})`,
+                      }}
+                    />
                   </span>
                   <div style={{ flex: 1 }}>
                     <div
