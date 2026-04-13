@@ -10,6 +10,12 @@ import {
 import { db } from "@/lib/firebase";
 
 // ─────────────────────────────────────────────
+// XP rate constants
+// ─────────────────────────────────────────────
+const FOCUSED_XP_PER_MINUTE  = 2; // Pomodoro/Focus sessions
+const STANDARD_XP_PER_MINUTE = 1; // Free timer sessions
+
+// ─────────────────────────────────────────────
 // Level calculation (1 level per 500 XP)
 // ─────────────────────────────────────────────
 export function calculateLevel(xp: number): number {
@@ -25,7 +31,7 @@ export async function updateUserXP(uid: string, xpAmount: number): Promise<void>
   const userRef = doc(db, "users", uid);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(userRef);
-    const currentXP: number = snap.exists() ? (snap.data().xp ?? 0) : 0;
+    const currentXP: number = snap.data()?.xp ?? 0;
     const newXP = currentXP + xpAmount;
     tx.update(userRef, { xp: newXP, level: calculateLevel(newXP) });
   });
@@ -56,7 +62,10 @@ export async function awardTimerXP(
   minutes: number,
   type: string
 ): Promise<number> {
-  const xpPerMinute = type === "POMODORO" || type === "FOCUS" ? 2 : 1;
+  const xpPerMinute =
+    type === "POMODORO" || type === "FOCUS"
+      ? FOCUSED_XP_PER_MINUTE
+      : STANDARD_XP_PER_MINUTE;
   const totalXP = Math.max(1, Math.round(minutes * xpPerMinute));
   await updateUserXP(uid, totalXP);
   // Update totalHoursStudied atomically with increment

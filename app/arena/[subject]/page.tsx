@@ -156,7 +156,7 @@ export default function ArenaPage() {
         console.error(`Failed to save battle to Firebase (uid=${uid}, subject=${subject}, won=${won}, acc=${acc}):`, err);
       }
     })();
-  }, [gameState]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [gameState, subject, total]);
 
   // Timer
   useEffect(() => {
