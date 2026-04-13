@@ -11,6 +11,9 @@ import {
   ChevronDown, LayoutDashboard, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/app/firebase";
+import { awardTimerXP } from "@/lib/xp-utils";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -665,8 +668,17 @@ export default function ShadowTimer() {
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   const sessionIdRef                = useRef(0);
+  const currentUidRef               = useRef<string | null>(null);
 
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
+
+  // Track auth state to get current user UID
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      currentUidRef.current = u ? u.uid : null;
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -682,6 +694,12 @@ export default function ShadowTimer() {
     };
     setSessions(prev => [...prev, newSession]);
     setXpNotif(xp);
+
+    // Save XP to Firebase if user is logged in
+    const uid = currentUidRef.current;
+    if (uid) {
+      awardTimerXP(uid, mins, xp, subject, type).catch((err) => console.error("Failed to save timer XP:", err));
+    }
   };
 
   useEffect(() => {

@@ -9,6 +9,9 @@ import {
   BarChart2, Crosshair, BookOpen, ChevronDown, ChevronUp
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/app/firebase";
+import { awardBattleXP } from "@/lib/xp-utils";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -85,6 +88,17 @@ export default function ArenaPage() {
   // Result
   const [animExp,      setAnimExp]      = useState(0);
   const [expandedLog,  setExpandedLog]  = useState<number | null>(null);
+  const [xpSaved,      setXpSaved]      = useState(false);
+  const [savedXP,      setSavedXP]      = useState(0);
+  const currentUidRef  = useRef<string | null>(null);
+
+  // Track auth state to get current user UID
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      currentUidRef.current = u ? u.uid : null;
+    });
+    return () => unsub();
+  }, []);
 
   const fbId   = useRef(0);
   const currentQ = questions[idx] || null;
@@ -104,6 +118,18 @@ export default function ArenaPage() {
       if (cur >= exp) clearInterval(t);
     }, 20);
     return () => clearInterval(t);
+  }, [gameState]);
+
+  // Save battle result to Firebase when game ends
+  useEffect(() => {
+    if (gameState === "playing" || xpSaved) return;
+    const uid = currentUidRef.current;
+    if (!uid) return;
+    const won = gameState === "won";
+    setXpSaved(true);
+    awardBattleXP(uid, won, correctCount, total, meta.label, exp)
+      .then((awarded) => setSavedXP(awarded))
+      .catch((err) => console.error("Failed to save battle XP:", err));
   }, [gameState]);
 
   // Timer
@@ -221,6 +247,7 @@ export default function ArenaPage() {
     setAnswerLog([]); setHasFreeze(true); setHasHeal(true); setHasShield(true);
     setShieldActive(false); setAnimExp(0); setSelectedOpt(null);
     setShowAnswer(false); setQStartTime(Date.now()); setExpandedLog(null);
+    setXpSaved(false); setSavedXP(0);
   };
 
   if (!currentQ && gameState === "playing") {
@@ -861,6 +888,29 @@ export default function ArenaPage() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* ── XP SAVED NOTIFICATION ── */}
+              {savedXP > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    margin: "0 16px 12px",
+                    padding: "10px 16px",
+                    borderRadius: 12,
+                    background: gameState === "won" ? "rgba(34,211,238,0.08)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${gameState === "won" ? "rgba(34,211,238,0.25)" : "rgba(255,255,255,0.1)"}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Zap size={14} color={gameState === "won" ? "#22d3ee" : "#f59e0b"} />
+                  <span style={{ fontSize: 12, fontWeight: 800, color: gameState === "won" ? "#22d3ee" : "#f59e0b", fontFamily: "'Orbitron', sans-serif", letterSpacing: "0.08em" }}>
+                    +{savedXP} XP SAVED TO PROFILE
+                  </span>
+                </motion.div>
+              )}
 
               {/* ── REVIEW SECTION ── */}
               <div className="review-section">
