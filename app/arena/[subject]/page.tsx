@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { physicsQuestions } from "@/lib/questions";
+import { awardBattleXP, saveBattleHistory } from "@/lib/xp-utils";
+import { useAuthUid } from "@/hooks/use-auth-uid";
 import {
   Swords, ChevronRight, Sparkles, Target, Zap, Clock,
   Heart, Flame, Shield, ArrowLeft, CheckCircle, XCircle,
@@ -85,13 +87,24 @@ export default function ArenaPage() {
   // Result
   const [animExp,      setAnimExp]      = useState(0);
   const [expandedLog,  setExpandedLog]  = useState<number | null>(null);
+  const [xpAwarded,    setXpAwarded]    = useState<number | null>(null);
 
-  const fbId   = useRef(0);
+  const fbId            = useRef(0);
+  const xpSavedRef      = useRef(false); // prevent double-save
+  const uidRef          = useAuthUid();  // cached auth uid
+  // Snapshot of final battle values so the save effect only needs [gameState]
+  const battleSnapRef   = useRef({ idx: 0, correctCount: 0, exp: 0, maxCombo: 0 });
+
   const currentQ = questions[idx] || null;
   const multiplier = getMultiplier(combo);
   const comboInfo  = getCombo(combo);
   const accuracy   = idx > 0 ? Math.round((correctCount / idx) * 100) : 0;
   const hpColor    = hp > 60 ? "#22c55e" : hp > 30 ? "#f97316" : "#ef4444";
+
+  // Keep battle snapshot ref up to date
+  useEffect(() => {
+    battleSnapRef.current = { idx, correctCount, exp, maxCombo };
+  }, [idx, correctCount, exp, maxCombo]);
 
   // EXP count-up on result
   useEffect(() => {
@@ -104,7 +117,37 @@ export default function ArenaPage() {
       if (cur >= exp) clearInterval(t);
     }, 20);
     return () => clearInterval(t);
-  }, [gameState]);
+  }, [gameState, exp]);
+
+  // Save battle result to Firebase when game ends
+  useEffect(() => {
+    if (gameState === "playing" || xpSavedRef.current) return;
+    if (!uidRef.current) return;
+    const uid = uidRef.current;
+    const won = gameState === "won";
+    const { idx: finalIdx, correctCount: finalCC, exp: finalExp, maxCombo: finalMax } = battleSnapRef.current;
+    const acc = finalIdx > 0 ? Math.round((finalCC / finalIdx) * 100) : 0;
+
+    (async () => {
+      try {
+        const awarded = await awardBattleXP(uid, won, acc);
+        xpSavedRef.current = true; // mark saved only after success
+        setXpAwarded(awarded);
+        await saveBattleHistory(uid, {
+          subject,
+          won,
+          exp: finalExp,
+          accuracy: acc,
+          maxCombo: finalMax,
+          totalQuestions: total,
+          correctCount: finalCC,
+          xpAwarded: awarded,
+        });
+      } catch (err) {
+        console.error(`Failed to save battle to Firebase (uid=${uid}, subject=${subject}, won=${won}, acc=${acc}):`, err);
+      }
+    })();
+  }, [gameState, subject, total, uidRef]);
 
   // Timer
   useEffect(() => {
@@ -221,6 +264,9 @@ export default function ArenaPage() {
     setAnswerLog([]); setHasFreeze(true); setHasHeal(true); setHasShield(true);
     setShieldActive(false); setAnimExp(0); setSelectedOpt(null);
     setShowAnswer(false); setQStartTime(Date.now()); setExpandedLog(null);
+    setXpAwarded(null);
+    xpSavedRef.current = false;
+    battleSnapRef.current = { idx: 0, correctCount: 0, exp: 0, maxCombo: 0 };
   };
 
   if (!currentQ && gameState === "playing") {
@@ -861,6 +907,34 @@ export default function ArenaPage() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* ── FIREBASE XP BADGE ── */}
+              {xpAwarded !== null && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", bounce: 0.4 }}
+                  style={{
+                    margin: "0 16px 16px",
+                    padding: "14px 18px",
+                    borderRadius: 16,
+                    background: "rgba(34,211,238,0.08)",
+                    border: "1px solid rgba(34,211,238,0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Zap size={18} color="#f59e0b" />
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.5)" }}>Firebase XP Saved</p>
+                      <p style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Profile updated in real-time</p>
+                    </div>
+                  </div>
+                  <span className="font-logo" style={{ fontSize: 22, fontWeight: 900, color: "#f59e0b" }}>+{xpAwarded}</span>
+                </motion.div>
+              )}
 
               {/* ── REVIEW SECTION ── */}
               <div className="review-section">

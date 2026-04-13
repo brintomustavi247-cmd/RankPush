@@ -11,6 +11,8 @@ import {
   ChevronDown, LayoutDashboard, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
+import { useAuthUid } from "@/hooks/use-auth-uid";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -664,7 +666,8 @@ export default function ShadowTimer() {
   const [xpNotif, setXpNotif]       = useState<number | null>(null);
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
-  const sessionIdRef                = useRef(0);
+  const sessionIdRef = useRef(0);
+  const uidRef       = useAuthUid(); // cached auth uid
 
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
 
@@ -682,6 +685,19 @@ export default function ShadowTimer() {
     };
     setSessions(prev => [...prev, newSession]);
     setXpNotif(xp);
+
+    // Persist to Firebase using the cached uid
+    const uid = uidRef.current;
+    if (uid) {
+      (async () => {
+        try {
+          const actualXP = await awardTimerXP(uid, mins, type);
+          await saveSessionHistory(uid, { type, duration: mins, xp: actualXP, subject });
+        } catch (err) {
+          console.error(`Failed to save session to Firebase (uid=${uid}, type=${type}, mins=${mins}, subject=${subject}):`, err);
+        }
+      })();
+    }
   };
 
   useEffect(() => {
