@@ -266,6 +266,7 @@ export default function ArenaPage() {
     setShowAnswer(false); setQStartTime(Date.now()); setExpandedLog(null);
     setXpAwarded(null);
     xpSavedRef.current = false;
+    battleSnapRef.current = { idx: 0, correctCount: 0, exp: 0, maxCombo: 0 };
   };
 
   if (!currentQ && gameState === "playing") {

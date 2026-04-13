@@ -691,8 +691,8 @@ export default function ShadowTimer() {
     if (uid) {
       (async () => {
         try {
-          await awardTimerXP(uid, mins, type);
-          await saveSessionHistory(uid, { type, duration: mins, xp, subject });
+          const actualXP = await awardTimerXP(uid, mins, type);
+          await saveSessionHistory(uid, { type, duration: mins, xp: actualXP, subject });
         } catch (err) {
           console.error(`Failed to save session to Firebase (uid=${uid}, type=${type}, mins=${mins}, subject=${subject}):`, err);
         }
