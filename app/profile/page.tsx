@@ -7,25 +7,30 @@ import {
   Shield, Zap, Trophy, Save, Edit3, ShieldAlert
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 
 // ============================================================
-// MOCK DATA & CONSTANTS (Replace with Firebase later)
+// CONSTANTS
 // ============================================================
-const MOCK_USER = {
-  uid: "hunter_123",
-  displayName: "Cyber Hunter",
-  email: "hunter@rankpush.com",
-  phone: "+880 1700-000000",
+const CRANK_XP_REQUIREMENT = 5000;
+
+const DEFAULT_USER = {
+  uid: "",
+  displayName: "Hunter",
+  email: "",
+  phone: "",
   bio: "Leveling up in the shadows.",
   photoURL: "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg",
-  xp: 3200, // Change to 5000+ to test the unlock feature
+  xp: 0,
 };
-
-const CRANK_XP_REQUIREMENT = 5000;
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState(MOCK_USER);
+  const [authUid, setAuthUid] = useState<string | null>(null);
+  const [user, setUser] = useState(DEFAULT_USER);
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     displayName: user.displayName,
@@ -35,18 +40,68 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Firebase auth listener ──
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        router.push("/");
+        return;
+      }
+      setAuthUid(firebaseUser.uid);
+    });
+    return () => unsubAuth();
+  }, [router]);
+
+  // ── Firestore real-time listener ──
+  useEffect(() => {
+    if (!authUid) return;
+    const userRef = doc(db, "users", authUid);
+    const unsubDoc = onSnapshot(userRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        const updated = {
+          uid: authUid,
+          displayName: data.displayName ?? DEFAULT_USER.displayName,
+          email: data.email ?? "",
+          phone: data.phone ?? "",
+          bio: data.bio ?? DEFAULT_USER.bio,
+          photoURL: data.photoURL ?? DEFAULT_USER.photoURL,
+          xp: data.xp ?? 0,
+        };
+        setUser(updated);
+        // Keep form in sync only when not actively editing
+        setFormData((prev) =>
+          isEditing
+            ? prev
+            : { displayName: updated.displayName, phone: updated.phone, bio: updated.bio }
+        );
+      }
+      setIsLoading(false);
+    });
+    return () => unsubDoc();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUid]);
+
   // Rank Logic
   const isCRankUnlocked = user.xp >= CRANK_XP_REQUIREMENT;
   const progressToCRank = Math.min((user.xp / CRANK_XP_REQUIREMENT) * 100, 100);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!authUid) return;
     setIsSaving(true);
-    // Simulate API/Firebase call
-    setTimeout(() => {
-      setUser({ ...user, ...formData });
+    try {
+      const userRef = doc(db, "users", authUid);
+      await updateDoc(userRef, {
+        displayName: formData.displayName,
+        phone: formData.phone,
+        bio: formData.bio,
+      });
       setIsEditing(false);
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   };
 
   const handleImageClick = () => {
@@ -54,6 +109,14 @@ export default function ProfilePage() {
       fileInputRef.current.click();
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#02010a] flex items-center justify-center">
+        <p style={{ fontFamily: "'Orbitron',sans-serif", color: "#22d3ee", fontSize: 14, letterSpacing: "0.3em" }}>LOADING...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#02010a] text-white font-sans overflow-x-hidden pb-12">

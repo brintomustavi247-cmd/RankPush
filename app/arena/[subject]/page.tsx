@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { physicsQuestions } from "@/lib/questions";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { awardBattleXP, saveBattleHistory } from "@/lib/xp-utils";
 import {
   Swords, ChevronRight, Sparkles, Target, Zap, Clock,
   Heart, Flame, Shield, ArrowLeft, CheckCircle, XCircle,
@@ -85,8 +88,10 @@ export default function ArenaPage() {
   // Result
   const [animExp,      setAnimExp]      = useState(0);
   const [expandedLog,  setExpandedLog]  = useState<number | null>(null);
+  const [xpAwarded,    setXpAwarded]    = useState<number | null>(null);
 
   const fbId   = useRef(0);
+  const xpSavedRef = useRef(false); // prevent double-save
   const currentQ = questions[idx] || null;
   const multiplier = getMultiplier(combo);
   const comboInfo  = getCombo(combo);
@@ -105,6 +110,35 @@ export default function ArenaPage() {
     }, 20);
     return () => clearInterval(t);
   }, [gameState]);
+
+  // Save battle result to Firebase when game ends
+  useEffect(() => {
+    if (gameState === "playing" || xpSavedRef.current) return;
+    xpSavedRef.current = true;
+    const won = gameState === "won";
+    const acc = idx > 0 ? Math.round((correctCount / idx) * 100) : 0;
+
+    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+      if (!u) return;
+      try {
+        const awarded = await awardBattleXP(u.uid, won, acc);
+        setXpAwarded(awarded);
+        await saveBattleHistory(u.uid, {
+          subject,
+          won,
+          exp,
+          accuracy: acc,
+          maxCombo,
+          totalQuestions: total,
+          correctCount,
+          xpAwarded: awarded,
+        });
+      } catch (err) {
+        console.error("Failed to save battle to Firebase:", err);
+      }
+      unsubAuth();
+    });
+  }, [gameState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer
   useEffect(() => {
@@ -221,6 +255,8 @@ export default function ArenaPage() {
     setAnswerLog([]); setHasFreeze(true); setHasHeal(true); setHasShield(true);
     setShieldActive(false); setAnimExp(0); setSelectedOpt(null);
     setShowAnswer(false); setQStartTime(Date.now()); setExpandedLog(null);
+    setXpAwarded(null);
+    xpSavedRef.current = false;
   };
 
   if (!currentQ && gameState === "playing") {
@@ -861,6 +897,34 @@ export default function ArenaPage() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* ── FIREBASE XP BADGE ── */}
+              {xpAwarded !== null && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", bounce: 0.4 }}
+                  style={{
+                    margin: "0 16px 16px",
+                    padding: "14px 18px",
+                    borderRadius: 16,
+                    background: "rgba(34,211,238,0.08)",
+                    border: "1px solid rgba(34,211,238,0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Zap size={18} color="#f59e0b" />
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.5)" }}>Firebase XP Saved</p>
+                      <p style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Profile updated in real-time</p>
+                    </div>
+                  </div>
+                  <span className="font-logo" style={{ fontSize: 22, fontWeight: 900, color: "#f59e0b" }}>+{xpAwarded}</span>
+                </motion.div>
+              )}
 
               {/* ── REVIEW SECTION ── */}
               <div className="review-section">

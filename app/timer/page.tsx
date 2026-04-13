@@ -11,6 +11,9 @@ import {
   ChevronDown, LayoutDashboard, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -682,6 +685,23 @@ export default function ShadowTimer() {
     };
     setSessions(prev => [...prev, newSession]);
     setXpNotif(xp);
+
+    // Persist to Firebase
+    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+      if (!u) return;
+      try {
+        await awardTimerXP(u.uid, mins, type);
+        await saveSessionHistory(u.uid, {
+          type,
+          duration: mins,
+          xp,
+          subject,
+        });
+      } catch (err) {
+        console.error("Failed to save session to Firebase:", err);
+      }
+      unsubAuth();
+    });
   };
 
   useEffect(() => {
