@@ -90,15 +90,22 @@ export default function ArenaPage() {
   const [expandedLog,  setExpandedLog]  = useState<number | null>(null);
   const [xpAwarded,    setXpAwarded]    = useState<number | null>(null);
 
-  const fbId   = useRef(0);
-  const xpSavedRef = useRef(false); // prevent double-save
-  const uidRef     = useRef<string | null>(null); // store auth uid
+  const fbId            = useRef(0);
+  const xpSavedRef      = useRef(false); // prevent double-save
+  const uidRef          = useRef<string | null>(null); // store auth uid
+  // Snapshot of final battle values so the save effect only needs [gameState]
+  const battleSnapRef   = useRef({ idx: 0, correctCount: 0, exp: 0, maxCombo: 0 });
 
   const currentQ = questions[idx] || null;
   const multiplier = getMultiplier(combo);
   const comboInfo  = getCombo(combo);
   const accuracy   = idx > 0 ? Math.round((correctCount / idx) * 100) : 0;
   const hpColor    = hp > 60 ? "#22c55e" : hp > 30 ? "#f97316" : "#ef4444";
+
+  // Keep battle snapshot ref up to date
+  useEffect(() => {
+    battleSnapRef.current = { idx, correctCount, exp, maxCombo };
+  }, [idx, correctCount, exp, maxCombo]);
 
   // Store the current user's UID once on mount
   useEffect(() => {
@@ -128,7 +135,8 @@ export default function ArenaPage() {
     xpSavedRef.current = true;
     const uid = uidRef.current;
     const won = gameState === "won";
-    const acc = idx > 0 ? Math.round((correctCount / idx) * 100) : 0;
+    const { idx: finalIdx, correctCount: finalCC, exp: finalExp, maxCombo: finalMax } = battleSnapRef.current;
+    const acc = finalIdx > 0 ? Math.round((finalCC / finalIdx) * 100) : 0;
 
     (async () => {
       try {
@@ -137,18 +145,18 @@ export default function ArenaPage() {
         await saveBattleHistory(uid, {
           subject,
           won,
-          exp,
+          exp: finalExp,
           accuracy: acc,
-          maxCombo,
+          maxCombo: finalMax,
           totalQuestions: total,
-          correctCount,
+          correctCount: finalCC,
           xpAwarded: awarded,
         });
       } catch (err) {
-        console.error("Failed to save battle to Firebase:", err);
+        console.error(`Failed to save battle to Firebase (uid=${uid}, subject=${subject}, won=${won}, acc=${acc}):`, err);
       }
     })();
-  }, [gameState, idx, correctCount, subject, exp, maxCombo, total]);
+  }, [gameState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer
   useEffect(() => {

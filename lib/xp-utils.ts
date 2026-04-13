@@ -1,11 +1,11 @@
 import {
   doc,
-  getDoc,
   updateDoc,
   addDoc,
   collection,
   increment,
   serverTimestamp,
+  runTransaction,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -17,20 +17,23 @@ export function calculateLevel(xp: number): number {
 }
 
 // ─────────────────────────────────────────────
-// Add XP to a user and update their level
+// Add XP to a user and update their level.
+// Uses a Firestore transaction to prevent race conditions
+// when called from multiple sources.
 // ─────────────────────────────────────────────
 export async function updateUserXP(uid: string, xpAmount: number): Promise<void> {
   const userRef = doc(db, "users", uid);
-  const snap = await getDoc(userRef);
-  const currentXP: number = snap.exists() ? (snap.data().xp ?? 0) : 0;
-  const newXP = currentXP + xpAmount;
-  const newLevel = calculateLevel(newXP);
-  await updateDoc(userRef, { xp: newXP, level: newLevel });
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(userRef);
+    const currentXP: number = snap.exists() ? (snap.data().xp ?? 0) : 0;
+    const newXP = currentXP + xpAmount;
+    tx.update(userRef, { xp: newXP, level: calculateLevel(newXP) });
+  });
 }
 
 // ─────────────────────────────────────────────
-// Award XP for a battle result
-// Returns the total XP awarded
+// Award XP for a battle result.
+// Returns the total XP awarded.
 // ─────────────────────────────────────────────
 export async function awardBattleXP(
   uid: string,
@@ -45,8 +48,8 @@ export async function awardBattleXP(
 }
 
 // ─────────────────────────────────────────────
-// Award XP for a timer session
-// Returns the total XP awarded
+// Award XP for a timer session and update
+// totalHoursStudied. Returns the total XP awarded.
 // ─────────────────────────────────────────────
 export async function awardTimerXP(
   uid: string,
@@ -55,25 +58,17 @@ export async function awardTimerXP(
 ): Promise<number> {
   const xpPerMinute = type === "POMODORO" || type === "FOCUS" ? 2 : 1;
   const totalXP = Math.max(1, Math.round(minutes * xpPerMinute));
-
-  const userRef = doc(db, "users", uid);
-  const snap = await getDoc(userRef);
-  const currentXP: number = snap.exists() ? (snap.data().xp ?? 0) : 0;
-  const newXP = currentXP + totalXP;
-  const newLevel = calculateLevel(newXP);
-
-  await updateDoc(userRef, {
-    xp: newXP,
-    level: newLevel,
+  await updateUserXP(uid, totalXP);
+  // Update totalHoursStudied atomically with increment
+  await updateDoc(doc(db, "users", uid), {
     totalHoursStudied: increment(minutes / 60),
   });
-
   return totalXP;
 }
 
 // ─────────────────────────────────────────────
 // Save a battle result to the battles sub-collection
-// and increment the user's totalBattles counter
+// and increment the user's totalBattles counter.
 // ─────────────────────────────────────────────
 export async function saveBattleHistory(
   uid: string,
@@ -81,12 +76,11 @@ export async function saveBattleHistory(
 ): Promise<void> {
   const battlesRef = collection(db, "users", uid, "battles");
   await addDoc(battlesRef, { ...battleData, timestamp: serverTimestamp() });
-  const userRef = doc(db, "users", uid);
-  await updateDoc(userRef, { totalBattles: increment(1) });
+  await updateDoc(doc(db, "users", uid), { totalBattles: increment(1) });
 }
 
 // ─────────────────────────────────────────────
-// Save a study session to the sessions sub-collection
+// Save a study session to the sessions sub-collection.
 // ─────────────────────────────────────────────
 export async function saveSessionHistory(
   uid: string,
