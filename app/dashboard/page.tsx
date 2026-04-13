@@ -266,17 +266,17 @@ const GLOBAL_CSS = `
 `;
 
 // ============================================================
-// RANK BADGE IMAGES (maps rank id → SVG path)
+// RANK BADGE IMAGES (maps rank id → PNG path)
 // ============================================================
 const RANK_BADGE_IMAGES: Record<string, string> = {
-  e:              "/rank-badges/bronze-badge.svg",
-  d:              "/rank-badges/silver-badge.svg",
-  c:              "/rank-badges/gold-badge.svg",
-  b:              "/rank-badges/platinum-badge.svg",
-  a:              "/rank-badges/diamond-badge.svg",
-  s:              "/rank-badges/master-badge.svg",
-  national:       "/rank-badges/grandmaster-badge.svg",
-  shadow_monarch: "/rank-badges/shadow-badge.svg",
+  e:              "/rank-badges/bronze-badge.png",
+  d:              "/rank-badges/silver-badge.png",
+  c:              "/rank-badges/gold-badge.png",
+  b:              "/rank-badges/platinum-badge.png",
+  a:              "/rank-badges/diamond-badge.png",
+  s:              "/rank-badges/master-badge.png",
+  national:       "/rank-badges/grandmaster-badge.png",
+  shadow_monarch: "/rank-badges/shadow-badge.png",
 };
 
 // ============================================================

@@ -702,7 +702,6 @@ export default function ShadowTimer() {
   const [liveLeaderboard, setLiveLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [currentUid, setCurrentUid]           = useState<string | null>(null);
 
-  const sessionIdRef = useRef(0);
   const uidRef       = useAuthUid(); // cached auth uid
 
   // XP / Level-up real-time notifications via Firestore
@@ -717,6 +716,38 @@ export default function ShadowTimer() {
     });
     return () => unsub();
   }, []);
+
+  // Real-time listener for current user's today sessions
+  useEffect(() => {
+    if (!currentUid) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const sessionsRef = collection(db, "users", currentUid, "sessions");
+    const q = query(
+      sessionsRef,
+      where("timestamp", ">=", Timestamp.fromDate(today)),
+      where("timestamp", "<", Timestamp.fromDate(tomorrow)),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      const loadedSessions = snap.docs.map((docSnap, idx) => ({
+        id: idx,
+        type: docSnap.data().type || "FREE",
+        duration: docSnap.data().duration || 0,
+        xp: docSnap.data().xp || 0,
+        timestamp: docSnap.data().timestamp?.toDate() || new Date(),
+        subject: docSnap.data().subject || "Physics",
+      }));
+      setSessions(loadedSessions);
+    });
+
+    return () => unsub();
+  }, [currentUid]);
 
   // Real-time leaderboard: top 6 users by XP, with today's study minutes
   useEffect(() => {
@@ -783,11 +814,6 @@ export default function ShadowTimer() {
   }, []);
 
   const handleSessionComplete = (mins: number, xp: number, subject: string, type = "FREE") => {
-    const newSession: Session = {
-      id: ++sessionIdRef.current,
-      type, duration: mins, xp, timestamp: new Date(), subject,
-    };
-    setSessions(prev => [...prev, newSession]);
     setXpNotif(xp);
 
     // Persist to Firebase using the cached uid
