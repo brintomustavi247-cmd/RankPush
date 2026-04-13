@@ -14,14 +14,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import {
   collection, query, orderBy, limit, onSnapshot,
-  doc, getDocs, where, Timestamp,
+  doc, getDoc,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
 import { useAuthUid } from "@/hooks/use-auth-uid";
 import { useXPNotifications } from "@/lib/notification-utils";
-import { getRankBadgeByXP } from "@/components/rank-badge";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -40,13 +39,15 @@ interface Session {
 
 interface LeaderboardEntry {
   rank: number;
-  uid: string;
+  uid?: string;
   name: string;
   avatar: string;
   todayMinutes: number;
   totalXP: number;
+  streak: number;
+  rankIcon: string;
   rankColor: string;
-  badgeImage: string;
+  badgeImage?: string;
   isCurrentUser?: boolean;
 }
 
@@ -62,6 +63,9 @@ const POMODORO_PRESETS: Record<PomodoroPhase, { label: string; mins: number; xp:
 const SUBJECTS = ["Physics", "Chemistry", "Math", "Biology", "English", "ICT"];
 
 const XP_PER_MINUTE = 2; // free timer: 2 XP per minute
+
+const RANK_ICONS  = ["⚔️", "👑", "💠", "🥇", "🥈", "🥉"];
+const RANK_COLORS = ["#ec4899", "#a855f7", "#3b82f6", "#f59e0b", "#9ca3af", "#6b7280"];
 
 const MOTIVATIONAL_LINES = [
   "Shadow soldiers don't rest. They level up.",
@@ -576,7 +580,29 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: Leaderb
 // ─────────────────────────────────────────────
 // STUDY LEADERBOARD
 // ─────────────────────────────────────────────
-function StudyLeaderboard({ leaderboardData }: { leaderboardData: LeaderboardEntry[] }) {
+function StudyLeaderboard({ entries }: { entries: LeaderboardEntry[] }) {
+  const maxXP = entries[0]?.totalXP || 1;
+
+  if (entries.length === 0) {
+    return (
+      <div style={{ width: "100%", margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Trophy size={18} color="#f59e0b" />
+            <h3 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.8)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              Today's Study Board
+            </h3>
+          </div>
+          <span style={{ fontSize: 10, color: "#22d3ee", fontWeight: 900, border: "1px solid rgba(34,211,238,0.4)", padding: "4px 12px", borderRadius: 20, background: "rgba(34,211,238,0.1)" }}>LIVE</span>
+        </div>
+        <div style={{ textAlign: "center", padding: "30px 0", background: "rgba(255,255,255,0.02)", borderRadius: 16, border: "1px dashed rgba(255,255,255,0.1)" }}>
+          <Trophy size={36} color="rgba(255,255,255,0.2)" style={{ margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>No data yet — be the first!</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: "100%", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -590,14 +616,58 @@ function StudyLeaderboard({ leaderboardData }: { leaderboardData: LeaderboardEnt
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {leaderboardData.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
-            <Users size={32} color="rgba(255,255,255,0.15)" style={{ margin: "0 auto 10px" }} />
-            Loading leaderboard…
+        {entries.map((p, i) => (
+          <div key={p.name} style={{
+            display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
+            borderRadius: 16, cursor: "pointer", transition: "all 0.2s",
+            background: p.isCurrentUser ? "rgba(34,211,238,0.08)" : i === 0 ? "rgba(245,158,11,0.06)" : "transparent",
+            border: p.isCurrentUser ? "1px solid rgba(34,211,238,0.3)" : i === 0 ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent",
+          }}>
+            {/* Rank number (Bigger) */}
+            <span style={{
+              fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, minWidth: 26, textAlign: "center", fontStyle: "italic",
+              color: i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#b45309" : "rgba(255,255,255,0.4)",
+            }}>
+              {String(p.rank).padStart(2, "0")}
+            </span>
+
+            {/* Avatar (Bigger) */}
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <img src={p.avatar} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }} alt={p.name} />
+              <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 12 }}>{p.rankIcon}</span>
+            </div>
+
+            {/* Name + bar */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{
+                fontSize: 14, fontWeight: 800, letterSpacing: "0.05em",
+                color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)",
+                textTransform: "uppercase", fontStyle: "italic",
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 2
+              }}>
+                {p.name} {p.isCurrentUser && "(YOU)"}
+              </p>
+              {/* XP bar */}
+              <div style={{ height: 8, background: "rgba(0,0,0,0.4)", borderRadius: 4, marginTop: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{
+                  height: "100%", borderRadius: 4,
+                  width: `${Math.min(100, (p.totalXP / maxXP) * 100)}%`,
+                  background: p.isCurrentUser ? "#22d3ee" : p.rankColor,
+                  transition: "width 0.8s ease",
+                  boxShadow: `0 0 10px ${p.rankColor}aa`
+                }} />
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 10 }}>
+              <p style={{ fontSize: 14, fontWeight: 900, color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)" }}>
+                {p.totalXP.toLocaleString()}
+              </p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}>XP</p>
+            </div>
           </div>
-        ) : (
-          leaderboardData.map((p, i) => <LeaderboardRow key={p.uid || p.name} p={p} i={i} />)
-        )}
+        ))}
       </div>
 
       <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 12, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)" }}>
@@ -628,11 +698,22 @@ const StatCard = React.memo(function StatCard({ label, value, color, icon: Icon 
 // ─────────────────────────────────────────────
 // STATS PANEL
 // ─────────────────────────────────────────────
-function StatsPanel({ sessions }: { sessions: Session[] }) {
-  const todayMins   = sessions.reduce((a, s) => a + s.duration, 0);
-  const totalXP     = sessions.reduce((a, s) => a + s.xp, 0);
-  const focusSess   = sessions.filter(s => s.type === "FOCUS").length;
-  const avgMins     = sessions.length ? Math.round(todayMins / sessions.length) : 0;
+function StatsPanel({
+  sessions,
+  firestoreTodayMins,
+  firestoreTotalXP,
+  firestoreFocusSess,
+}: {
+  sessions: Session[];
+  firestoreTodayMins: number;
+  firestoreTotalXP: number;
+  firestoreFocusSess: number;
+}) {
+  // Prefer Firestore data; fall back to local session data when not yet loaded
+  const todayMins = firestoreTodayMins > 0 ? firestoreTodayMins : sessions.reduce((a, s) => a + s.duration, 0);
+  const totalXP   = firestoreTotalXP   > 0 ? firestoreTotalXP   : sessions.reduce((a, s) => a + s.xp, 0);
+  const focusSess = firestoreFocusSess > 0 ? firestoreFocusSess : sessions.filter(s => s.type === "FOCUS").length;
+  const avgMins   = sessions.length ? Math.round(todayMins / sessions.length) : 0;
 
   return (
     <div style={{ width: "100%", margin: "0 auto" }}>
@@ -697,114 +778,106 @@ export default function ShadowTimer() {
   const [xpNotif, setXpNotif]       = useState<number | null>(null);
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const sessionIdRef = useRef(0);
+  const uidRef       = useAuthUid(); // cached auth uid (for fire-and-forget async handlers)
 
-  // Real-time leaderboard state
-  const [liveLeaderboard, setLiveLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [currentUid, setCurrentUid]           = useState<string | null>(null);
+  // ── Firestore real-time state ──────────────────────
+  const [uid, setUid]               = useState<string | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [firestoreTodayMins, setFirestoreTodayMins] = useState(0);
+  const [firestoreTotalXP,   setFirestoreTotalXP]   = useState(0);
+  const [firestoreFocusSess, setFirestoreFocusSess] = useState(0);
 
-  const uidRef       = useAuthUid(); // cached auth uid
+  // Derived header stats: prefer Firestore data, fall back to local session list
+  const todayMins = firestoreTodayMins > 0
+    ? firestoreTodayMins
+    : sessions.reduce((a, s) => a + s.duration, 0);
 
-  // XP / Level-up real-time notifications via Firestore
-  useXPNotifications(currentUid);
-
-  const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
-
-  // Auth state → set currentUid
+  // ── Auth listener ──────────────────────────────────
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
-      setCurrentUid(u ? u.uid : null);
+      setUid(u ? u.uid : null);
     });
     return () => unsub();
   }, []);
 
-  // Real-time listener for current user's today sessions
-  useEffect(() => {
-    if (!currentUid) return;
+  // XP / Level-up real-time notifications via Firestore
+  useXPNotifications(uid);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const sessionsRef = collection(db, "users", currentUid, "sessions");
-    const q = query(
-      sessionsRef,
-      where("timestamp", ">=", Timestamp.fromDate(today)),
-      where("timestamp", "<", Timestamp.fromDate(tomorrow)),
-      orderBy("timestamp", "desc")
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-      const loadedSessions = snap.docs.map((docSnap, idx) => ({
-        id: idx,
-        type: docSnap.data().type || "FREE",
-        duration: docSnap.data().duration || 0,
-        xp: docSnap.data().xp || 0,
-        timestamp: docSnap.data().timestamp?.toDate() || new Date(),
-        subject: docSnap.data().subject || "Physics",
-      }));
-      setSessions(loadedSessions);
-    });
-
-    return () => unsub();
-  }, [currentUid]);
-
-  // Real-time leaderboard: top 6 users by XP, with today's study minutes
+  // ── Leaderboard: top-6 users by XP ────────────────
   useEffect(() => {
     const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(6));
     const unsub = onSnapshot(q, async (snap) => {
-      if (snap.empty) return;
+      const topDocs = snap.docs;
+      const currentUid = uid;
 
-      // Build today's date boundaries in UTC for querying sessions
-      const now   = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const end   = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+      const entries: LeaderboardEntry[] = topDocs.map((d, i) => {
+        const data = d.data();
+        return {
+          rank: i + 1,
+          name: data.displayName || "Hunter",
+          avatar: data.photoURL || `https://i.pravatar.cc/150?img=${i + 1}`,
+          todayMinutes: Math.round((data.totalHoursStudied || 0) * 60),
+          totalXP: data.xp || 0,
+          streak: data.streak || 0,
+          rankIcon:  RANK_ICONS[i]  ?? "⭐",
+          rankColor: RANK_COLORS[i] ?? "#6b7280",
+          isCurrentUser: d.id === currentUid,
+        };
+      });
 
-      const entries: LeaderboardEntry[] = await Promise.all(
-        snap.docs.map(async (d, i) => {
-          const data      = d.data();
-          const uid       = d.id;
-          const rankInfo  = getRankBadgeByXP(data.xp || 0);
-
-          // Fetch today's sessions for this user
-          let todayMinutes = 0;
-          try {
-            const sessQuery = query(
-              collection(db, "users", uid, "sessions"),
-              where("timestamp", ">=", Timestamp.fromDate(start)),
-              where("timestamp", "<",  Timestamp.fromDate(end))
-            );
-            const sessSnap = await getDocs(sessQuery);
-            sessSnap.forEach((s) => {
-              todayMinutes += s.data().duration ?? 0;
+      // If current user is not already in top 6, fetch their data and append
+      const currentUserInTop = entries.some(e => e.isCurrentUser);
+      if (currentUid && !currentUserInTop) {
+        try {
+          const userSnap = await getDoc(doc(db, "users", currentUid));
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            entries.push({
+              rank: entries.length + 1,
+              name: data.displayName || "Hunter",
+              avatar: data.photoURL || "https://i.pravatar.cc/150?img=99",
+              todayMinutes: Math.round((data.totalHoursStudied || 0) * 60),
+              totalXP: data.xp || 0,
+              streak: data.streak || 0,
+              rankIcon:  "⭐",
+              rankColor: "#22d3ee",
+              isCurrentUser: true,
             });
-          } catch {
-            // sessions sub-collection may not exist yet
           }
+        } catch {
+          // silently skip if fetch fails
+        }
+      }
 
-          return {
-            rank:          i + 1,
-            uid,
-            name:          data.displayName || data.email?.split("@")[0] || "Hunter",
-            avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${uid}`,
-            todayMinutes,
-            totalXP:       data.xp || 0,
-            rankColor:     rankInfo.color,
-            badgeImage:    rankInfo.badgeImage,
-            isCurrentUser: uid === currentUid,
-          };
-        })
-      );
-
-      // Sort by today's minutes, then by XP as tie-breaker
-      entries.sort((a, b) => b.todayMinutes - a.todayMinutes || b.totalXP - a.totalXP);
-      entries.forEach((e, i) => { e.rank = i + 1; });
-
-      setLiveLeaderboard(entries);
+      setLeaderboard(entries);
     });
-
     return () => unsub();
-  }, [currentUid]);
+  }, [uid]);
+
+  // ── Today's stats: current user's sessions sub-collection ──
+  useEffect(() => {
+    if (!uid) return;
+    const sessionsRef = collection(db, "users", uid, "sessions");
+    const unsub = onSnapshot(sessionsRef, (snap) => {
+      const todayStr = new Date().toDateString();
+      let todayMinsAcc = 0, totalXPAcc = 0, focusSessAcc = 0;
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        const ts   = data.timestamp?.toDate?.() as Date | undefined;
+        if (ts && ts.toDateString() === todayStr) {
+          todayMinsAcc += data.duration || 0;
+          totalXPAcc   += data.xp || 0;
+          const t = (data.type as string || "").toUpperCase();
+          if (t === "FOCUS" || t === "POMODORO") focusSessAcc++;
+        }
+      });
+      setFirestoreTodayMins(todayMinsAcc);
+      setFirestoreTotalXP(totalXPAcc);
+      setFirestoreFocusSess(focusSessAcc);
+    });
+    return () => unsub();
+  }, [uid]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -814,6 +887,11 @@ export default function ShadowTimer() {
   }, []);
 
   const handleSessionComplete = (mins: number, xp: number, subject: string, type = "FREE") => {
+    const newSession: Session = {
+      id: ++sessionIdRef.current,
+      type, duration: mins, xp, timestamp: new Date(), subject,
+    };
+    setSessions(prev => [...prev, newSession]);
     setXpNotif(xp);
 
     // Persist to Firebase using the cached uid
@@ -943,7 +1021,7 @@ export default function ShadowTimer() {
             </div>
             <div className="flex items-center gap-2 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-4 py-2.5 shadow-[0_0_15px_rgba(34,211,238,0.15)]">
               <Zap size={14} className="text-cyan-400" />
-              <span className="font-logo text-xs md:text-sm font-black text-cyan-400">+{sessions.reduce((a, s) => a + s.xp, 0)} XP</span>
+              <span className="font-logo text-xs md:text-sm font-black text-cyan-400">+{firestoreTotalXP > 0 ? firestoreTotalXP : sessions.reduce((a, s) => a + s.xp, 0)} XP</span>
             </div>
           </div>
         </div>
@@ -1001,7 +1079,7 @@ export default function ShadowTimer() {
               border: "1px solid rgba(255,255,255,0.07)", borderLeft: "4px solid rgba(34,211,238,0.6)",
               borderRadius: 24, padding: "28px", width: "100%", margin: "0 auto"
             }}>
-              <StudyLeaderboard leaderboardData={liveLeaderboard} />
+              <StudyLeaderboard entries={leaderboard} />
             </div>
 
             {/* Stats */}
@@ -1010,7 +1088,12 @@ export default function ShadowTimer() {
               border: "1px solid rgba(255,255,255,0.07)", borderLeft: "4px solid rgba(168,85,247,0.6)",
               borderRadius: 24, padding: "28px", width: "100%", margin: "0 auto"
             }}>
-              <StatsPanel sessions={sessions} />
+              <StatsPanel
+                sessions={sessions}
+                firestoreTodayMins={firestoreTodayMins}
+                firestoreTotalXP={firestoreTotalXP}
+                firestoreFocusSess={firestoreFocusSess}
+              />
             </div>
 
           </div>
