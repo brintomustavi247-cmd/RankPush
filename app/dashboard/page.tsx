@@ -19,6 +19,8 @@ import {
   ChevronRight, Medal, Moon, Sunrise
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Toaster } from "sonner";
+import { useXPNotifications, useBattleNotifications } from "@/lib/notification-utils";
 
 // ============================================================
 // SOLO LEVELING RANK SYSTEM — S → E (reversed, S is highest)
@@ -264,11 +266,26 @@ const GLOBAL_CSS = `
 `;
 
 // ============================================================
+// RANK BADGE IMAGES (maps rank id → SVG path)
+// ============================================================
+const RANK_BADGE_IMAGES: Record<string, string> = {
+  e:              "/rank-badges/bronze-badge.svg",
+  d:              "/rank-badges/silver-badge.svg",
+  c:              "/rank-badges/gold-badge.svg",
+  b:              "/rank-badges/platinum-badge.svg",
+  a:              "/rank-badges/diamond-badge.svg",
+  s:              "/rank-badges/master-badge.svg",
+  national:       "/rank-badges/grandmaster-badge.svg",
+  shadow_monarch: "/rank-badges/shadow-badge.svg",
+};
+
+// ============================================================
 // RANK BADGE COMPONENT
 // ============================================================
 function RankBadge({ rank, size = "md" }: { rank: RankInfo; size?: "sm" | "md" | "lg" }) {
-  const sizes = { sm: { px: "8px 12px", fs: 9, icon: 14 }, md: { px: "10px 16px", fs: 11, icon: 18 }, lg: { px: "14px 22px", fs: 14, icon: 24 } };
+  const sizes = { sm: { px: "8px 12px", fs: 9, img: 20 }, md: { px: "10px 16px", fs: 11, img: 26 }, lg: { px: "14px 22px", fs: 14, img: 34 } };
   const s = sizes[size];
+  const badgeImg = RANK_BADGE_IMAGES[rank.id];
   return (
     <div style={{
       display: "inline-flex", alignItems: "center", gap: 8,
@@ -276,7 +293,11 @@ function RankBadge({ rank, size = "md" }: { rank: RankInfo; size?: "sm" | "md" |
       background: rank.bgColor, border: `1px solid ${rank.color}44`,
       boxShadow: `0 0 16px ${rank.glowColor}`,
     }}>
-      <span style={{ fontSize: s.icon }}>{rank.icon}</span>
+      {badgeImg ? (
+        <img src={badgeImg} width={s.img} height={s.img} alt={rank.name} loading="lazy" style={{ flexShrink: 0 }} />
+      ) : (
+        <span style={{ fontSize: s.img }}>{rank.icon}</span>
+      )}
       <div>
         <p style={{
           fontFamily: "'Orbitron', sans-serif", fontSize: s.fs, fontWeight: 900,
@@ -680,12 +701,18 @@ export default function RankPushDashboard() {
 
   const handleSignOut = async () => { await signOut(auth); router.push("/"); };
 
- 
+  // Real-time XP/level-up & battle notifications
+  useXPNotifications(user?.uid ?? null);
+  useBattleNotifications(user?.uid ?? null);
+
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet" />
       <script src="https://cdn.tailwindcss.com" async />
       <style>{GLOBAL_CSS}</style>
+
+      {/* Sonner toaster for real-time notifications */}
+      <Toaster position="top-right" richColors={false} />
 
       {showProModal   && <ProUpgradeModal  onClose={() => setShowProModal(false)} />}
       {showRivalModal && <RivalModal       onClose={() => setShowRivalModal(false)} />}

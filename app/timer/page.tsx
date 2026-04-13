@@ -11,8 +11,17 @@ import {
   ChevronDown, LayoutDashboard, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Toaster } from "sonner";
+import {
+  collection, query, orderBy, limit, onSnapshot,
+  doc, getDocs, where, Timestamp,
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
 import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
 import { useAuthUid } from "@/hooks/use-auth-uid";
+import { useXPNotifications } from "@/lib/notification-utils";
+import { getRankBadgeByXP } from "@/components/rank-badge";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -31,13 +40,13 @@ interface Session {
 
 interface LeaderboardEntry {
   rank: number;
+  uid: string;
   name: string;
   avatar: string;
   todayMinutes: number;
   totalXP: number;
-  streak: number;
-  rankIcon: string;
   rankColor: string;
+  badgeImage: string;
   isCurrentUser?: boolean;
 }
 
@@ -53,15 +62,6 @@ const POMODORO_PRESETS: Record<PomodoroPhase, { label: string; mins: number; xp:
 const SUBJECTS = ["Physics", "Chemistry", "Math", "Biology", "English", "ICT"];
 
 const XP_PER_MINUTE = 2; // free timer: 2 XP per minute
-
-const LEADERBOARD_DATA: LeaderboardEntry[] = [
-  { rank: 1, name: "S-Rank_Slayer", avatar: "https://i.pravatar.cc/150?u=slayer",  todayMinutes: 185, totalXP: 24500, streak: 12, rankIcon: "⚔️", rankColor: "#ec4899" },
-  { rank: 2, name: "ZeroOne",       avatar: "https://i.pravatar.cc/150?u=zeroone", todayMinutes: 162, totalXP: 22100, streak: 8,  rankIcon: "👑", rankColor: "#a855f7" },
-  { rank: 3, name: "GhostVibes",    avatar: "https://i.pravatar.cc/150?u=ghost",   todayMinutes: 140, totalXP: 19850, streak: 6,  rankIcon: "💠", rankColor: "#3b82f6" },
-  { rank: 4, name: "YOU",           avatar: "https://i.pravatar.cc/150?u=you",     todayMinutes: 0,   totalXP: 15420, streak: 4,  rankIcon: "🥇", rankColor: "#f59e0b", isCurrentUser: true },
-  { rank: 5, name: "NightCrawler",  avatar: "https://i.pravatar.cc/150?u=night",   todayMinutes: 98,  totalXP: 17200, streak: 5,  rankIcon: "💠", rankColor: "#3b82f6" },
-  { rank: 6, name: "PhantomX",      avatar: "https://i.pravatar.cc/150?u=phantom", todayMinutes: 75,  totalXP: 15900, streak: 3,  rankIcon: "🥈", rankColor: "#9ca3af" },
-];
 
 const MOTIVATIONAL_LINES = [
   "Shadow soldiers don't rest. They level up.",
@@ -504,13 +504,79 @@ function PomodoroTimer({
 }
 
 // ─────────────────────────────────────────────
+// LEADERBOARD ROW (memoized for performance)
+// ─────────────────────────────────────────────
+const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: LeaderboardEntry; i: number }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
+      borderRadius: 16, transition: "background 0.2s",
+      background: p.isCurrentUser ? "rgba(34,211,238,0.08)" : i === 0 ? "rgba(245,158,11,0.06)" : "transparent",
+      border: p.isCurrentUser ? "1px solid rgba(34,211,238,0.3)" : i === 0 ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent",
+    }}>
+      {/* Rank number */}
+      <span style={{
+        fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, minWidth: 26, textAlign: "center", fontStyle: "italic",
+        color: i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#b45309" : "rgba(255,255,255,0.4)",
+      }}>
+        {String(p.rank).padStart(2, "0")}
+      </span>
+
+      {/* Avatar */}
+      <div style={{ position: "relative", flexShrink: 0 }}>
+        <img
+          src={p.avatar}
+          loading="lazy"
+          style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }}
+          alt={p.name}
+        />
+        {/* Rank badge icon */}
+        <img
+          src={p.badgeImage}
+          loading="lazy"
+          width={18}
+          height={18}
+          style={{ position: "absolute", bottom: -2, right: -2, borderRadius: "50%" }}
+          alt="rank"
+        />
+      </div>
+
+      {/* Name + bar */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          fontSize: 14, fontWeight: 800, letterSpacing: "0.05em",
+          color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)",
+          textTransform: "uppercase", fontStyle: "italic",
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 2,
+        }}>
+          {p.name} {p.isCurrentUser && "(YOU)"}
+        </p>
+        <div style={{ height: 8, background: "rgba(0,0,0,0.4)", borderRadius: 4, marginTop: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{
+            height: "100%", borderRadius: 4,
+            width: `${Math.min(100, (p.todayMinutes / 200) * 100)}%`,
+            background: p.isCurrentUser ? "#22d3ee" : p.rankColor,
+            transition: "width 0.8s ease",
+            boxShadow: `0 0 10px ${p.rankColor}aa`,
+          }} />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 10 }}>
+        <p style={{ fontSize: 14, fontWeight: 900, color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)" }}>
+          {formatMinutes(p.todayMinutes)}
+        </p>
+        <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}>TODAY</p>
+      </div>
+    </div>
+  );
+});
+
+// ─────────────────────────────────────────────
 // STUDY LEADERBOARD
 // ─────────────────────────────────────────────
-function StudyLeaderboard({ todayMinutes }: { todayMinutes: number }) {
-  const data = LEADERBOARD_DATA.map(e =>
-    e.isCurrentUser ? { ...e, todayMinutes } : e
-  ).sort((a, b) => b.todayMinutes - a.todayMinutes).map((e, i) => ({ ...e, rank: i + 1 }));
-
+function StudyLeaderboard({ leaderboardData }: { leaderboardData: LeaderboardEntry[] }) {
   return (
     <div style={{ width: "100%", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -524,58 +590,14 @@ function StudyLeaderboard({ todayMinutes }: { todayMinutes: number }) {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {data.map((p, i) => (
-          <div key={p.name} style={{
-            display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
-            borderRadius: 16, cursor: "pointer", transition: "all 0.2s",
-            background: p.isCurrentUser ? "rgba(34,211,238,0.08)" : i === 0 ? "rgba(245,158,11,0.06)" : "transparent",
-            border: p.isCurrentUser ? "1px solid rgba(34,211,238,0.3)" : i === 0 ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent",
-          }}>
-            {/* Rank number (Bigger) */}
-            <span style={{
-              fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 900, minWidth: 26, textAlign: "center", fontStyle: "italic",
-              color: i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#b45309" : "rgba(255,255,255,0.4)",
-            }}>
-              {String(p.rank).padStart(2, "0")}
-            </span>
-
-            {/* Avatar (Bigger) */}
-            <div style={{ position: "relative", flexShrink: 0 }}>
-              <img src={p.avatar} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }} alt={p.name} />
-              <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 12 }}>{p.rankIcon}</span>
-            </div>
-
-            {/* Name + bar */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{
-                fontSize: 14, fontWeight: 800, letterSpacing: "0.05em",
-                color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)",
-                textTransform: "uppercase", fontStyle: "italic",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 2
-              }}>
-                {p.name} {p.isCurrentUser && "(YOU)"}
-              </p>
-              {/* Study bar (Thicker & Softer) */}
-              <div style={{ height: 8, background: "rgba(0,0,0,0.4)", borderRadius: 4, marginTop: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{
-                  height: "100%", borderRadius: 4,
-                  width: `${Math.min(100, (p.todayMinutes / 200) * 100)}%`,
-                  background: p.isCurrentUser ? "#22d3ee" : p.rankColor,
-                  transition: "width 0.8s ease",
-                  boxShadow: `0 0 10px ${p.rankColor}aa`
-                }} />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 10 }}>
-              <p style={{ fontSize: 14, fontWeight: 900, color: p.isCurrentUser ? "#22d3ee" : "rgba(255,255,255,0.9)" }}>
-                {formatMinutes(p.todayMinutes)}
-              </p>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}>TODAY</p>
-            </div>
+        {leaderboardData.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+            <Users size={32} color="rgba(255,255,255,0.15)" style={{ margin: "0 auto 10px" }} />
+            Loading leaderboard…
           </div>
-        ))}
+        ) : (
+          leaderboardData.map((p, i) => <LeaderboardRow key={p.uid || p.name} p={p} i={i} />)
+        )}
       </div>
 
       <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 12, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)" }}>
@@ -586,6 +608,22 @@ function StudyLeaderboard({ todayMinutes }: { todayMinutes: number }) {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────
+// STAT CARD (memoized for performance)
+// ─────────────────────────────────────────────
+const StatCard = React.memo(function StatCard({ label, value, color, icon: Icon }: { label: string; value: string | number; color: string; icon: React.ElementType }) {
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: 16, padding: "16px 20px", textAlign: "center",
+    }}>
+      <Icon size={20} color={color} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
+      <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 22, fontWeight: 900, color }}>{value}</p>
+      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>{label}</p>
+    </div>
+  );
+});
 
 // ─────────────────────────────────────────────
 // STATS PANEL
@@ -613,14 +651,7 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
           { label: "Focus Sessions", value: focusSess,              color: "#a855f7", icon: Brain        },
           { label: "Avg Session",   value: `${avgMins}m`,           color: "#34d399", icon: TrendingUp   },
         ].map(s => (
-          <div key={s.label} style={{
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 16, padding: "16px 20px", textAlign: "center",
-          }}>
-            <s.icon size={20} color={s.color} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
-            <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</p>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>{s.label}</p>
-          </div>
+          <StatCard key={s.label} label={s.label} value={s.value} color={s.color} icon={s.icon} />
         ))}
       </div>
 
@@ -665,11 +696,84 @@ export default function ShadowTimer() {
   const [sessions, setSessions]     = useState<Session[]>([]);
   const [xpNotif, setXpNotif]       = useState<number | null>(null);
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Real-time leaderboard state
+  const [liveLeaderboard, setLiveLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [currentUid, setCurrentUid]           = useState<string | null>(null);
+
   const sessionIdRef = useRef(0);
   const uidRef       = useAuthUid(); // cached auth uid
 
+  // XP / Level-up real-time notifications via Firestore
+  useXPNotifications(currentUid);
+
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
+
+  // Auth state → set currentUid
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setCurrentUid(u ? u.uid : null);
+    });
+    return () => unsub();
+  }, []);
+
+  // Real-time leaderboard: top 6 users by XP, with today's study minutes
+  useEffect(() => {
+    const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(6));
+    const unsub = onSnapshot(q, async (snap) => {
+      if (snap.empty) return;
+
+      // Build today's date boundaries in UTC for querying sessions
+      const now   = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const end   = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+
+      const entries: LeaderboardEntry[] = await Promise.all(
+        snap.docs.map(async (d, i) => {
+          const data      = d.data();
+          const uid       = d.id;
+          const rankInfo  = getRankBadgeByXP(data.xp || 0);
+
+          // Fetch today's sessions for this user
+          let todayMinutes = 0;
+          try {
+            const sessQuery = query(
+              collection(db, "users", uid, "sessions"),
+              where("timestamp", ">=", Timestamp.fromDate(start)),
+              where("timestamp", "<",  Timestamp.fromDate(end))
+            );
+            const sessSnap = await getDocs(sessQuery);
+            sessSnap.forEach((s) => {
+              todayMinutes += s.data().duration ?? 0;
+            });
+          } catch {
+            // sessions sub-collection may not exist yet
+          }
+
+          return {
+            rank:          i + 1,
+            uid,
+            name:          data.displayName || data.email?.split("@")[0] || "Hunter",
+            avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${uid}`,
+            todayMinutes,
+            totalXP:       data.xp || 0,
+            rankColor:     rankInfo.color,
+            badgeImage:    rankInfo.badgeImage,
+            isCurrentUser: uid === currentUid,
+          };
+        })
+      );
+
+      // Sort by today's minutes, then by XP as tie-breaker
+      entries.sort((a, b) => b.todayMinutes - a.todayMinutes || b.totalXP - a.totalXP);
+      entries.forEach((e, i) => { e.rank = i + 1; });
+
+      setLiveLeaderboard(entries);
+    });
+
+    return () => unsub();
+  }, [currentUid]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -712,7 +816,8 @@ export default function ShadowTimer() {
     <div className="min-h-screen font-sans text-white pb-12 px-4 md:px-8" style={{
       background: "#02010a",
       backgroundImage: "radial-gradient(ellipse 60% 40% at 20% 0%, rgba(14,165,233,0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 80% 100%, rgba(124,58,237,0.05) 0%, transparent 60%)",
-      overflowX: "hidden"
+      overflowX: "hidden",
+      contain: "layout",
     }}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
       
@@ -725,6 +830,9 @@ export default function ShadowTimer() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.3); border-radius: 4px; }
       `}</style>
+
+      {/* Sonner toaster for real-time notifications */}
+      <Toaster position="top-right" richColors={false} />
 
       {xpNotif !== null && (
         <XPNotif xp={xpNotif} onDone={() => setXpNotif(null)} />
@@ -867,7 +975,7 @@ export default function ShadowTimer() {
               border: "1px solid rgba(255,255,255,0.07)", borderLeft: "4px solid rgba(34,211,238,0.6)",
               borderRadius: 24, padding: "28px", width: "100%", margin: "0 auto"
             }}>
-              <StudyLeaderboard todayMinutes={todayMins} />
+              <StudyLeaderboard leaderboardData={liveLeaderboard} />
             </div>
 
             {/* Stats */}

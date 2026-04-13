@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6b7280"/>
+      <stop offset="100%" stop-color="#374151"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e5e7eb"/>
+      <stop offset="50%" stop-color="#9ca3af"/>
+      <stop offset="100%" stop-color="#d1d5db"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="40" cy="40" r="38" fill="none" stroke="url(#rim)" stroke-width="3"/>
+  <circle cx="40" cy="40" r="34" fill="url(#bg)"/>
+  <circle cx="40" cy="40" r="30" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M40 14 L58 22 L58 42 Q58 56 40 64 Q22 56 22 42 L22 22 Z" fill="#4b5563" stroke="#d1d5db" stroke-width="1.5"/>
+  <text x="40" y="46" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="22" fill="#e5e7eb" filter="url(#glow)">D</text>
+  <polygon points="40,10 44,16 40,14 36,16" fill="#e5e7eb"/>
+</svg>

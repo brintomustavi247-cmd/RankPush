@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2e1065"/>
+      <stop offset="100%" stop-color="#09040f"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="50%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#e879f9"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="strongGlow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Aura -->
+  <circle cx="40" cy="40" r="38" fill="url(#aura)"/>
+  <!-- Outer triple ring -->
+  <circle cx="40" cy="40" r="38" fill="none" stroke="url(#rim)" stroke-width="4.5"/>
+  <circle cx="40" cy="40" r="35" fill="none" stroke="#7c3aed" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="40" cy="40" r="32" fill="none" stroke="#c084fc" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.4"/>
+  <circle cx="40" cy="40" r="34" fill="url(#bg)"/>
+  <!-- Shadow monarch wings -->
+  <path d="M8 50 Q14 28 22 36 L24 44 Q16 44 8 50 Z" fill="#7c3aed" opacity="0.6"/>
+  <path d="M72 50 Q66 28 58 36 L56 44 Q64 44 72 50 Z" fill="#7c3aed" opacity="0.6"/>
+  <!-- Crown with spikes -->
+  <path d="M24 52 L28 34 L34 44 L40 22 L46 44 L52 34 L56 52 Z" fill="#1e1040" stroke="#c084fc" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Gems on crown -->
+  <circle cx="40" cy="22" r="3.5" fill="#e879f9" filter="url(#glow)"/>
+  <circle cx="28" cy="34" r="2.5" fill="#c084fc" filter="url(#glow)"/>
+  <circle cx="52" cy="34" r="2.5" fill="#c084fc" filter="url(#glow)"/>
+  <!-- Shadow eyes (eerie glow) -->
+  <circle cx="36" cy="44" r="2" fill="#e879f9" filter="url(strongGlow)"/>
+  <circle cx="44" cy="44" r="2" fill="#e879f9" filter="url(strongGlow)"/>
+  <!-- Top gem -->
+  <polygon points="40,6 43,10 40,9 37,10" fill="#c084fc" filter="url(glow)"/>
+  <text x="40" y="72" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="7" fill="#c084fc" filter="url(glow)">SHADOW MONARCH</text>
+</svg>

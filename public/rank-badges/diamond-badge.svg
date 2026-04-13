@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6b21a8"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#e879f9"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="40" cy="40" r="38" fill="none" stroke="url(#rim)" stroke-width="4"/>
+  <circle cx="40" cy="40" r="34" fill="url(#bg)"/>
+  <!-- Wing decorations -->
+  <path d="M12 32 Q6 40 12 48 L22 44 Q18 40 22 36 Z" fill="#a855f7" opacity="0.5"/>
+  <path d="M68 32 Q74 40 68 48 L58 44 Q62 40 58 36 Z" fill="#a855f7" opacity="0.5"/>
+  <circle cx="40" cy="40" r="30" fill="none" stroke="#a855f7" stroke-width="1" stroke-dasharray="4 3"/>
+  <!-- Diamond gem center -->
+  <polygon points="40,20 50,30 50,50 40,60 30,50 30,30" fill="#4c1d95" stroke="#c084fc" stroke-width="1.5"/>
+  <text x="40" y="46" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="22" fill="#e879f9" filter="url(#glow)">A</text>
+  <polygon points="40,10 44,16 40,14 36,16" fill="#c084fc"/>
+  <circle cx="40" cy="10" r="3" fill="#e879f9" filter="url(#glow)"/>
+</svg>
