@@ -1192,7 +1192,7 @@ export default function RankPushDashboard() {
 
       <div className="min-h-screen w-full relative z-10">
         <div className="w-full max-w-[1920px] mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="lg:flex lg:items-start lg:gap-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
 
         <aside className="hidden lg:flex lg:sticky lg:top-6 lg:w-[260px] lg:shrink-0 h-[calc(100vh-3rem)] card p-5 flex-col border border-white/10">
           <div className="flex items-center gap-3 mb-7">
