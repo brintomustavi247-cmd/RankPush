@@ -24,6 +24,7 @@ import { Toaster } from "sonner";
 import { useXPNotifications, useBattleNotifications, useSessionNotifications, useRealtimeNotifications, relativeTime, NOTIF_CONFIG } from "@/lib/notification-utils";
 import { initializeDefaultQuests, checkAndResetWeeklyStats, DEFAULT_QUESTS } from "@/lib/xp-utils";
 import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
+import { UserProfileModal } from "@/components/UserProfileModal";
 
 // ============================================================
 // SOLO LEVELING RANK SYSTEM — S → E (reversed, S is highest)
@@ -923,6 +924,7 @@ export default function RankPushDashboard() {
   const [showRankModal, setShowRankModal]   = useState(false);
   const [showProfile, setShowProfile]       = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
   const [showNotif, setShowNotif]           = useState(false);
   const [isMobileMenuOpen, setMobileMenu]   = useState(false);
   const [animXP, setAnimXP]                 = useState(0);
@@ -1134,6 +1136,13 @@ export default function RankPushDashboard() {
           onClose={() => setShowUploadModal(false)}
           currentPhotoURL={user?.photoURL}
           onUploadSuccess={(url) => setUser((prev: any) => ({ ...prev, photoURL: url }))}
+        />
+      )}
+      {selectedProfileUserId && (
+        <UserProfileModal
+          userId={selectedProfileUserId}
+          viewerUid={user?.uid}
+          onClose={() => setSelectedProfileUserId(null)}
         />
       )}
 
@@ -1650,6 +1659,7 @@ export default function RankPushDashboard() {
               ) : liveLeaderboard.map((p, i) => (
                   <div key={p.id || p.name}
                     className="flex items-center gap-2.5 p-2 md:p-2.5 rounded-xl cursor-pointer transition-all"
+                    onClick={() => p.id && setSelectedProfileUserId(p.id)}
                     style={{
                       background: p.isCurrentUser
                         ? `rgba(${p.rankInfo?.color ? "34,211,238" : "34,211,238"},0.08)`
