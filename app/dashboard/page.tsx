@@ -159,7 +159,8 @@ const GLOBAL_CSS = `
   html, body {
     background: #02010a; color: white;
     font-family: 'Outfit', sans-serif;
-    overflow-x: hidden; scroll-behavior: smooth;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
   body {
     background-image:
@@ -168,26 +169,35 @@ const GLOBAL_CSS = `
       linear-gradient(to bottom, #02010a, #050b14);
     min-height: 100vh;
   }
-  /* Scanline — GPU layer, content-visibility */
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);
-    pointer-events: none; z-index: 1;
-    will-change: auto;
-    content-visibility: auto;
+
+  /* Scanline — DESKTOP ONLY (too expensive on mobile GPU during scroll) */
+  @media (min-width: 1024px) {
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);
+      pointer-events: none; z-index: 1;
+    }
   }
+
   .font-logo  { font-family: 'Orbitron', sans-serif; }
   .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
 
-  /* Card — GPU accelerated, no heavy blur on scroll */
+  /* Card — Desktop: blur glass, Mobile: solid bg (no backdrop-filter) */
   .card {
-    background: rgba(255,255,255,0.025);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    background: rgba(10, 12, 22, 0.85);
     border: 1px solid rgba(255,255,255,0.06); border-radius: 20px;
     transition: border-color 0.2s ease, background 0.2s ease;
     transform: translateZ(0);
-    will-change: auto;
-    contain: layout paint;
+    contain: layout style paint;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 300px;
+  }
+  /* Desktop only: enable backdrop blur (GPU handles it fine) */
+  @media (min-width: 768px) {
+    .card {
+      background: rgba(255,255,255,0.025);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
   }
   .card:hover { border-color: rgba(34,211,238,0.15); background: rgba(255,255,255,0.035); }
 
@@ -203,26 +213,40 @@ const GLOBAL_CSS = `
   @keyframes slideUp  { from{transform:translateY(16px) translateZ(0);opacity:0}to{transform:translateY(0) translateZ(0);opacity:1} }
   @keyframes shadowFloat{ 0%,100%{transform:translateY(0) rotate(-1deg) translateZ(0)}50%{transform:translateY(-6px) rotate(1deg) translateZ(0)} }
 
-  /* Applied classes — will-change only when animating */
-  .xp-bar        { animation: xpFill 1.2s cubic-bezier(0.4,0,0.2,1) forwards; will-change: width; }
-  .glow-pulse    { animation: glowPulse 3s ease-in-out infinite; will-change: opacity; }
-  .float         { animation: floatY 6s ease-in-out infinite; will-change: transform; }
-  .badge-bounce  { animation: badgeBounce 2s ease infinite; will-change: transform; }
-  .quest-bar     { animation: questFill 1s ease forwards; will-change: width; }
-  .stat-bar      { animation: statFill 1.5s cubic-bezier(0.4,0,0.2,1) forwards; will-change: width; }
-  .streak-pip    { animation: streakPop 0.3s ease forwards; will-change: transform, opacity; }
-  .shadow-float  { animation: shadowFloat 6s ease-in-out infinite; will-change: transform; }
+  /* Applied classes — animations run on both mobile+desktop for one-shot,
+     but INFINITE animations are desktop-only to save mobile GPU */
+  .xp-bar        { animation: xpFill 1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .quest-bar     { animation: questFill 1s ease forwards; }
+  .stat-bar      { animation: statFill 1.5s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .streak-pip    { animation: streakPop 0.3s ease forwards; }
 
-  .shimmer-text {
-    background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b, #a855f7);
-    background-size: 200% auto;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shimmer 3s linear infinite;
+  /* Infinite animations — DESKTOP ONLY */
+  @media (min-width: 768px) {
+    .glow-pulse    { animation: glowPulse 3s ease-in-out infinite; }
+    .float         { animation: floatY 6s ease-in-out infinite; }
+    .badge-bounce  { animation: badgeBounce 2s ease infinite; }
+    .shadow-float  { animation: shadowFloat 6s ease-in-out infinite; }
+    .shimmer-text {
+      background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b, #a855f7);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    .rank-shimmer {
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
+    }
   }
-  .rank-shimmer {
-    background-size: 200% auto;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shimmer 2s linear infinite;
+  /* Mobile: shimmer text shows static gradient, no animation */
+  @media (max-width: 767px) {
+    .shimmer-text {
+      background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .rank-shimmer {
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
   }
 
   .sub-btn {
@@ -271,6 +295,12 @@ const GLOBAL_CSS = `
 
   .rank-card-hover { transition: transform 0.15s ease; transform: translateZ(0); }
   .rank-card-hover:hover { transform: scale(1.02) translateZ(0); }
+
+  /* Lazy render sections below fold — browser skips rendering off-screen */
+  .lazy-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 400px;
+  }
 `;
 
 
@@ -1055,11 +1085,15 @@ export default function RankPushDashboard() {
       {showRankModal  && <RankModal        onClose={() => setShowRankModal(false)} currentXP={stats.xp} />}
       {showProfile    && <ProfileModal     onClose={() => setShowProfile(false)} user={user} stats={stats} />}
 
-      {/* Ambient BG */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      {/* Ambient BG — simplified for mobile (no blur filter), full effect on desktop */}
+      <div className="fixed inset-0 z-0 pointer-events-none hidden md:block">
         <div style={{ position:"absolute", top:"-15%", left:"-10%", width:700, height:700, background:"#0ea5e9", opacity:0.05, filter:"blur(140px)", borderRadius:"50%" }} />
         <div style={{ position:"absolute", bottom:"-15%", right:"-10%", width:700, height:700, background:rank.color, opacity:0.04, filter:"blur(140px)", borderRadius:"50%" }} />
       </div>
+      {/* Mobile: simple radial gradient BG (no blur filter = no GPU hit) */}
+      <div className="fixed inset-0 z-0 pointer-events-none md:hidden" style={{
+        background: `radial-gradient(ellipse at 20% 10%, rgba(14,165,233,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, ${rank.color}08 0%, transparent 50%)`
+      }} />
 
       <div className="min-h-screen px-4 md:px-6 py-6 md:py-8 relative z-10 max-w-[1920px] mx-auto">
 
@@ -1443,7 +1477,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Shadow Focus Banner */}
-            <div className="card p-6 md:p-7 border-l-[4px] border-purple-500 bg-gradient-to-r from-purple-500/10 to-transparent flex flex-col md:flex-row items-start md:items-center gap-5" style={{ boxShadow:"0 0 30px rgba(168,85,247,0.08)" }}>
+            <div className="card lazy-section p-6 md:p-7 border-l-[4px] border-purple-500 bg-gradient-to-r from-purple-500/10 to-transparent flex flex-col md:flex-row items-start md:items-center gap-5" style={{ boxShadow:"0 0 30px rgba(168,85,247,0.08)" }}>
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-purple-500/15 rounded-xl border border-purple-500/25">
                   <Timer size={24} color="#a855f7" />
@@ -1463,7 +1497,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Tactical Arena */}
-            <div className="card p-5 md:p-8 border-t-[3px] border-sky-500">
+            <div className="card lazy-section p-5 md:p-8 border-t-[3px] border-sky-500">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="font-logo text-lg md:text-[22px] uppercase mb-1">Tactical <span className="text-sky-500">Arena</span></h2>
@@ -1498,7 +1532,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Rival Battle */}
-            <div className="card p-5 md:p-7 bg-gradient-to-r from-red-500/5 to-transparent border-l-[3px] border-red-500 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-5">
+            <div className="card lazy-section p-5 md:p-7 bg-gradient-to-r from-red-500/5 to-transparent border-l-[3px] border-red-500 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-5">
               <div className="w-11 h-11 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20 shrink-0">
                 <Sword size={20} color="#ef4444" />
               </div>
@@ -1513,7 +1547,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Performance Analytics */}
-            <div className="card p-5 md:p-7">
+            <div className="card lazy-section p-5 md:p-7">
               <div className="flex items-center gap-2 mb-5">
                 <BarChart2 size={14} color="#22d3ee" />
                 <h3 className="text-[9px] font-black tracking-widest uppercase opacity-70">Performance This Week</h3>
@@ -1539,7 +1573,7 @@ export default function RankPushDashboard() {
           <div className="lg:col-span-12 xl:col-span-3 flex flex-col gap-5">
 
             {/* Leaderboard */}
-            <div className="card p-5 md:p-6 border-l-[3px] border-sky-500/50">
+            <div className="card lazy-section p-5 md:p-6 border-l-[3px] border-sky-500/50">
               <div className="flex justify-between items-center mb-5">
                 <h3 className="text-[9px] font-black tracking-widest uppercase opacity-60 flex items-center gap-2">
                   <Trophy size={12} color="#f59e0b" /> Global Elite
@@ -1617,7 +1651,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Daily Quests — Real Firestore */}
-            <div className="card p-5 md:p-6 border-l-[3px] border-orange-500 bg-orange-500/5">
+            <div className="card lazy-section p-5 md:p-6 border-l-[3px] border-orange-500 bg-orange-500/5">
               <div className="flex items-center gap-2 mb-4 opacity-80">
                 <Flame size={14} color="#f97316" />
                 <h3 className="text-[9px] font-black tracking-widest uppercase">Daily Quests</h3>
@@ -1655,7 +1689,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Boss Fight */}
-            <div className="card p-5 md:p-6 bg-gradient-to-br from-red-500/5 to-purple-600/5 border border-red-500/15 relative overflow-hidden">
+            <div className="card lazy-section p-5 md:p-6 bg-gradient-to-br from-red-500/5 to-purple-600/5 border border-red-500/15 relative overflow-hidden">
               <div style={{ position:"absolute", right:-8, top:"50%", transform:"translateY(-50%)", opacity:0.05, fontSize:110, lineHeight:1 }}>💀</div>
               <div className="flex items-center gap-2 mb-2.5">
                 <Layers size={14} color="#ef4444" />
