@@ -107,7 +107,7 @@ export function ProfilePictureUpload({
       }, 1500);
     } catch (err: any) {
       console.error("Upload failed:", err);
-      setError(err?.message ? `Upload failed: ${err.message}` : "Upload failed. Please try again.");
+      setError("Upload failed. Please check your connection and try again.");
     } finally {
       setUploading(false);
     }
