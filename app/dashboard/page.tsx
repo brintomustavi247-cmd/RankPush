@@ -1190,11 +1190,11 @@ export default function RankPushDashboard() {
         background: `radial-gradient(ellipse at 20% 10%, rgba(14,165,233,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, ${rank.color}08 0%, transparent 50%)`
       }} />
 
-      <div className="min-h-screen w-full flex justify-center relative z-10">
-        <div className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1920px]">
-        <div className="grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
+      <div className="min-h-screen w-full relative z-10">
+        <div className="w-full max-w-[1920px] mx-auto px-4 md:px-6 py-6 md:py-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
 
-        <aside className="hidden xl:flex xl:sticky xl:top-6 h-[calc(100vh-3rem)] card p-5 flex-col border border-white/10">
+        <aside className="hidden lg:flex lg:sticky lg:top-6 lg:w-[260px] lg:shrink-0 h-[calc(100vh-3rem)] card p-5 flex-col border border-white/10">
           <div className="flex items-center gap-3 mb-7">
             <div className="p-2.5 bg-sky-500 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.5)] border border-white/20">
               <Swords size={18} color="white" />
@@ -1256,7 +1256,7 @@ export default function RankPushDashboard() {
           </div>
         </aside>
 
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
 
         {/* ═══ HEADER ═══ */}
         <header className="flex justify-between items-center mb-8 md:mb-10">
