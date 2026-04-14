@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, updateDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase"; // db ইমপোর্ট করতে ভুলবেন না
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -1393,8 +1393,11 @@ export default function RankPushDashboard() {
               <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 rounded-full cursor-pointer hover:scale-105 transition-transform"
                 style={{ border: `2px solid ${rank.color}`, boxShadow: `0 0 24px ${rank.glowColor}` }}
                 onClick={() => setShowUploadModal(true)}>
-                <img src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`}
-                  className="w-full h-full rounded-full object-cover" alt="Profile" />
+                <img 
+  src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`} 
+  style={{ width: "96px", height: "96px", minWidth: "96px", minHeight: "96px", objectFit: "cover", borderRadius: "50%" }} 
+  alt="Profile" 
+/>
                 <div style={{ position:"absolute", bottom:-4, right:-4, background:`linear-gradient(135deg,${rank.color},${rank.color}bb)`, borderRadius:8, padding:"3px 7px", fontFamily:"'Orbitron',sans-serif", fontSize:8, fontWeight:900, border:"2px solid #02010a" }}>
                   LVL {stats.level}
                 </div>
