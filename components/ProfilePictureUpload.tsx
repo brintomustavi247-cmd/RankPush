@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { X, Upload, Camera, CheckCircle } from "lucide-react";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, updateDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import { storage, db, auth } from "@/lib/firebase";
@@ -21,6 +21,7 @@ export function ProfilePictureUpload({
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -70,12 +71,26 @@ export function ProfilePictureUpload({
     }
 
     setUploading(true);
+    setProgress(0);
     setError(null);
 
     try {
-      const storageRef = ref(storage, `profile_pictures/${user.uid}`);
-      await uploadBytes(storageRef, selectedFile);
-      const downloadURL = await getDownloadURL(storageRef);
+      const storageRef = ref(storage, `users/${user.uid}/avatar`);
+      const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
+      await new Promise<void>((resolve, reject) => {
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            setProgress(pct);
+          },
+          (err) => reject(err),
+          () => resolve(),
+        );
+      });
+
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
       // Update Firebase Auth profile
       await updateProfile(user, { photoURL: downloadURL });
@@ -92,7 +107,7 @@ export function ProfilePictureUpload({
       }, 1500);
     } catch (err: any) {
       console.error("Upload failed:", err);
-      setError("Upload failed. Please try again.");
+      setError(err?.message ? `Upload failed: ${err.message}` : "Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -190,6 +205,18 @@ export function ProfilePictureUpload({
           </div>
         )}
 
+        {/* Progress bar */}
+        {uploading && (
+          <div className="mb-3">
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${progress}%`, background: "linear-gradient(90deg,#22d3ee,#0891b2)" }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Upload button */}
         <button
           onClick={handleUpload}
@@ -203,7 +230,7 @@ export function ProfilePictureUpload({
           }}
         >
           {uploading ? (
-            <span className="animate-pulse">Uploading...</span>
+            <span className="animate-pulse">Uploading... {progress}%</span>
           ) : success ? (
             <><CheckCircle size={14} /> Done!</>
           ) : (
