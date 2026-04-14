@@ -2,6 +2,7 @@
 import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, updateDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase"; // db ইমপোর্ট করতে ভুলবেন না
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { debounce } from "@/lib/debounce-utils";
 import { useRouter } from "next/navigation";
 
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -905,6 +906,18 @@ function RivalModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Leaderboard entry shape used inside the dashboard Firebase listener
+interface DashboardLeaderboardEntry {
+  id: string;
+  name: string;
+  xp: number;
+  avatar: string;
+  rankInfo: RankInfo;
+  isCurrentUser: boolean;
+  score: string;
+  rank: string;
+}
+
 // ============================================================
 // MAIN DASHBOARD
 // ============================================================
@@ -959,6 +972,22 @@ export default function RankPushDashboard() {
 
   // 🔥 Firebase Real-Time Listeners (User + Leaderboard + Online Count + Quests)
   useEffect(() => {
+    // Track cleanup functions for staggered listeners
+    const staggeredTimers: ReturnType<typeof setTimeout>[] = [];
+    let unsubUser:        (() => void) | null = null;
+    let unsubLeaderboard: (() => void) | null = null;
+    let unsubOnline:      (() => void) | null = null;
+    let unsubQuests:      (() => void) | null = null;
+
+    // Snapshot key and debounced setter are created once per effect mount.
+    // Placing them here (outside onAuthStateChanged) ensures a single, stable
+    // debounce instance that is NOT reset on every auth-state emission.
+    let prevLbKey = "";
+    const debouncedSetLeaderboard = debounce((combined: DashboardLeaderboardEntry[]) => {
+      setLiveLeaderboard(combined);
+      setLeaderboardLoading(false);
+    }, 300);
+
     const unsubAuth = onAuthStateChanged(auth, async (u) => {
       if (!u) { router.push("/"); return; }
       setUser(u);
@@ -967,9 +996,19 @@ export default function RankPushDashboard() {
       checkAndResetWeeklyStats(u.uid);
       // ── Initialize default quests if not present ──
       initializeDefaultQuests(u.uid);
-      // ── ইউজার ডেটা ──
+
+      // Clean up any previous subscriptions before setting up new ones
+      // (guards against onAuthStateChanged firing multiple times)
+      unsubUser?.();
+      unsubLeaderboard?.();
+      unsubOnline?.();
+      unsubQuests?.();
+      staggeredTimers.forEach(clearTimeout);
+      staggeredTimers.length = 0;
+
+      // ── ① ইউজার ডেটা (immediate) ──
       const userRef = doc(db, "users", u.uid);
-      const unsubUser = onSnapshot(userRef, (snap) => {
+      unsubUser = onSnapshot(userRef, (snap) => {
         if (snap.exists()) {
           setStats({ ...MOCK_STATS, ...snap.data() } as any);
         } else {
@@ -985,70 +1024,90 @@ export default function RankPushDashboard() {
         }
       });
 
-      // ── লিডারবোর্ড (Gamified Mix of Real + Mock Users) ──
-      const lbQuery = query(collection(db, "users"), orderBy("xp", "desc"), limit(5));
-      const unsubLeaderboard = onSnapshot(lbQuery, (snap) => {
-        setLeaderboardLoading(false);
-        
-        const realUsers = snap.empty ? [] : snap.docs.map(d => {
-          const data = d.data();
-          return {
-            id:            d.id,
-            name:          data.displayName || data.name || "Hunter",
-            xp:            data.xp || 0,
-            avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${d.id}`,
-            rankInfo:      getRankByXP(data.xp || 0),
-            isCurrentUser: d.id === u.uid,
-          };
+      // ── ② লিডারবোর্ড — staggered by 150 ms ──
+      const t1 = setTimeout(() => {
+        const lbQuery = query(collection(db, "users"), orderBy("xp", "desc"), limit(5));
+        unsubLeaderboard = onSnapshot(lbQuery, (snap) => {
+          const realUsers = snap.empty ? [] : snap.docs.map(d => {
+            const data = d.data();
+            return {
+              id:            d.id,
+              name:          data.displayName || data.name || "Hunter",
+              xp:            data.xp || 0,
+              avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${d.id}`,
+              rankInfo:      getRankByXP(data.xp || 0),
+              isCurrentUser: d.id === u.uid,
+            };
+          });
+
+          const mockUsers = LEADERBOARD.map((p, i) => ({
+            id: `mock-${i}`,
+            name: p.name,
+            xp: p.xp,
+            avatar: p.avatar,
+            rankInfo: p.rankInfo,
+            isCurrentUser: false
+          }));
+
+          const combined: DashboardLeaderboardEntry[] = [...realUsers, ...mockUsers]
+            .sort((a, b) => b.xp - a.xp)
+            .slice(0, 5)
+            .map((p, i) => ({
+               ...p,
+               score: p.xp.toLocaleString(),
+               rank: String(i + 1).padStart(2, "0")
+            }));
+
+          // Skip update if rankings have not changed (uid + xp key comparison)
+          const lbKey = combined.map(p => `${p.id}:${p.xp}`).join("|");
+          if (lbKey === prevLbKey) {
+            setLeaderboardLoading(false);
+            return;
+          }
+          prevLbKey = lbKey;
+
+          debouncedSetLeaderboard(combined);
+        }, () => {
+          setLeaderboardLoading(false);
         });
+      }, 150);
+      staggeredTimers.push(t1);
 
-        const mockUsers = LEADERBOARD.map((p, i) => ({
-          id: `mock-${i}`,
-          name: p.name,
-          xp: p.xp,
-          avatar: p.avatar,
-          rankInfo: p.rankInfo,
-          isCurrentUser: false
-        }));
+      // ── ③ Online Count — staggered by 300 ms ──
+      const t2 = setTimeout(() => {
+        const metaRef = doc(db, "meta", "online");
+        unsubOnline = onSnapshot(metaRef, (snap) => {
+          if (snap.exists() && snap.data().count) setOnlineCount(snap.data().count);
+        }, () => {});
+      }, 300);
+      staggeredTimers.push(t2);
 
-        // Mix real and mock users, sort by XP, and take Top 5
-        const combined = [...realUsers, ...mockUsers]
-          .sort((a, b) => b.xp - a.xp)
-          .slice(0, 5)
-          .map((p, i) => ({
-             ...p,
-             score: p.xp.toLocaleString(),
-             rank: String(i + 1).padStart(2, "0")
-          }));
-
-        setLiveLeaderboard(combined);
-      }, () => {
-        setLeaderboardLoading(false);
-      });
-
-      // ── Online Count ──
-      const metaRef = doc(db, "meta", "online");
-      const unsubOnline = onSnapshot(metaRef, (snap) => {
-        if (snap.exists() && snap.data().count) setOnlineCount(snap.data().count);
-      }, () => {});
-
-      // ── Quest real-time listener ──
-      const questRef  = collection(db, "users", u.uid, "quests");
-      const unsubQuests = onSnapshot(questRef, (snap) => {
-        if (!snap.empty) {
-          const iconMap: Record<string, any> = { atom: Atom, clock: Clock, flame: Flame };
-          const quests = snap.docs.map(d => ({
-            ...d.data(),
-            id: d.id,
-            icon: iconMap[d.data().iconName] || Atom,
-          }));
-          setLiveQuests(quests);
-        }
-      }, () => {});
-
-      return () => { unsubUser(); unsubLeaderboard(); unsubOnline(); unsubQuests(); };
+      // ── ④ Quest real-time listener — staggered by 450 ms ──
+      const t3 = setTimeout(() => {
+        const questRef = collection(db, "users", u.uid, "quests");
+        unsubQuests = onSnapshot(questRef, (snap) => {
+          if (!snap.empty) {
+            const iconMap: Record<string, any> = { atom: Atom, clock: Clock, flame: Flame };
+            const quests = snap.docs.map(d => ({
+              ...d.data(),
+              id: d.id,
+              icon: iconMap[d.data().iconName] || Atom,
+            }));
+            setLiveQuests(quests);
+          }
+        }, () => {});
+      }, 450);
+      staggeredTimers.push(t3);
     });
-    return () => unsubAuth();
+
+    return () => {
+      unsubAuth();
+      staggeredTimers.forEach(clearTimeout);
+      unsubUser?.();
+      unsubLeaderboard?.();
+      unsubOnline?.();
+      unsubQuests?.();
+    };
   }, [router]);
 
   // XP এনিমেশন
