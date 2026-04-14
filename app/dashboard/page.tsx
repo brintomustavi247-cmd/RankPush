@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, updateDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase"; // db ইমপোর্ট করতে ভুলবেন না
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { useXPNotifications, useBattleNotifications, useSessionNotifications, useRealtimeNotifications, relativeTime, NOTIF_CONFIG } from "@/lib/notification-utils";
 import { initializeDefaultQuests, checkAndResetWeeklyStats, DEFAULT_QUESTS } from "@/lib/xp-utils";
+import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
 
 // ============================================================
 // SOLO LEVELING RANK SYSTEM — S → E (reversed, S is highest)
@@ -113,8 +114,8 @@ const getXPProgress = (xp: number, rank: RankInfo): number => {
 const SUBJECTS = [
   { name: "Physics",   icon: Atom,         color: "#22d3ee", locked: false, questions: 48  },
   { name: "Chemistry", icon: FlaskConical, color: "#a78bfa", locked: false, questions: 36  },
-  { name: "Math",      icon: Sigma,        color: "#34d399", locked: true,  questions: 0   },
-  { name: "Biology",   icon: Dna,          color: "#f87171", locked: true,  questions: 0   },
+  { name: "Math",      icon: Sigma,        color: "#34d399", locked: false, questions: 24  },
+  { name: "Biology",   icon: Dna,          color: "#f87171", locked: false, questions: 20  },
 ];
 
 const DAILY_QUESTS = [
@@ -682,7 +683,7 @@ function ProfileModal({ onClose, user, stats }: { onClose: () => void; user: any
           <div style={{ display: "flex", alignItems: "flex-end", gap: 16, marginBottom: 20 }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
               <div style={{ width: 88, height: 88, borderRadius: "50%", border: `3px solid ${rank.color}`, boxShadow: `0 0 24px ${rank.glowColor}`, overflow: "hidden" }}>
-                <img src={user?.photoURL || "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg"} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="avatar" />
+                <img src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="avatar" />
               </div>
               <div style={{ position: "absolute", bottom: 0, right: -4, background: `linear-gradient(135deg, ${rank.color}, ${rank.color}bb)`, borderRadius: 8, padding: "3px 7px", fontFamily: "'Orbitron', sans-serif", fontSize: 9, fontWeight: 900, border: "2px solid #06040f" }}>
                 LVL {stats.level}
@@ -921,6 +922,7 @@ export default function RankPushDashboard() {
   const [showRivalModal, setShowRivalModal] = useState(false);
   const [showRankModal, setShowRankModal]   = useState(false);
   const [showProfile, setShowProfile]       = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [showNotif, setShowNotif]           = useState(false);
   const [isMobileMenuOpen, setMobileMenu]   = useState(false);
   const [animXP, setAnimXP]                 = useState(0);
@@ -1027,7 +1029,7 @@ export default function RankPushDashboard() {
               id:            d.id,
               name:          data.displayName || data.name || "Hunter",
               xp:            data.xp || 0,
-              avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${d.id}`,
+              avatar:        data.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${d.id}`,
               rankInfo:      getRankByXP(data.xp || 0),
               isCurrentUser: d.id === u.uid,
             };
@@ -1127,6 +1129,13 @@ export default function RankPushDashboard() {
       {showRivalModal && <RivalModal       onClose={() => setShowRivalModal(false)} />}
       {showRankModal  && <RankModal        onClose={() => setShowRankModal(false)} currentXP={stats.xp} />}
       {showProfile    && <ProfileModal     onClose={() => setShowProfile(false)} user={user} stats={stats} />}
+      {showUploadModal && (
+        <ProfilePictureUpload
+          onClose={() => setShowUploadModal(false)}
+          currentPhotoURL={user?.photoURL}
+          onUploadSuccess={(url) => setUser((prev: any) => ({ ...prev, photoURL: url }))}
+        />
+      )}
 
       {/* Ambient BG — simplified for mobile (no blur filter), full effect on desktop */}
       <div className="fixed inset-0 z-0 pointer-events-none hidden md:block">
@@ -1337,11 +1346,11 @@ export default function RankPushDashboard() {
             <div className="card p-6 md:p-7 text-center relative overflow-hidden" style={{ borderTop: `3px solid ${rank.color}` }}>
               <div style={{ position:"absolute", top:"-30%", left:"50%", transform:"translateX(-50%)", width:220, height:220, borderRadius:"50%", background:rank.color, opacity:0.06, filter:"blur(50px)", pointerEvents:"none" }} />
 
-              {/* Avatar — clickable opens profile */}
+              {/* Avatar — clickable opens upload modal */}
               <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 rounded-full cursor-pointer hover:scale-105 transition-transform"
                 style={{ border: `2px solid ${rank.color}`, boxShadow: `0 0 24px ${rank.glowColor}` }}
-                onClick={() => setShowProfile(true)}>
-                <img src={user?.photoURL || "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg"}
+                onClick={() => setShowUploadModal(true)}>
+                <img src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`}
                   className="w-full h-full rounded-full object-cover" alt="Profile" />
                 <div style={{ position:"absolute", bottom:-4, right:-4, background:`linear-gradient(135deg,${rank.color},${rank.color}bb)`, borderRadius:8, padding:"3px 7px", fontFamily:"'Orbitron',sans-serif", fontSize:8, fontWeight:900, border:"2px solid #02010a" }}>
                   LVL {stats.level}
@@ -1583,9 +1592,9 @@ export default function RankPushDashboard() {
                 <h3 className="font-logo text-sm md:text-base text-red-500 uppercase mb-1">Rival Battle</h3>
                 <p className="text-[10px] opacity-45">Challenge a friend to real-time 1v1 MCQ battle</p>
               </div>
-              <button onClick={() => stats.plan === "pro" ? setShowRivalModal(true) : setShowProModal(true)}
+              <button onClick={() => setShowRivalModal(true)}
                 className="w-full md:w-auto bg-gradient-to-br from-red-600 to-red-500 border-none rounded-xl py-2.5 px-5 text-white font-black text-[10px] tracking-wide flex items-center justify-center gap-2">
-                {stats.plan === "pro" ? <><Wifi size={14} /> Find Rival</> : <><Lock size={14} /> PRO Only</>}
+                <Wifi size={14} /> Find Rival
               </button>
             </div>
 
@@ -1741,8 +1750,8 @@ export default function RankPushDashboard() {
               </div>
               <p className="text-[13px] font-bold text-white/80 mb-1.5">Physics Chapter 3 Boss</p>
               <p className="text-[10px] opacity-35 mb-4">10 hard questions. Defeat the boss to earn rare XP!</p>
-              <button onClick={() => setShowProModal(true)} className="w-full py-2.5 bg-red-500/10 border border-red-500/25 rounded-lg text-red-500 font-black text-[10px] flex items-center justify-center gap-1.5">
-                <Lock size={12} /> PRO Feature
+              <button onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)} className="w-full py-2.5 bg-red-500/10 border border-red-500/25 rounded-lg text-red-500 font-black text-[10px] flex items-center justify-center gap-1.5">
+                <Layers size={12} /> Start Boss Fight
               </button>
             </div>
 
