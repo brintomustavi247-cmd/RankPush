@@ -436,6 +436,30 @@ export function UserProfileModal({
                   </div>
                 </div>
 
+                {/* ── Bio ── */}
+                {profileData.bio && (
+                  <div
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: 12,
+                      padding: "10px 14px",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.6)",
+                        lineHeight: 1.6,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      "{profileData.bio}"
+                    </p>
+                  </div>
+                )}
+
                 {/* ── XP strip ── */}
                 <div
                   style={{

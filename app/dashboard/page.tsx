@@ -698,7 +698,14 @@ function ProfileModal({ onClose, user, stats }: { onClose: () => void; user: any
             </div>
           </div>
 
-          {/* XP Bar */}
+          {/* Bio */}
+          {(stats as any).bio && (
+            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, fontStyle: "italic" }}>
+                "{(stats as any).bio}"
+              </p>
+            </div>
+          )}
           <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <div>
@@ -1372,9 +1379,16 @@ export default function RankPushDashboard() {
                 </div>
               </div>
 
-              <h2 className="font-logo text-base md:text-lg tracking-wide mb-3 text-white">
+              <h2 className="font-logo text-base md:text-lg tracking-wide mb-1 text-white">
                 {user?.displayName || "CYBER HUNTER"}
               </h2>
+
+              {/* Bio */}
+              {(stats as any).bio && (
+                <p className="text-[10px] text-white/40 italic mb-3 px-2 leading-relaxed">
+                  {(stats as any).bio}
+                </p>
+              )}
 
               {/* Rank Badge — clickable opens rank modal */}
               <div className="flex justify-center mb-4">
