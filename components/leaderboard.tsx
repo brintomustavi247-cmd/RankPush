@@ -1,26 +1,18 @@
 "use client"
 
-import { Trophy, TrendingUp, TrendingDown, Minus, ChevronRight } from "lucide-react"
+import { Trophy, Minus, ChevronRight } from "lucide-react"
 import { useTheme } from "@/contexts/theme-context"
 import Image from "next/image"
+import { useLeaderboardRealtime } from "@/hooks/use-leaderboard-realtime"
 
 interface Player {
   rank: number
   username: string
   role: string
   score: number
-  wins: number
   trend: "up" | "down" | "stable"
   avatar: string
 }
-
-const mockPlayers: Player[] = [
-  { rank: 1, username: "PhysicsKing_BD", role: "Wing Spiker", score: 98500, wins: 342, trend: "stable", avatar: "https://i.pravatar.cc/100?img=1" },
-  { rank: 2, username: "MathWizard007", role: "Middle Blocker", score: 95200, wins: 318, trend: "up", avatar: "https://i.pravatar.cc/100?img=2" },
-  { rank: 3, username: "ChemMaster_Pro", role: "Libero", score: 92800, wins: 301, trend: "up", avatar: "https://i.pravatar.cc/100?img=3" },
-  { rank: 4, username: "BiologyNinja", role: "Setter", score: 89400, wins: 287, trend: "down", avatar: "https://i.pravatar.cc/100?img=4" },
-  { rank: 5, username: "ScienceGuru99", role: "Ace", score: 87100, wins: 275, trend: "stable", avatar: "https://i.pravatar.cc/100?img=5" },
-]
 
 // Theme-specific avatars
 const getAvatarUrl = (theme: string, player: Player) => {
@@ -31,8 +23,6 @@ const getAvatarUrl = (theme: string, player: Player) => {
 }
 
 const TrendIcon = ({ trend }: { trend: Player["trend"] }) => {
-  if (trend === "up") return <TrendingUp className="w-4 h-4 text-green-500" />
-  if (trend === "down") return <TrendingDown className="w-4 h-4 text-red-500" />
   return <Minus className="w-4 h-4 text-muted-foreground" />
 }
 
@@ -47,6 +37,17 @@ const getRankColor = (rank: number, theme: string) => {
 
 export function Leaderboard() {
   const { theme } = useTheme()
+  const { entries, loading } = useLeaderboardRealtime(5)
+
+  // Map LeaderboardEntry → Player for rendering
+  const players: Player[] = entries.map((e) => ({
+    rank: e.rank,
+    username: e.username,
+    role: "Warrior",
+    score: e.xp,
+    trend: "stable" as const,
+    avatar: e.avatar,
+  }))
 
   return (
     <div className={`theme-card overflow-hidden h-full ${theme === "pixel" ? "" : "rounded-xl"}`}>
@@ -75,7 +76,21 @@ export function Leaderboard() {
 
       {/* Player Cards */}
       <div className="p-4 space-y-3 max-h-[450px] overflow-y-auto custom-scrollbar">
-        {mockPlayers.map((player) => (
+        {loading ? (
+          // Loading skeleton
+          [1, 2, 3, 4, 5].map((n) => (
+            <div key={n} className="flex items-center gap-4 p-4 animate-pulse">
+              <div className="w-10 h-10 bg-muted/40 rounded" />
+              <div className="w-12 h-12 bg-muted/40 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-muted/40 rounded w-32" />
+                <div className="h-2 bg-muted/20 rounded w-20" />
+              </div>
+              <div className="w-16 h-3 bg-muted/40 rounded" />
+            </div>
+          ))
+        ) : (
+          players.map((player) => (
           <div
             key={player.rank}
             className={`
@@ -160,7 +175,8 @@ export function Leaderboard() {
               </button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   )
