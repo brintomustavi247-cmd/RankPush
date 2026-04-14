@@ -8,7 +8,6 @@ import {
   Trophy,
   Flame,
   Layers,
-  Lock,
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
@@ -269,10 +268,9 @@ export function RightPanel({
         </p>
 
         <button
-          onClick={() => setShowProModal(true)}
           className="w-full py-2.5 bg-red-500/10 border border-red-500/25 rounded-lg text-red-500 font-black text-[10px] flex items-center justify-center gap-1.5"
         >
-          <Lock size={12} /> PRO Feature
+          <Layers size={12} /> Start Boss Fight
         </button>
       </div>
     </div>
