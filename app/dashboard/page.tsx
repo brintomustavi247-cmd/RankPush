@@ -926,6 +926,7 @@ interface DashboardLeaderboardEntry {
 export default function RankPushDashboard() {
   const [selectedSub, setSelectedSub]       = useState("Physics");
   const [user, setUser]                     = useState<any>(null);
+  const [isAuthLoading, setIsAuthLoading]   = useState(true);
   const [showProModal, setShowProModal]     = useState(false);
   const [showRivalModal, setShowRivalModal] = useState(false);
   const [showRankModal, setShowRankModal]   = useState(false);
@@ -993,6 +994,7 @@ export default function RankPushDashboard() {
     }, 300);
 
     const unsubAuth = onAuthStateChanged(auth, async (u) => {
+      setIsAuthLoading(false);
       if (!u) { router.push("/"); return; }
       setUser(u);
 
@@ -1026,6 +1028,8 @@ export default function RankPushDashboard() {
           setDoc(userRef, initialData);
           setStats(initialData);
         }
+      }, (err) => {
+        console.error("[Dashboard] User snapshot error:", err.code, err.message);
       });
 
       // ── ② লিডারবোর্ড — staggered by 150 ms ──
@@ -1125,6 +1129,29 @@ export default function RankPushDashboard() {
   useBattleNotifications(user?.uid ?? null);
   useSessionNotifications(user?.uid ?? null);
   const { notifications: liveNotifs, unreadCount, markAllRead, markOneRead } = useRealtimeNotifications(user?.uid ?? null);
+
+  // Show a full-screen loading spinner while Firebase resolves auth state.
+  // This prevents the page from briefly flashing mock content or redirecting
+  // prematurely on reload before the persisted session is confirmed.
+  if (isAuthLoading) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center"
+        style={{ background: "#02010a" }}
+      >
+        <div
+          className="w-12 h-12 rounded-full animate-spin mb-4"
+          style={{ border: "3px solid rgba(34,211,238,0.15)", borderTopColor: "#22d3ee" }}
+        />
+        <p
+          className="text-[11px] uppercase tracking-widest font-black"
+          style={{ fontFamily: "'Orbitron',sans-serif", color: "rgba(34,211,238,0.6)" }}
+        >
+          Loading...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>

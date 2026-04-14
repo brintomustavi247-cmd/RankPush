@@ -74,30 +74,54 @@ export function ProfilePictureUpload({
     setProgress(0);
     setError(null);
 
+    const TIMEOUT_MS = 30_000;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     try {
       const storageRef = ref(storage, `users/${user.uid}/avatar`);
-      const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
+      console.log("[Upload] Starting upload for user:", user.uid, "file:", selectedFile.name, "size:", selectedFile.size);
+
+      // Wrap upload in a race against a 30-second timeout
       await new Promise<void>((resolve, reject) => {
+        timeoutId = setTimeout(() => {
+          console.error("[Upload] Timed out after 30 seconds");
+          reject(new Error("Upload timed out. Please check your network and try again."));
+        }, TIMEOUT_MS);
+
+        const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
         uploadTask.on(
           "state_changed",
           (snapshot) => {
             const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            console.log("[Upload] Progress:", pct, "%");
             setProgress(pct);
           },
-          (err) => reject(err),
-          () => resolve(),
+          (err) => {
+            console.error("[Upload] Storage error:", err.code, err.message);
+            reject(err);
+          },
+          () => {
+            console.log("[Upload] Upload task completed");
+            resolve();
+          },
         );
       });
 
-      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log("[Upload] Download URL obtained:", downloadURL);
 
       // Update Firebase Auth profile
       await updateProfile(user, { photoURL: downloadURL });
+      console.log("[Upload] Auth profile updated");
 
       // Update Firestore user document
       const userRef = doc(db, "users", user.uid);
       await updateDoc(userRef, { photoURL: downloadURL });
+      console.log("[Upload] Firestore document updated");
 
       setSuccess(true);
       onUploadSuccess?.(downloadURL);
@@ -106,8 +130,19 @@ export function ProfilePictureUpload({
         onClose();
       }, 1500);
     } catch (err: any) {
-      console.error("Upload failed:", err);
-      setError(err?.message ? `Upload failed: ${err.message}` : "Upload failed. Please try again.");
+      if (timeoutId) clearTimeout(timeoutId);
+      console.error("[Upload] Failed:", err);
+      let message = "Upload failed. Please try again.";
+      if (err?.code === "storage/unauthorized") {
+        message = "Upload failed: Permission denied. Please sign in again.";
+      } else if (err?.code === "storage/canceled") {
+        message = "Upload was cancelled.";
+      } else if (err?.code === "storage/unknown" || err?.message?.includes("network")) {
+        message = "Upload failed: Network error. Check your connection.";
+      } else if (err?.message) {
+        message = `Upload failed: ${err.message}`;
+      }
+      setError(message);
     } finally {
       setUploading(false);
     }
