@@ -123,13 +123,6 @@ const DAILY_QUESTS = [
   { id: 3, title: "Combo Master",     desc: "Get 5x combo streak", xp: 400, progress: 3,  total: 5,  icon: Flame,    color: "#f87171", done: false },
 ];
 
-const LEADERBOARD = [
-  { name: "S-Rank_Slayer", xp: 24500, avatar: "https://i.pravatar.cc/150?u=slayer",  rankInfo: RANKS[7] },
-  { name: "ZeroOne",       xp: 22100, avatar: "https://i.pravatar.cc/150?u=zeroone", rankInfo: RANKS[6] },
-  { name: "GhostVibes",    xp: 19850, avatar: "https://i.pravatar.cc/150?u=ghost",   rankInfo: RANKS[5] },
-  { name: "NightCrawler",  xp: 17200, avatar: "https://i.pravatar.cc/150?u=night",   rankInfo: RANKS[4] },
-  { name: "PhantomX",      xp: 15900, avatar: "https://i.pravatar.cc/150?u=phantom", rankInfo: RANKS[3] },
-];
 
 const ACHIEVEMENTS = [
   { title: "First Blood",  desc: "Complete first battle",  icon: "🩸", unlocked: true,  xp: 100  },
@@ -1040,16 +1033,7 @@ export default function RankPushDashboard() {
             };
           });
 
-          const mockUsers = LEADERBOARD.map((p, i) => ({
-            id: `mock-${i}`,
-            name: p.name,
-            xp: p.xp,
-            avatar: p.avatar,
-            rankInfo: p.rankInfo,
-            isCurrentUser: false
-          }));
-
-          const combined: DashboardLeaderboardEntry[] = [...realUsers, ...mockUsers]
+          const combined: DashboardLeaderboardEntry[] = realUsers
             .sort((a, b) => b.xp - a.xp)
             .slice(0, 5)
             .map((p, i) => ({
