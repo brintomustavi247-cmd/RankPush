@@ -188,9 +188,25 @@ export async function awardTimerXP(
       : STANDARD_XP_PER_MINUTE;
   const totalXP = Math.max(1, Math.round(minutes * xpPerMinute));
   await updateUserXP(uid, totalXP);
-  await updateDoc(doc(db, "users", uid), {
+
+  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  const userRef = doc(db, "users", uid);
+  const snap = await getDoc(userRef);
+  
+  let newTodayTime = minutes;
+  if (snap.exists()) {
+    const data = snap.data();
+    if (data.today_study_date === todayStr) {
+      newTodayTime += (data.today_study_time || 0);
+    }
+  }
+
+  await updateDoc(userRef, {
     totalHoursStudied: increment(minutes / 60),
+    today_study_time: newTodayTime,
+    today_study_date: todayStr
   });
+  
   await updateStreak(uid);
   return totalXP;
 }

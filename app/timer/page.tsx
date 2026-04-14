@@ -746,58 +746,47 @@ export default function ShadowTimer() {
     return () => unsub();
   }, [currentUid]);
 
-  // Real-time leaderboard: top 6 users by XP, with today's study minutes
+  // Real-time leaderboard: top 10 users by today's study minutes
   useEffect(() => {
-    const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(6));
-    const unsub = onSnapshot(q, async (snap) => {
-      if (snap.empty) return;
+    const todayStr = new Date().toLocaleDateString("en-CA");
+    const q = query(
+      collection(db, "users"),
+      where("today_study_date", "==", todayStr),
+      orderBy("today_study_time", "desc"),
+      limit(10)
+    );
 
-      // Build today's date boundaries in UTC for querying sessions
-      const now   = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const end   = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    const unsub = onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        setLiveLeaderboard([]);
+        return;
+      }
 
-      const entries: LeaderboardEntry[] = await Promise.all(
-        snap.docs.map(async (d, i) => {
-          const data      = d.data();
-          const uid       = d.id;
-          const rankInfo  = getRankByXP(data.xp || 0);
+      const entries: LeaderboardEntry[] = snap.docs.map((d, i) => {
+        const data = d.data();
+        const uid = d.id;
+        const rankInfo = getRankByXP(data.xp || 0);
 
-          // Fetch today's sessions for this user
-          let todayMinutes = 0;
-          try {
-            const sessQuery = query(
-              collection(db, "users", uid, "sessions"),
-              where("timestamp", ">=", Timestamp.fromDate(start)),
-              where("timestamp", "<",  Timestamp.fromDate(end))
-            );
-            const sessSnap = await getDocs(sessQuery);
-            sessSnap.forEach((s) => {
-              todayMinutes += s.data().duration ?? 0;
-            });
-          } catch {
-            // sessions sub-collection may not exist yet
-          }
-
-          return {
-            rank:          i + 1,
-            uid,
-            name:          data.displayName || data.email?.split("@")[0] || "Hunter",
-            avatar:        data.photoURL || `https://i.pravatar.cc/150?u=${uid}`,
-            todayMinutes,
-            totalXP:       data.xp || 0,
-            rankColor:     rankInfo.color,
-            rankId:        rankInfo.id || "e",
-            isCurrentUser: uid === currentUid,
-          };
-        })
-      );
+        return {
+          rank: i + 1,
+          uid,
+          name: data.displayName || data.email?.split("@")[0] || "Hunter",
+          avatar: data.photoURL || `https://i.pravatar.cc/150?u=${uid}`,
+          todayMinutes: data.today_study_time || 0,
+          totalXP: data.xp || 0,
+          rankColor: rankInfo.color,
+          rankId: rankInfo.id || "e",
+          isCurrentUser: uid === currentUid,
+        };
+      });
 
       // Sort by today's minutes, then by XP as tie-breaker
       entries.sort((a, b) => b.todayMinutes - a.todayMinutes || b.totalXP - a.totalXP);
       entries.forEach((e, i) => { e.rank = i + 1; });
 
       setLiveLeaderboard(entries);
+    }, (error) => {
+      console.error("Leaderboard fetch error (index needed?):", error);
     });
 
     return () => unsub();
