@@ -1190,7 +1190,8 @@ export default function RankPushDashboard() {
         background: `radial-gradient(ellipse at 20% 10%, rgba(14,165,233,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, ${rank.color}08 0%, transparent 50%)`
       }} />
 
-      <div className="min-h-screen px-4 md:px-6 py-6 md:py-8 relative z-10 max-w-[1920px] mx-auto">
+      <div className="min-h-screen w-full flex justify-center relative z-10">
+        <div className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1920px]">
 
         {/* ═══ HEADER ═══ */}
         <header className="flex justify-between items-center mb-8 md:mb-10">
@@ -1813,9 +1814,10 @@ export default function RankPushDashboard() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-12 md:mt-[60px] pt-6 border-t border-white/5 text-center opacity-20">
-          <p className="font-logo text-[9px] tracking-[1.2em] text-cyan-400 uppercase">RankPush · Shadow System · 2026</p>
-        </footer>
+          <footer className="mt-12 md:mt-[60px] pt-6 border-t border-white/5 text-center opacity-20">
+            <p className="font-logo text-[9px] tracking-[1.2em] text-cyan-400 uppercase">RankPush · Shadow System · 2026</p>
+          </footer>
+        </div>
       </div>
     </>
   );
