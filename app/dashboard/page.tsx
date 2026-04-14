@@ -1192,6 +1192,71 @@ export default function RankPushDashboard() {
 
       <div className="min-h-screen w-full flex justify-center relative z-10">
         <div className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1920px]">
+        <div className="grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
+
+        <aside className="hidden xl:flex xl:sticky xl:top-6 h-[calc(100vh-3rem)] card p-5 flex-col border border-white/10">
+          <div className="flex items-center gap-3 mb-7">
+            <div className="p-2.5 bg-sky-500 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.5)] border border-white/20">
+              <Swords size={18} color="white" />
+            </div>
+            <span className="font-logo text-[20px] tracking-tight">RANKPUSH</span>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 mb-5">
+            <img
+              src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`}
+              alt={user?.displayName ? `${user.displayName}'s profile picture` : "Profile picture"}
+              className="w-10 h-10 rounded-full object-cover border border-white/20"
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] font-black truncate">{user?.displayName || "Hunter"}</p>
+              <p className="text-[8px] opacity-45 uppercase tracking-widest truncate">{rank.name}</p>
+            </div>
+          </div>
+
+          <nav aria-label="Primary dashboard navigation" className="flex flex-col gap-1">
+            {[
+              { label: "Dashboard", icon: LayoutDashboard, fn: () => router.push("/dashboard"), active: true },
+              { label: "Profile", icon: User, fn: () => setShowProfile(true) },
+              { label: "Battle Arena", icon: Swords, fn: () => router.push(`/arena/${selectedSub.toLowerCase()}`) },
+              { label: "Shadow Focus", icon: Timer, fn: () => router.push("/timer") },
+              { label: "Leaderboard", icon: Trophy, disabled: true },
+              { label: "Analytics", icon: BarChart2, disabled: true },
+            ].map(item => (
+              <button
+                key={item.label}
+                onClick={item.fn}
+                disabled={item.disabled}
+                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${item.active ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/25" : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"}`}
+              >
+                <span className="flex items-center gap-2.5">
+                  <item.icon size={14} />
+                  {item.label}
+                </span>
+                <ChevronRight size={12} className={item.active ? "opacity-100" : "opacity-30"} />
+              </button>
+            ))}
+          </nav>
+
+          <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-2">
+            {stats.plan === "free" && (
+              <button
+                onClick={() => setShowProModal(true)}
+                className="w-full bg-gradient-to-br from-violet-600 to-purple-500 rounded-xl px-4 py-3 text-white font-black text-[10px] tracking-widest flex items-center justify-center gap-2"
+              >
+                <Crown size={14} /> GO PRO
+              </button>
+            )}
+            <button
+              onClick={handleSignOut}
+              className="w-full bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 font-black text-[10px] tracking-widest flex items-center justify-center gap-2"
+            >
+              <LogOut size={14} /> SIGN OUT
+            </button>
+          </div>
+        </aside>
+
+        <div className="min-w-0">
 
         {/* ═══ HEADER ═══ */}
         <header className="flex justify-between items-center mb-8 md:mb-10">
@@ -1227,14 +1292,6 @@ export default function RankPushDashboard() {
               </AnimatePresence>
             </div>
 
-            {/* Desktop nav */}
-            <nav className="hidden xl:flex gap-7">
-              <a href="#" className="nav-link active">Dashboard</a>
-              <a href="#" className="nav-link" onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)}>Battle Arena</a>
-              <a href="#" className="nav-link" onClick={() => router.push("/timer")}>Shadow Focus</a>
-              <a href="#" className="nav-link">Leaderboard</a>
-              <a href="#" className="nav-link">Analytics</a>
-            </nav>
           </div>
 
           {/* Right */}
@@ -1817,6 +1874,8 @@ export default function RankPushDashboard() {
           <footer className="mt-12 md:mt-[60px] pt-6 border-t border-white/5 text-center opacity-20">
             <p className="font-logo text-[9px] tracking-[1.2em] text-cyan-400 uppercase">RankPush · Shadow System · 2026</p>
           </footer>
+        </div>
+        </div>
         </div>
       </div>
     </>
