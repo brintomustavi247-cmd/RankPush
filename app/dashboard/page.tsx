@@ -1394,7 +1394,7 @@ export default function RankPushDashboard() {
                 style={{ border: `2px solid ${rank.color}`, boxShadow: `0 0 24px ${rank.glowColor}` }}
                 onClick={() => setShowUploadModal(true)}>
                 <img src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`}
-                  className="w-full h-full rounded-full object-cover" alt="Profile" />
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover mx-auto border-2 border-cyan-400" alt="Profile" />
                 <div style={{ position:"absolute", bottom:-4, right:-4, background:`linear-gradient(135deg,${rank.color},${rank.color}bb)`, borderRadius:8, padding:"3px 7px", fontFamily:"'Orbitron',sans-serif", fontSize:8, fontWeight:900, border:"2px solid #02010a" }}>
                   LVL {stats.level}
                 </div>
