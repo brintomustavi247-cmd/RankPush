@@ -1194,7 +1194,7 @@ export default function RankPushDashboard() {
         <div className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1920px]">
         <div className="grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
 
-        <aside aria-label="Dashboard sidebar navigation" className="hidden xl:flex xl:sticky xl:top-6 h-[calc(100vh-3rem)] card p-5 flex-col border border-white/10">
+        <aside aria-label="Dashboard navigation" className="hidden xl:flex xl:sticky xl:top-6 h-[calc(100vh-3rem)] card p-5 flex-col border border-white/10">
           <div className="flex items-center gap-3 mb-7">
             <div className="p-2.5 bg-sky-500 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.5)] border border-white/20">
               <Swords size={18} color="white" />
@@ -1205,7 +1205,7 @@ export default function RankPushDashboard() {
           <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 mb-5">
             <img
               src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`}
-              alt="Profile"
+              alt={user?.displayName ? `${user.displayName}'s profile picture` : "Profile picture"}
               className="w-10 h-10 rounded-full object-cover border border-white/20"
             />
             <div className="min-w-0">
@@ -1225,7 +1225,7 @@ export default function RankPushDashboard() {
             ].map(item => (
               <button
                 key={item.label}
-                onClick={item.fn ?? (() => {})}
+                onClick={item.disabled ? undefined : item.fn}
                 disabled={item.disabled}
                 className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${item.active ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/25" : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"}`}
               >
