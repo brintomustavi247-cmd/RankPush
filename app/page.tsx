@@ -119,31 +119,39 @@ export default function RankPushLogin() {
 
         .tactical-grid {
           background-image: 
-            linear-gradient(rgba(14, 165, 233, 0.07) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(14, 165, 233, 0.07) 1px, transparent 1px);
+            linear-gradient(rgba(14, 165, 233, 0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(14, 165, 233, 0.06) 1px, transparent 1px);
           background-size: 50px 50px;
           background-position: center center;
         }
         
+        /* Auth card - mobile: no backdrop blur, desktop: glassmorphism */
         .auth-card {
-          background: rgba(10, 15, 30, 0.5);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(8, 12, 25, 0.95);
           border: 1px solid rgba(14, 165, 233, 0.2); 
           border-top: 2px solid #0ea5e9; 
           border-radius: 30px;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        @media (min-width: 768px) {
+          .auth-card {
+            background: rgba(10, 15, 30, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+          }
         }
 
         .cyber-input {
           background: rgba(0, 0, 0, 0.4);
           border: 1px solid rgba(255, 255, 255, 0.1);
           color: white;
-          transition: all 0.3s ease;
+          transition: border-color 0.2s ease;
+          -webkit-tap-highlight-color: transparent;
         }
         .cyber-input:focus {
           border-color: #0ea5e9;
-          box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+          box-shadow: 0 0 12px rgba(14, 165, 233, 0.25);
           outline: none;
         }
 
@@ -151,49 +159,52 @@ export default function RankPushLogin() {
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.08);
           transition: all 0.2s ease;
+          -webkit-tap-highlight-color: transparent;
         }
         .quest-btn-active {
           background: linear-gradient(135deg, #0284c7, #0ea5e9) !important;
           border-color: #22d3ee !important;
           color: white !important;
-          box-shadow: 0 0 20px rgba(14, 165, 233, 0.5) !important;
-          transform: scale(1.05);
+          box-shadow: 0 0 16px rgba(14, 165, 233, 0.4) !important;
         }
 
         @keyframes cyber-pulse {
-          0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.6); }
-          70% { box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
+          0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.5); }
+          70% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); }
           100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
+        @keyframes slow-pulse {
+          0%, 100% { opacity: 0.15; }
+          50% { opacity: 0.3; }
         }
         
         .btn-auth {
           background: linear-gradient(135deg, #0ea5e9, #0284c7);
-          animation: cyber-pulse 2s infinite;
           position: relative;
           overflow: hidden;
+          -webkit-tap-highlight-color: transparent;
+        }
+        /* Pulse animation only on desktop */
+        @media (min-width: 768px) {
+          .btn-auth { animation: cyber-pulse 2.5s infinite; }
+          .orb-1 { animation: slow-pulse 8s ease-in-out infinite; }
+          .orb-2 { animation: slow-pulse 12s ease-in-out infinite 2s; }
         }
 
-        .btn-auth:active {
-          transform: scale(0.95);
-        }
-
+        .btn-auth:active { transform: scale(0.96); }
         .neon-blue { color: #22d3ee; text-shadow: 0 0 10px rgba(34, 211, 238, 0.5); }
         .italic-black { font-style: italic; font-weight: 900; letter-spacing: -0.02em; }
-
-        @keyframes slow-pulse {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.1); }
-        }
-        .orb-1 { animation: slow-pulse 8s ease-in-out infinite; }
-        .orb-2 { animation: slow-pulse 12s ease-in-out infinite 2s; }
       `}</style>
 
       <div className="fixed inset-0 z-[-2] bg-[#02010a] overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-        <div className="absolute inset-0 tactical-grid"></div>
-        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#0ea5e9] blur-[150px] rounded-full orb-1"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[700px] h-[700px] bg-[#7c3aed] blur-[180px] rounded-full orb-2"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#02010a_100%)] opacity-80"></div>
+        {/* Tactical grid - lightweight */}
+        <div className="absolute inset-0 tactical-grid opacity-60"></div>
+        {/* Simple radial bg orbs - no blur on mobile, blur on desktop */}
+        <div className="orb-1 absolute top-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full md:w-[600px] md:h-[600px]"
+          style={{ background: '#0ea5e9', opacity: 0.08, filter: 'blur(80px)' }}></div>
+        <div className="orb-2 absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full md:w-[700px] md:h-[700px]"
+          style={{ background: '#7c3aed', opacity: 0.07, filter: 'blur(90px)' }}></div>
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at center, transparent 0%, #02010a 100%)', opacity: 0.75 }}></div>
       </div>
 
       <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-10">

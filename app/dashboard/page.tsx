@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, updateDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase"; // db ইমপোর্ট করতে ভুলবেন না
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -170,7 +170,7 @@ const GLOBAL_CSS = `
     min-height: 100vh;
   }
 
-  /* Scanline — DESKTOP ONLY (too expensive on mobile GPU during scroll) */
+  /* Scanline - DESKTOP ONLY */
   @media (min-width: 1024px) {
     body::before {
       content: ''; position: fixed; inset: 0;
@@ -182,50 +182,48 @@ const GLOBAL_CSS = `
   .font-logo  { font-family: 'Orbitron', sans-serif; }
   .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
 
-  /* Card — Desktop: blur glass, Mobile: solid bg (no backdrop-filter) */
+  /* CARD - Mobile: solid dark, Desktop: glassmorphism */
   .card {
-    background: rgba(10, 12, 22, 0.85);
-    border: 1px solid rgba(255,255,255,0.06); border-radius: 20px;
-    transition: border-color 0.2s ease, background 0.2s ease;
-    transform: translateZ(0);
-    contain: layout style paint;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 300px;
+    background: rgba(8, 10, 20, 0.92);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    transition: border-color 0.2s ease;
   }
-  /* Desktop only: enable backdrop blur (GPU handles it fine) */
   @media (min-width: 768px) {
     .card {
-      background: rgba(255,255,255,0.025);
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(255,255,255,0.028);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .card:hover {
+      border-color: rgba(34,211,238,0.18);
+      background: rgba(255,255,255,0.04);
     }
   }
-  .card:hover { border-color: rgba(34,211,238,0.15); background: rgba(255,255,255,0.035); }
 
-  /* Animations — only GPU-composite properties (transform, opacity) */
-  @keyframes xpFill   { from { width: 0% } }
-  @keyframes glowPulse { 0%,100%{opacity:0.7}50%{opacity:1} }
-  @keyframes floatY   { 0%,100%{transform:translateY(0) translateZ(0)}50%{transform:translateY(-5px) translateZ(0)} }
-  @keyframes shimmer  { 0%{background-position:-200% center}100%{background-position:200% center} }
-  @keyframes streakPop{ 0%{transform:scale(0.85) translateZ(0);opacity:0}100%{transform:scale(1) translateZ(0);opacity:1} }
-  @keyframes badgeBounce{0%,100%{transform:scale(1) translateZ(0)}50%{transform:scale(1.15) translateZ(0)}}
-  @keyframes questFill{ from{width:0%} }
-  @keyframes statFill { from{width:0%} }
-  @keyframes slideUp  { from{transform:translateY(16px) translateZ(0);opacity:0}to{transform:translateY(0) translateZ(0);opacity:1} }
-  @keyframes shadowFloat{ 0%,100%{transform:translateY(0) rotate(-1deg) translateZ(0)}50%{transform:translateY(-6px) rotate(1deg) translateZ(0)} }
+  /* KEYFRAMES */
+  @keyframes xpFill    { from { width: 0% } }
+  @keyframes questFill { from { width: 0% } }
+  @keyframes statFill  { from { width: 0% } }
+  @keyframes streakPop { 0%{transform:scale(0.85);opacity:0} 100%{transform:scale(1);opacity:1} }
+  @keyframes glowPulse  { 0%,100%{opacity:0.7} 50%{opacity:1} }
+  @keyframes floatY     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  @keyframes badgeBounce{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+  @keyframes shadowFloat{ 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-6px) rotate(1deg)} }
+  @keyframes shimmer    { 0%{background-position:-200% center} 100%{background-position:200% center} }
 
-  /* Applied classes — animations run on both mobile+desktop for one-shot,
-     but INFINITE animations are desktop-only to save mobile GPU */
-  .xp-bar        { animation: xpFill 1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
-  .quest-bar     { animation: questFill 1s ease forwards; }
-  .stat-bar      { animation: statFill 1.5s cubic-bezier(0.4,0,0.2,1) forwards; }
-  .streak-pip    { animation: streakPop 0.3s ease forwards; }
+  /* ONE-SHOT animations (mobile + desktop) */
+  .xp-bar     { animation: xpFill    1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .quest-bar  { animation: questFill 1s   ease forwards; }
+  .stat-bar   { animation: statFill  1.5s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .streak-pip { animation: streakPop 0.3s ease forwards; }
 
-  /* Infinite animations — DESKTOP ONLY */
+  /* INFINITE animations - DESKTOP ONLY */
   @media (min-width: 768px) {
-    .glow-pulse    { animation: glowPulse 3s ease-in-out infinite; }
-    .float         { animation: floatY 6s ease-in-out infinite; }
-    .badge-bounce  { animation: badgeBounce 2s ease infinite; }
-    .shadow-float  { animation: shadowFloat 6s ease-in-out infinite; }
+    .glow-pulse   { animation: glowPulse   3s ease-in-out infinite; }
+    .float        { animation: floatY      6s ease-in-out infinite; }
+    .badge-bounce { animation: badgeBounce 2s ease          infinite; }
+    .shadow-float { animation: shadowFloat 6s ease-in-out infinite; }
     .shimmer-text {
       background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b, #a855f7);
       background-size: 200% auto;
@@ -238,7 +236,6 @@ const GLOBAL_CSS = `
       animation: shimmer 2s linear infinite;
     }
   }
-  /* Mobile: shimmer text shows static gradient, no animation */
   @media (max-width: 767px) {
     .shimmer-text {
       background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b);
@@ -247,39 +244,48 @@ const GLOBAL_CSS = `
     .rank-shimmer {
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
+    .rank-card-hover:hover { transform: none; }
   }
 
+  /* SUBJECT BUTTONS */
   .sub-btn {
     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px; padding: 24px 16px;
+    border-radius: 16px; padding: 20px 12px;
     display: flex; flex-direction: column; align-items: center; gap: 10px;
-    cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease;
     position: relative; overflow: hidden;
-    transform: translateZ(0);
+    -webkit-tap-highlight-color: transparent;
   }
-  .sub-btn:hover:not(.sub-locked) {
-    border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); transform: translateY(-2px) translateZ(0);
+  @media (min-width: 768px) {
+    .sub-btn { padding: 24px 16px; }
+    .sub-btn:hover:not(.sub-locked) {
+      border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06);
+      transform: translateY(-2px);
+    }
   }
   .sub-btn.sub-active {
     border-color: var(--sub-color) !important;
     background: rgba(var(--sub-rgb),0.1) !important;
-    box-shadow: 0 8px 24px rgba(var(--sub-rgb),0.25) !important;
-    transform: translateY(-3px) scale(1.02) translateZ(0);
+    box-shadow: 0 6px 20px rgba(var(--sub-rgb),0.22) !important;
   }
   .sub-locked { opacity: 0.35; cursor: not-allowed; }
 
+  /* ARENA BUTTON */
   .arena-btn {
-    width: 100%; padding: 20px;
+    width: 100%; padding: 18px;
     background: linear-gradient(135deg, #0ea5e9, #0284c7);
-    border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; color: white;
-    font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900;
-    letter-spacing: 0.2em; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; color: white;
+    font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900;
+    letter-spacing: 0.15em; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 12px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    transform: translateZ(0);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
   }
-  .arena-btn:hover { transform: translateY(-2px) translateZ(0); box-shadow: 0 12px 40px rgba(14,165,233,0.35); }
-  .arena-btn:active { transform: translateY(0) scale(0.98) translateZ(0); }
+  .arena-btn:active { transform: scale(0.97); }
+  @media (min-width: 768px) {
+    .arena-btn { padding: 20px; font-size: 18px; letter-spacing: 0.2em; }
+    .arena-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(14,165,233,0.35); }
+  }
 
   .nav-link {
     font-size: 11px; font-weight: 800; letter-spacing: 0.15em;
@@ -293,14 +299,8 @@ const GLOBAL_CSS = `
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.3); border-radius: 2px; }
 
-  .rank-card-hover { transition: transform 0.15s ease; transform: translateZ(0); }
-  .rank-card-hover:hover { transform: scale(1.02) translateZ(0); }
-
-  /* Lazy render sections below fold — browser skips rendering off-screen */
-  .lazy-section {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 400px;
-  }
+  .rank-card-hover { transition: transform 0.15s ease; }
+  .rank-card-hover:hover { transform: scale(1.02); }
 `;
 
 
@@ -1477,7 +1477,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Shadow Focus Banner */}
-            <div className="card lazy-section p-6 md:p-7 border-l-[4px] border-purple-500 bg-gradient-to-r from-purple-500/10 to-transparent flex flex-col md:flex-row items-start md:items-center gap-5" style={{ boxShadow:"0 0 30px rgba(168,85,247,0.08)" }}>
+            <div className="card p-6 md:p-7 border-l-[4px] border-purple-500 bg-gradient-to-r from-purple-500/10 to-transparent flex flex-col md:flex-row items-start md:items-center gap-5" style={{ boxShadow:"0 0 30px rgba(168,85,247,0.08)" }}>
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-purple-500/15 rounded-xl border border-purple-500/25">
                   <Timer size={24} color="#a855f7" />
@@ -1497,7 +1497,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Tactical Arena */}
-            <div className="card lazy-section p-5 md:p-8 border-t-[3px] border-sky-500">
+            <div className="card p-5 md:p-8 border-t-[3px] border-sky-500">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="font-logo text-lg md:text-[22px] uppercase mb-1">Tactical <span className="text-sky-500">Arena</span></h2>
@@ -1532,7 +1532,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Rival Battle */}
-            <div className="card lazy-section p-5 md:p-7 bg-gradient-to-r from-red-500/5 to-transparent border-l-[3px] border-red-500 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-5">
+            <div className="card p-5 md:p-7 bg-gradient-to-r from-red-500/5 to-transparent border-l-[3px] border-red-500 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-5">
               <div className="w-11 h-11 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20 shrink-0">
                 <Sword size={20} color="#ef4444" />
               </div>
@@ -1547,7 +1547,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Performance Analytics */}
-            <div className="card lazy-section p-5 md:p-7">
+            <div className="card p-5 md:p-7">
               <div className="flex items-center gap-2 mb-5">
                 <BarChart2 size={14} color="#22d3ee" />
                 <h3 className="text-[9px] font-black tracking-widest uppercase opacity-70">Performance This Week</h3>
@@ -1573,7 +1573,7 @@ export default function RankPushDashboard() {
           <div className="lg:col-span-12 xl:col-span-3 flex flex-col gap-5">
 
             {/* Leaderboard */}
-            <div className="card lazy-section p-5 md:p-6 border-l-[3px] border-sky-500/50">
+            <div className="card p-5 md:p-6 border-l-[3px] border-sky-500/50">
               <div className="flex justify-between items-center mb-5">
                 <h3 className="text-[9px] font-black tracking-widest uppercase opacity-60 flex items-center gap-2">
                   <Trophy size={12} color="#f59e0b" /> Global Elite
@@ -1651,7 +1651,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Daily Quests — Real Firestore */}
-            <div className="card lazy-section p-5 md:p-6 border-l-[3px] border-orange-500 bg-orange-500/5">
+            <div className="card p-5 md:p-6 border-l-[3px] border-orange-500 bg-orange-500/5">
               <div className="flex items-center gap-2 mb-4 opacity-80">
                 <Flame size={14} color="#f97316" />
                 <h3 className="text-[9px] font-black tracking-widest uppercase">Daily Quests</h3>
@@ -1689,7 +1689,7 @@ export default function RankPushDashboard() {
             </div>
 
             {/* Boss Fight */}
-            <div className="card lazy-section p-5 md:p-6 bg-gradient-to-br from-red-500/5 to-purple-600/5 border border-red-500/15 relative overflow-hidden">
+            <div className="card p-5 md:p-6 bg-gradient-to-br from-red-500/5 to-purple-600/5 border border-red-500/15 relative overflow-hidden">
               <div style={{ position:"absolute", right:-8, top:"50%", transform:"translateY(-50%)", opacity:0.05, fontSize:110, lineHeight:1 }}>💀</div>
               <div className="flex items-center gap-2 mb-2.5">
                 <Layers size={14} color="#ef4444" />
