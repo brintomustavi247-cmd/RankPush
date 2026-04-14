@@ -2,10 +2,9 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { X, Upload, Camera, CheckCircle } from "lucide-react";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, updateDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
-import { storage, db, auth } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 
 interface ProfilePictureUploadProps {
   onClose: () => void;
@@ -74,75 +73,37 @@ export function ProfilePictureUpload({
     setProgress(0);
     setError(null);
 
-    const TIMEOUT_MS = 30_000;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
     try {
-      const storageRef = ref(storage, `users/${user.uid}/avatar`);
+      const formData = new FormData();
+      formData.append("image", selectedFile);
 
-      console.log("[Upload] Starting upload for user:", user.uid, "file:", selectedFile.name, "size:", selectedFile.size);
+      const IMGBB_API_KEY = "009dbf74cdf5c094fad4ceac7532987c";
 
-      // Wrap upload in a race against a 30-second timeout
-      await new Promise<void>((resolve, reject) => {
-        timeoutId = setTimeout(() => {
-          console.error("[Upload] Timed out after 30 seconds");
-          reject(new Error("Upload timed out. Please check your network and try again."));
-        }, TIMEOUT_MS);
-
-        const uploadTask = uploadBytesResumable(storageRef, selectedFile);
-
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            console.log("[Upload] Progress:", pct, "%");
-            setProgress(pct);
-          },
-          (err) => {
-            console.error("[Upload] Storage error:", err.code, err.message);
-            reject(err);
-          },
-          () => {
-            console.log("[Upload] Upload task completed");
-            resolve();
-          },
-        );
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: formData,
       });
 
-      if (timeoutId) clearTimeout(timeoutId);
+      const data = await response.json();
 
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log("[Upload] Download URL obtained:", downloadURL);
+      if (data.success) {
+        const imageUrl = data.data.url;
 
-      // Update Firebase Auth profile
-      await updateProfile(user, { photoURL: downloadURL });
-      console.log("[Upload] Auth profile updated");
+        await updateProfile(user, { photoURL: imageUrl });
 
-      // Update Firestore user document
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, { photoURL: downloadURL });
-      console.log("[Upload] Firestore document updated");
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, { avatar: imageUrl });
 
-      setSuccess(true);
-      onUploadSuccess?.(downloadURL);
+        setSuccess(true);
+        onUploadSuccess?.(imageUrl);
 
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (err: any) {
-      if (timeoutId) clearTimeout(timeoutId);
-      console.error("[Upload] Failed:", err);
-      let message = "Upload failed. Please try again.";
-      if (err?.code === "storage/unauthorized") {
-        message = "Upload failed: Permission denied. Please sign in again.";
-      } else if (err?.code === "storage/canceled") {
-        message = "Upload was cancelled.";
-      } else if (err?.code === "storage/unknown" || err?.message?.includes("network")) {
-        message = "Upload failed: Network error. Check your connection.";
-      } else if (err?.message) {
-        message = `Upload failed: ${err.message}`;
+        window.location.reload();
+      } else {
+        throw new Error(data.error?.message || "Upload failed");
       }
-      setError(message);
+    } catch (err: any) {
+      console.error("[Upload] Failed:", err);
+      setError("Failed to upload image.");
     } finally {
       setUploading(false);
     }
