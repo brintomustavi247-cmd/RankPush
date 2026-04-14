@@ -1216,17 +1216,18 @@ export default function RankPushDashboard() {
 
           <nav className="flex flex-col gap-1">
             {[
-              { label: "Dashboard", icon: LayoutDashboard, fn: () => {}, active: true },
+              { label: "Dashboard", icon: LayoutDashboard, fn: () => router.push("/dashboard"), active: true },
               { label: "Profile", icon: User, fn: () => setShowProfile(true) },
               { label: "Battle Arena", icon: Swords, fn: () => router.push(`/arena/${selectedSub.toLowerCase()}`) },
               { label: "Shadow Focus", icon: Timer, fn: () => router.push("/timer") },
-              { label: "Leaderboard", icon: Trophy, fn: () => {} },
-              { label: "Analytics", icon: BarChart2, fn: () => {} },
+              { label: "Leaderboard", icon: Trophy, disabled: true },
+              { label: "Analytics", icon: BarChart2, disabled: true },
             ].map(item => (
               <button
                 key={item.label}
                 onClick={item.fn}
-                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-colors ${item.active ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/25" : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"}`}
+                disabled={item.disabled}
+                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${item.active ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/25" : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"}`}
               >
                 <span className="flex items-center gap-2.5">
                   <item.icon size={14} />
@@ -1291,14 +1292,6 @@ export default function RankPushDashboard() {
               </AnimatePresence>
             </div>
 
-            {/* Desktop nav */}
-            <nav className="hidden">
-              <a href="#" className="nav-link active">Dashboard</a>
-              <a href="#" className="nav-link" onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)}>Battle Arena</a>
-              <a href="#" className="nav-link" onClick={() => router.push("/timer")}>Shadow Focus</a>
-              <a href="#" className="nav-link">Leaderboard</a>
-              <a href="#" className="nav-link">Analytics</a>
-            </nav>
           </div>
 
           {/* Right */}
