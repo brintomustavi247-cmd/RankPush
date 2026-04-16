@@ -94,8 +94,8 @@ export function ProfilePictureUpload({
         const userRef = doc(db, "users", user.uid);
         await updateDoc(userRef, { photoURL: imageUrl });
 
-        setProgress(100);
         setSuccess(true);
+        setProgress(100);
         onUploadSuccess?.(imageUrl);
       } else {
         throw new Error(data.error?.message || "Upload failed");

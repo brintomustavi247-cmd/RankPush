@@ -70,6 +70,7 @@ const MOTIVATIONAL_LINES = [
   "Arise. Read. Dominate.",
   "Your rival is studying right now.",
 ];
+const FALLBACK_BADGE_PATH = "/rank-badges/bronze-badge.png";
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -540,8 +541,8 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: Leaderb
             loading="lazy"
             onError={(e) => {
               const target = e.currentTarget;
-              if (target.src.includes("/rank-badges/bronze-badge.png")) return;
-              target.src = "/rank-badges/bronze-badge.png";
+              if (target.src.includes(FALLBACK_BADGE_PATH)) return;
+              target.src = FALLBACK_BADGE_PATH;
             }}
           />
         </div>
