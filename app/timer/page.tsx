@@ -538,6 +538,11 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: Leaderb
             alt={rankBadge.name}
             style={{ width: 18, height: 18, objectFit: "contain" }}
             loading="lazy"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src.includes("/rank-badges/bronze-badge.png")) return;
+              target.src = "/rank-badges/bronze-badge.png";
+            }}
           />
         </div>
       </div>
