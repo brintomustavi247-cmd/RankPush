@@ -541,7 +541,7 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: Leaderb
             loading="lazy"
             onError={(e) => {
               const target = e.currentTarget;
-              if (target.src.includes(FALLBACK_BADGE_PATH)) return;
+              if (target.src.endsWith(FALLBACK_BADGE_PATH)) return;
               target.src = FALLBACK_BADGE_PATH;
             }}
           />
