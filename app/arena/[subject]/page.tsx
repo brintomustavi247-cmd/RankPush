@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { mockQuestions } from "@/lib/questions";
 import { awardBattleXP, saveBattleHistory } from "@/lib/xp-utils";
 import { useAuthUid } from "@/hooks/use-auth-uid";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import {
   Swords, ChevronRight, Sparkles, Target, Zap, Clock,
   Heart, Flame, Shield, ArrowLeft, CheckCircle, XCircle,
@@ -96,6 +98,14 @@ export default function ArenaPage() {
   const uidRef          = useAuthUid();  // cached auth uid
   // Snapshot of final battle values so the save effect only needs [gameState]
   const battleSnapRef   = useRef({ idx: 0, correctCount: 0, exp: 0, maxCombo: 0 });
+
+  // Redirect unauthenticated users back to login on reload
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (!u) router.replace("/");
+    });
+    return () => unsub();
+  }, [router]);
 
   const currentQ = questions[idx] || null;
   const multiplier = getMultiplier(combo);
@@ -299,7 +309,6 @@ export default function ArenaPage() {
   // ─────────────────────────────────────────────
   return (
     <>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet" />
       {/* Sonner toaster for battle notifications */}
       <Toaster position="top-right" richColors={false} />
 

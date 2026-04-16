@@ -608,6 +608,7 @@ function RivalModal({ onClose }: { onClose: () => void }) {
 export default function RankPushDashboard() {
   const [selectedSub, setSelectedSub]       = useState("Physics");
   const [user, setUser]                     = useState<any>(null);
+  const [authLoading, setAuthLoading]       = useState(true);
   const [showProModal, setShowProModal]     = useState(false);
   const [showRivalModal, setShowRivalModal] = useState(false);
   const [showRankModal, setShowRankModal]   = useState(false);
@@ -623,9 +624,13 @@ export default function RankPushDashboard() {
   const xpPct    = getXPProgress(stats.xp, rank);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => setUser(u));
+    const unsub = onAuthStateChanged(auth, u => {
+      setUser(u);
+      setAuthLoading(false);
+      if (!u) router.replace("/");
+    });
     return () => unsub();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let start = 0; const end = stats.xp; const step = end / (1200 / 16);
@@ -641,10 +646,23 @@ export default function RankPushDashboard() {
 
   const handleSignOut = async () => { await signOut(auth); router.push("/"); };
 
+  // Show a full-screen loader while Firebase Auth re-initializes on reload.
+  // Without this, the page renders with user=null, causing a broken/empty UI.
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#02010a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <style>{GLOBAL_CSS}</style>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, border: "3px solid rgba(14,165,233,0.2)", borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+          <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 11, letterSpacing: "0.3em", color: "rgba(14,165,233,0.7)", textTransform: "uppercase" }}>Initializing System…</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet" />
-      <script src="https://cdn.tailwindcss.com" async />
       <style>{GLOBAL_CSS}</style>
 
       {showProModal   && <ProUpgradeModal  onClose={() => setShowProModal(false)} />}

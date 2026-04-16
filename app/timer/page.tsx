@@ -692,6 +692,7 @@ export default function ShadowTimer() {
   const [xpNotif, setXpNotif] = useState<number | null>(null);
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Real-time leaderboard state
   const [liveLeaderboard, setLiveLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -705,13 +706,15 @@ export default function ShadowTimer() {
 
   const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
 
-  // Auth state → set currentUid
+  // Auth state → set currentUid, redirect if not logged in
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setCurrentUid(u ? u.uid : null);
+      setAuthLoading(false);
+      if (!u) router.replace("/");
     });
     return () => unsub();
-  }, []);
+  }, [router]);
 
   // Real-time listener for current user's today sessions
   useEffect(() => {
@@ -830,6 +833,18 @@ export default function ShadowTimer() {
     return () => window.removeEventListener('click', closeMenu);
   }, [isMobileMenuOpen]);
 
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#02010a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, border: "3px solid rgba(14,165,233,0.2)", borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+          <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 11, letterSpacing: "0.3em", color: "rgba(14,165,233,0.7)", textTransform: "uppercase" }}>Loading…</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen font-sans text-white pb-12 px-4 md:px-8" style={{
       background: "#02010a",
@@ -837,7 +852,6 @@ export default function ShadowTimer() {
       overflowX: "hidden",
       contain: "layout",
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
 
       {/* ── GLOBAL STYLES ── */}
       <style>{`
