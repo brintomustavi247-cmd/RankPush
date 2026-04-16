@@ -298,7 +298,7 @@ export default function ArenaPage() {
   // RENDER
   // ─────────────────────────────────────────────
   return (
-    <>
+    <div className="arena-page">
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet" />
       {/* Sonner toaster for battle notifications */}
       <Toaster position="top-right" richColors={false} />
@@ -310,15 +310,11 @@ export default function ArenaPage() {
           height: -webkit-fill-available;
           background: #02010a;
         }
-        body {
+        .arena-page {
           min-height: 100vh;
-          min-height: -webkit-fill-available;
           background: #02010a;
           color: white;
           font-family: 'Outfit', sans-serif;
-          overflow: hidden;
-          position: fixed;
-          width: 100%;
         }
 
         /* Scanlines */
@@ -1070,6 +1066,6 @@ export default function ArenaPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

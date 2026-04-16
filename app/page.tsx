@@ -99,16 +99,12 @@ export default function RankPushLogin() {
 
   return (
     <>
-      <script src="https://cdn.tailwindcss.com"></script>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@800&display=swap');
         
-        html, body { 
+        .login-page { 
           max-width: 100vw;
           overflow-x: hidden;
-        }
-
-        body { 
           background-color: #02010a;
           color: white; 
           font-family: 'Outfit', sans-serif;
@@ -207,7 +203,7 @@ export default function RankPushLogin() {
         <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at center, transparent 0%, #02010a 100%)', opacity: 0.75 }}></div>
       </div>
 
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-10">
+      <div className="login-page min-h-screen flex flex-col items-center justify-center p-4 relative z-10">
         
         <div className="flex items-center gap-3 mb-8 animate-pulse">
           <div className="p-3 bg-[#0ea5e9]/10 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)] border border-[#0ea5e9]/40 backdrop-blur-md">

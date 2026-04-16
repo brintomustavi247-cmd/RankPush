@@ -92,12 +92,11 @@ export function ProfilePictureUpload({
         await updateProfile(user, { photoURL: imageUrl });
 
         const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, { avatar: imageUrl });
+        await updateDoc(userRef, { photoURL: imageUrl });
 
+        setProgress(100);
         setSuccess(true);
         onUploadSuccess?.(imageUrl);
-
-        window.location.reload();
       } else {
         throw new Error(data.error?.message || "Upload failed");
       }

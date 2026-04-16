@@ -118,14 +118,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#02010a] text-white font-sans overflow-x-hidden pb-12">
+    <div className="profile-page min-h-screen bg-[#02010a] text-white font-sans overflow-x-hidden pb-12">
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-      <script src="https://cdn.tailwindcss.com" async />
 
       <style>{`
         .font-logo { font-family: 'Orbitron', sans-serif; }
-        body { font-family: 'Outfit', sans-serif; background-color: #02010a; }
-        body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px); pointer-events: none; z-index: 1; }
+        .profile-page { font-family: 'Outfit', sans-serif; background-color: #02010a; }
         
         .input-field {
           width: 100%; padding: 14px 16px; border-radius: 12px;

@@ -21,8 +21,7 @@ import { auth, db } from "@/lib/firebase";
 import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
 import { useAuthUid } from "@/hooks/use-auth-uid";
 import { useXPNotifications, useSessionNotifications, pushNotification } from "@/lib/notification-utils";
-import { RankBadgeSVG } from "@/app/dashboard/UIComponents";
-import { getRankByXP } from "@/app/dashboard/Ranksystem";
+import { getRankBadgeByXP } from "@/components/rank-badge";
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -508,6 +507,7 @@ function PomodoroTimer({
 // LEADERBOARD ROW (memoized for performance)
 // ─────────────────────────────────────────────
 const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: LeaderboardEntry; i: number }) {
+  const rankBadge = getRankBadgeByXP(p.totalXP);
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
@@ -533,7 +533,12 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: Leaderb
         />
       {/* Rank badge — SVG */}
         <div style={{ position: "absolute", bottom: -3, right: -3, width: 20, height: 20, display:"flex", alignItems:"center", justifyContent:"center", filter:"drop-shadow(0 0 4px rgba(0,0,0,0.9))" }}>
-          <RankBadgeSVG rankId={p.rankId || "e"} size={18} />
+          <img
+            src={rankBadge.badgeImage}
+            alt={rankBadge.name}
+            style={{ width: 18, height: 18, objectFit: "contain" }}
+            loading="lazy"
+          />
         </div>
       </div>
 
@@ -762,10 +767,10 @@ export default function ShadowTimer() {
         return;
       }
 
-      const entries: LeaderboardEntry[] = snap.docs.map((d, i) => {
-        const data = d.data();
-        const uid = d.id;
-        const rankInfo = getRankByXP(data.xp || 0);
+        const entries: LeaderboardEntry[] = snap.docs.map((d, i) => {
+          const data = d.data();
+          const uid = d.id;
+          const rankInfo = getRankBadgeByXP(data.xp || 0);
 
         return {
           rank: i + 1,
