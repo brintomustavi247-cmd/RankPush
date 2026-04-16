@@ -312,6 +312,7 @@ export default function ArenaPage() {
         }
         body {
           min-height: 100vh;
+          min-height: -webkit-fill-available;
           background: #02010a;
           color: white;
           font-family: 'Outfit', sans-serif;
