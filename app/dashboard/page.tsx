@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { AuthLoadingSpinner } from "@/components/auth-loading-spinner";
 import {
   Zap, Trophy, Swords, Bell, Target,
   Brain, Play, Crown, Flame, LayoutDashboard,
@@ -649,16 +650,7 @@ export default function RankPushDashboard() {
   // Show a full-screen loader while Firebase Auth re-initializes on reload.
   // Without this, the page renders with user=null, causing a broken/empty UI.
   if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#02010a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <style>{GLOBAL_CSS}</style>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: 48, height: 48, border: "3px solid rgba(14,165,233,0.2)", borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-          <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 11, letterSpacing: "0.3em", color: "rgba(14,165,233,0.7)", textTransform: "uppercase" }}>Initializing System…</p>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
+    return <AuthLoadingSpinner />;
   }
 
   return (
