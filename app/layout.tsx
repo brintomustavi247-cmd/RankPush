@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={outfit.className}>
         {/* PageTransition সরিয়ে সরাসরি children রাখা হয়েছে যাতে এরর না আসে */}
         {children}

@@ -21,8 +21,7 @@ import { auth, db } from "@/lib/firebase";
 import { awardTimerXP, saveSessionHistory } from "@/lib/xp-utils";
 import { useAuthUid } from "@/hooks/use-auth-uid";
 import { useXPNotifications, useSessionNotifications, pushNotification } from "@/lib/notification-utils";
-import { RankBadgeSVG } from "@/app/dashboard/UIComponents";
-import { getRankByXP } from "@/app/dashboard/Ranksystem";
+
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -55,9 +54,9 @@ interface LeaderboardEntry {
 // CONSTANTS
 // ─────────────────────────────────────────────
 const POMODORO_PRESETS: Record<PomodoroPhase, { label: string; mins: number; xp: number; color: string; desc: string; icon: React.ElementType }> = {
-  focus: { label: "FOCUS",       mins: 25, xp: 50,  color: "#22d3ee", desc: "Shadow Seal Active",    icon: Brain    },
-  short: { label: "SHORT BREAK", mins: 5,  xp: 10,  color: "#34d399", desc: "Mana Recovery",         icon: Coffee   },
-  long:  { label: "LONG BREAK",  mins: 15, xp: 20,  color: "#a855f7", desc: "Deep Rest Protocol",    icon: Moon     },
+  focus: { label: "FOCUS", mins: 25, xp: 50, color: "#22d3ee", desc: "Shadow Seal Active", icon: Brain },
+  short: { label: "SHORT BREAK", mins: 5, xp: 10, color: "#34d399", desc: "Mana Recovery", icon: Coffee },
+  long: { label: "LONG BREAK", mins: 15, xp: 20, color: "#a855f7", desc: "Deep Rest Protocol", icon: Moon },
 };
 
 const SUBJECTS = ["Physics", "Chemistry", "Math", "Biology", "English", "ICT"];
@@ -79,13 +78,13 @@ function formatTime(secs: number): string {
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
   const s = secs % 60;
-  if (h > 0) return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 function formatMinutes(mins: number): string {
   if (mins < 60) return `${mins}m`;
-  return `${Math.floor(mins/60)}h ${mins%60}m`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
 // ─────────────────────────────────────────────
@@ -168,13 +167,13 @@ function FreeTimer({
 }: {
   onSessionComplete: (mins: number, xp: number, subject: string) => void;
 }) {
-  const [running, setRunning]       = useState(false);
-  const [elapsed, setElapsed]       = useState(0); // seconds
-  const [subject, setSubject]       = useState("Physics");
-  const [lapTime, setLapTime]       = useState(0);
-  const [laps, setLaps]             = useState<{label: string; secs: number}[]>([]);
-  const intervalRef                 = useRef<NodeJS.Timeout | null>(null);
-  const startTimeRef                = useRef<number>(0);
+  const [running, setRunning] = useState(false);
+  const [elapsed, setElapsed] = useState(0); // seconds
+  const [subject, setSubject] = useState("Physics");
+  const [lapTime, setLapTime] = useState(0);
+  const [laps, setLaps] = useState<{ label: string; secs: number }[]>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
 
   const tick = useCallback(() => {
     setElapsed(prev => prev + 1);
@@ -321,16 +320,16 @@ function PomodoroTimer({
 }: {
   onSessionComplete: (mins: number, xp: number, subject: string, phase: string) => void;
 }) {
-  const [phase, setPhase]           = useState<PomodoroPhase>("focus");
-  const [running, setRunning]       = useState(false);
-  const [remaining, setRemaining]   = useState(POMODORO_PRESETS.focus.mins * 60);
-  const [subject, setSubject]       = useState("Physics");
-  const [cycle, setCycle]           = useState(1); // pomodoro cycle count
-  const [streak, setStreak]         = useState(0); // consecutive focus sessions
-  const intervalRef                 = useRef<NodeJS.Timeout | null>(null);
-  const totalSecs                   = POMODORO_PRESETS[phase].mins * 60;
-  const preset                      = POMODORO_PRESETS[phase];
-  const progress                    = remaining / totalSecs;
+  const [phase, setPhase] = useState<PomodoroPhase>("focus");
+  const [running, setRunning] = useState(false);
+  const [remaining, setRemaining] = useState(POMODORO_PRESETS.focus.mins * 60);
+  const [subject, setSubject] = useState("Physics");
+  const [cycle, setCycle] = useState(1); // pomodoro cycle count
+  const [streak, setStreak] = useState(0); // consecutive focus sessions
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const totalSecs = POMODORO_PRESETS[phase].mins * 60;
+  const preset = POMODORO_PRESETS[phase];
+  const progress = remaining / totalSecs;
 
   useEffect(() => {
     if (running) {
@@ -355,7 +354,7 @@ function PomodoroTimer({
     if (phase === "focus") setStreak(newStreak);
     if (newStreak >= 3 && phase === "focus") xp = Math.round(xp * 1.5);
     onSessionComplete(p.mins, xp, subject, p.label);
-    
+
     if (phase === "focus") {
       const nextCycle = cycle + 1;
       setCycle(nextCycle);
@@ -381,7 +380,7 @@ function PomodoroTimer({
   };
 
   const bonusActive = streak >= 2 && phase === "focus";
-  const displayXP   = bonusActive ? Math.round(preset.xp * 1.5) : preset.xp;
+  const displayXP = bonusActive ? Math.round(preset.xp * 1.5) : preset.xp;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, width: "100%", margin: "0 auto" }}>
@@ -531,8 +530,8 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ p, i }: { p: Leaderb
           style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${p.rankColor}` }}
           alt={p.name}
         />
-      {/* Rank badge — SVG */}
-        <div style={{ position: "absolute", bottom: -3, right: -3, width: 20, height: 20, display:"flex", alignItems:"center", justifyContent:"center", filter:"drop-shadow(0 0 4px rgba(0,0,0,0.9))" }}>
+        {/* Rank badge — SVG */}
+        <div style={{ position: "absolute", bottom: -3, right: -3, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", filter: "drop-shadow(0 0 4px rgba(0,0,0,0.9))" }}>
           <RankBadgeSVG rankId={p.rankId || "e"} size={18} />
         </div>
       </div>
@@ -625,10 +624,10 @@ const StatCard = React.memo(function StatCard({ label, value, color, icon: Icon 
 // STATS PANEL
 // ─────────────────────────────────────────────
 function StatsPanel({ sessions }: { sessions: Session[] }) {
-  const todayMins   = sessions.reduce((a, s) => a + s.duration, 0);
-  const totalXP     = sessions.reduce((a, s) => a + s.xp, 0);
-  const focusSess   = sessions.filter(s => s.type === "FOCUS").length;
-  const avgMins     = sessions.length ? Math.round(todayMins / sessions.length) : 0;
+  const todayMins = sessions.reduce((a, s) => a + s.duration, 0);
+  const totalXP = sessions.reduce((a, s) => a + s.xp, 0);
+  const focusSess = sessions.filter(s => s.type === "FOCUS").length;
+  const avgMins = sessions.length ? Math.round(todayMins / sessions.length) : 0;
 
   return (
     <div style={{ width: "100%", margin: "0 auto" }}>
@@ -642,10 +641,10 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
       {/* Stat grid (Bigger) */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
         {[
-          { label: "Study Time",    value: formatMinutes(todayMins), color: "#22d3ee", icon: Clock       },
-          { label: "Focus XP",      value: `+${totalXP}`,           color: "#f59e0b", icon: Zap          },
-          { label: "Focus Sessions", value: focusSess,              color: "#a855f7", icon: Brain        },
-          { label: "Avg Session",   value: `${avgMins}m`,           color: "#34d399", icon: TrendingUp   },
+          { label: "Study Time", value: formatMinutes(todayMins), color: "#22d3ee", icon: Clock },
+          { label: "Focus XP", value: `+${totalXP}`, color: "#f59e0b", icon: Zap },
+          { label: "Focus Sessions", value: focusSess, color: "#a855f7", icon: Brain },
+          { label: "Avg Session", value: `${avgMins}m`, color: "#34d399", icon: TrendingUp },
         ].map(s => (
           <StatCard key={s.label} label={s.label} value={s.value} color={s.color} icon={s.icon} />
         ))}
@@ -688,17 +687,17 @@ function StatsPanel({ sessions }: { sessions: Session[] }) {
 // ─────────────────────────────────────────────
 export default function ShadowTimer() {
   const router = useRouter();
-  const [mode, setMode]             = useState<TimerMode>("pomodoro");
-  const [sessions, setSessions]     = useState<Session[]>([]);
-  const [xpNotif, setXpNotif]       = useState<number | null>(null);
+  const [mode, setMode] = useState<TimerMode>("pomodoro");
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [xpNotif, setXpNotif] = useState<number | null>(null);
   const [motiveLine, setMotiveLine] = useState(MOTIVATIONAL_LINES[0]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Real-time leaderboard state
   const [liveLeaderboard, setLiveLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [currentUid, setCurrentUid]           = useState<string | null>(null);
+  const [currentUid, setCurrentUid] = useState<string | null>(null);
 
-  const uidRef       = useAuthUid(); // cached auth uid
+  const uidRef = useAuthUid(); // cached auth uid
 
   // XP / Level-up + Session real-time notifications via Firestore
   useXPNotifications(currentUid);
@@ -839,7 +838,7 @@ export default function ShadowTimer() {
       contain: "layout",
     }}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-      
+
       {/* ── GLOBAL STYLES ── */}
       <style>{`
         .font-logo { font-family: 'Orbitron', sans-serif; }
@@ -857,18 +856,18 @@ export default function ShadowTimer() {
         <XPNotif xp={xpNotif} onDone={() => setXpNotif(null)} />
       )}
 
-      <div className="max-w-[1400px] mx-auto pt-6 md:pt-10 w-full">
+      <div className="pt-6 md:pt-10 w-full">
 
         {/* ═══════════════════════════════════════════════════
             HEADER (FIXED FOR MOBILE & DESKTOP)
         ═══════════════════════════════════════════════════ */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 w-full relative z-50">
-          
+
           <div className="flex flex-col md:flex-row items-start md:items-center gap-5 md:gap-8 w-full md:w-auto">
-            
+
             {/* 🆕 INTERACTIVE LOGO WITH DROPDOWN (Replacing Back Button) */}
             <div className="relative order-1">
-              <div 
+              <div
                 className="flex items-center gap-3 cursor-pointer group"
                 onClick={(e) => { e.stopPropagation(); setIsMobileMenuOpen(!isMobileMenuOpen); }}
               >
@@ -888,7 +887,7 @@ export default function ShadowTimer() {
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
                     className="absolute top-full left-0 mt-4 w-64 bg-[#0a0f1e]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-[100] flex flex-col gap-1.5"
-                    onClick={(e) => e.stopPropagation()} 
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <button onClick={() => { router.push('/dashboard'); setIsMobileMenuOpen(false); }} className="flex items-center gap-3.5 px-4 py-4 rounded-xl hover:bg-white/5 text-white/70 hover:text-white font-black text-[13px] tracking-widest uppercase transition-colors">
                       <LayoutDashboard size={18} /> Dashboard

@@ -99,7 +99,7 @@ export default function RankPushLogin() {
 
   return (
     <>
-      <script src="https://cdn.tailwindcss.com"></script>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@800&display=swap');
         
@@ -201,10 +201,10 @@ export default function RankPushLogin() {
         <div className="absolute inset-0 tactical-grid opacity-60"></div>
         {/* Simple radial bg orbs - no blur on mobile, blur on desktop */}
         <div className="orb-1 absolute top-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full md:w-[600px] md:h-[600px]"
-          style={{ background: '#0ea5e9', opacity: 0.08, filter: 'blur(80px)' }}></div>
+          suppressHydrationWarning style={{ background: '#0ea5e9', opacity: '0.08', filter: 'blur(80px)' }}></div>
         <div className="orb-2 absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full md:w-[700px] md:h-[700px]"
-          style={{ background: '#7c3aed', opacity: 0.07, filter: 'blur(90px)' }}></div>
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at center, transparent 0%, #02010a 100%)', opacity: 0.75 }}></div>
+          suppressHydrationWarning style={{ background: '#7c3aed', opacity: '0.07', filter: 'blur(90px)' }}></div>
+        <div className="absolute inset-0" suppressHydrationWarning style={{ background: 'radial-gradient(circle at center, transparent 0%, #02010a 100%)', opacity: '0.75' }}></div>
       </div>
 
       <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-10">

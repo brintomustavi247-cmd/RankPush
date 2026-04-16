@@ -1,10 +1,8 @@
 ﻿"use client";
-import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, updateDoc, Timestamp } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase"; // db ইমপোর্ট করতে ভুলবেন না
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { debounce } from "@/lib/debounce-utils";
-import { useRouter } from "next/navigation";
 
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   Zap, Trophy, Swords, Bell, Target,
@@ -17,14 +15,9 @@ import {
   Settings, Shield, Star, BookOpen, Zap as ZapIcon,
   Eye, EyeOff, Copy, ExternalLink, Edit3,
   Activity, Calendar, GitBranch, ArrowRight,
-  ChevronRight, Medal, Moon, Sunrise, CheckCheck, BellOff
+  ChevronRight, Medal, Moon, Sunrise
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Toaster } from "sonner";
-import { useXPNotifications, useBattleNotifications, useSessionNotifications, useRealtimeNotifications, relativeTime, NOTIF_CONFIG } from "@/lib/notification-utils";
-import { initializeDefaultQuests, checkAndResetWeeklyStats, DEFAULT_QUESTS } from "@/lib/xp-utils";
-import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
-import { UserProfileModal } from "@/components/UserProfileModal";
 
 // ============================================================
 // SOLO LEVELING RANK SYSTEM — S → E (reversed, S is highest)
@@ -115,8 +108,8 @@ const getXPProgress = (xp: number, rank: RankInfo): number => {
 const SUBJECTS = [
   { name: "Physics",   icon: Atom,         color: "#22d3ee", locked: false, questions: 48  },
   { name: "Chemistry", icon: FlaskConical, color: "#a78bfa", locked: false, questions: 36  },
-  { name: "Math",      icon: Sigma,        color: "#34d399", locked: false, questions: 24  },
-  { name: "Biology",   icon: Dna,          color: "#f87171", locked: false, questions: 20  },
+  { name: "Math",      icon: Sigma,        color: "#34d399", locked: true,  questions: 0   },
+  { name: "Biology",   icon: Dna,          color: "#f87171", locked: true,  questions: 0   },
 ];
 
 const DAILY_QUESTS = [
@@ -125,6 +118,13 @@ const DAILY_QUESTS = [
   { id: 3, title: "Combo Master",     desc: "Get 5x combo streak", xp: 400, progress: 3,  total: 5,  icon: Flame,    color: "#f87171", done: false },
 ];
 
+const LEADERBOARD = [
+  { name: "S-Rank_Slayer", score: "24,500", rank: "01", avatar: "https://i.pravatar.cc/150?u=slayer",  rankInfo: RANKS[7] },
+  { name: "ZeroOne",       score: "22,100", rank: "02", avatar: "https://i.pravatar.cc/150?u=zeroone", rankInfo: RANKS[6] },
+  { name: "GhostVibes",    score: "19,850", rank: "03", avatar: "https://i.pravatar.cc/150?u=ghost",   rankInfo: RANKS[5] },
+  { name: "NightCrawler",  score: "17,200", rank: "04", avatar: "https://i.pravatar.cc/150?u=night",   rankInfo: RANKS[4] },
+  { name: "PhantomX",      score: "15,900", rank: "05", avatar: "https://i.pravatar.cc/150?u=phantom", rankInfo: RANKS[3] },
+];
 
 const ACHIEVEMENTS = [
   { title: "First Blood",  desc: "Complete first battle",  icon: "🩸", unlocked: true,  xp: 100  },
@@ -135,6 +135,8 @@ const ACHIEVEMENTS = [
   { title: "Shadow Army",  desc: "7-day streak",           icon: "👥", unlocked: false, xp: 800  },
 ];
 
+const STREAK_DAYS = ["M","T","W","T","F","S","S"];
+const STREAK_DONE = [true,true,true,true,false,false,false];
 
 const MOCK_STATS = {
   xp: 15420, level: 47,
@@ -148,15 +150,14 @@ const MOCK_STATS = {
 };
 
 // ============================================================
-// GLOBAL STYLES — Performance Optimized
+// GLOBAL STYLES
 // ============================================================
 const GLOBAL_CSS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     background: #02010a; color: white;
     font-family: 'Outfit', sans-serif;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden; scroll-behavior: smooth;
   }
   body {
     background-image:
@@ -165,127 +166,89 @@ const GLOBAL_CSS = `
       linear-gradient(to bottom, #02010a, #050b14);
     min-height: 100vh;
   }
-
-  /* Scanline - DESKTOP ONLY */
-  @media (min-width: 1024px) {
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);
-      pointer-events: none; z-index: 1;
-    }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);
+    pointer-events: none; z-index: 1;
   }
-
   .font-logo  { font-family: 'Orbitron', sans-serif; }
   .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
 
-  /* CARD - Mobile: solid dark, Desktop: glassmorphism */
   .card {
-    background: rgba(8, 10, 20, 0.92);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 20px;
-    transition: border-color 0.2s ease;
+    background: rgba(255,255,255,0.025);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 20px;
+    transition: all 0.3s ease;
   }
-  @media (min-width: 768px) {
-    .card {
-      background: rgba(255,255,255,0.028);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-    }
-    .card:hover {
-      border-color: rgba(34,211,238,0.18);
-      background: rgba(255,255,255,0.04);
-    }
+  .card:hover { border-color: rgba(34,211,238,0.15); background: rgba(255,255,255,0.035); }
+
+  @keyframes xpFill   { from { width: 0% } }
+  @keyframes glowPulse { 0%,100%{box-shadow:0 0 20px rgba(14,165,233,0.3)}50%{box-shadow:0 0 40px rgba(14,165,233,0.6)} }
+  @keyframes floatY   { 0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)} }
+  @keyframes shimmer  { 0%{background-position:-200% center}100%{background-position:200% center} }
+  @keyframes streakPop{ 0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1} }
+  @keyframes badgeBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}} 
+  @keyframes questFill{ from{width:0%} }
+  @keyframes statFill { from{width:0%} }
+  @keyframes rankGlow { 0%,100%{opacity:0.6}50%{opacity:1} }
+  @keyframes slideUp  { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+  @keyframes pulseRing{ 0%,100%{transform:scale(1)}50%{transform:scale(1.05)} }
+  @keyframes shadowFloat{ 0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-8px) rotate(1deg)} }
+
+  .xp-bar        { animation: xpFill 1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .glow-pulse    { animation: glowPulse 2s ease-in-out infinite; }
+  .float         { animation: floatY 3s ease-in-out infinite; }
+  .badge-bounce  { animation: badgeBounce 1s ease infinite; }
+  .quest-bar     { animation: questFill 1s ease forwards; }
+  .stat-bar      { animation: statFill 1.5s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .streak-pip    { animation: streakPop 0.4s ease forwards; }
+  .shadow-float  { animation: shadowFloat 4s ease-in-out infinite; }
+
+  .shimmer-text {
+    background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b, #a855f7);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
   }
-
-  /* KEYFRAMES */
-  @keyframes xpFill    { from { width: 0% } }
-  @keyframes questFill { from { width: 0% } }
-  @keyframes statFill  { from { width: 0% } }
-  @keyframes streakPop { 0%{transform:scale(0.85);opacity:0} 100%{transform:scale(1);opacity:1} }
-  @keyframes glowPulse  { 0%,100%{opacity:0.7} 50%{opacity:1} }
-  @keyframes floatY     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-  @keyframes badgeBounce{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
-  @keyframes shadowFloat{ 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-6px) rotate(1deg)} }
-  @keyframes shimmer    { 0%{background-position:-200% center} 100%{background-position:200% center} }
-
-  /* ONE-SHOT animations (mobile + desktop) */
-  .xp-bar     { animation: xpFill    1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
-  .quest-bar  { animation: questFill 1s   ease forwards; }
-  .stat-bar   { animation: statFill  1.5s cubic-bezier(0.4,0,0.2,1) forwards; }
-  .streak-pip { animation: streakPop 0.3s ease forwards; }
-
-  /* INFINITE animations - DESKTOP ONLY */
-  @media (min-width: 768px) {
-    .glow-pulse   { animation: glowPulse   3s ease-in-out infinite; }
-    .float        { animation: floatY      6s ease-in-out infinite; }
-    .badge-bounce { animation: badgeBounce 2s ease          infinite; }
-    .shadow-float { animation: shadowFloat 6s ease-in-out infinite; }
-    .shimmer-text {
-      background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b, #a855f7);
-      background-size: 200% auto;
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      animation: shimmer 3s linear infinite;
-    }
-    .rank-shimmer {
-      background-size: 200% auto;
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      animation: shimmer 2s linear infinite;
-    }
-  }
-  @media (max-width: 767px) {
-    .shimmer-text {
-      background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .rank-shimmer {
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .rank-card-hover:hover { transform: none; }
+  .rank-shimmer {
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shimmer 2s linear infinite;
   }
 
-  /* SUBJECT BUTTONS */
   .sub-btn {
     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px; padding: 20px 12px;
+    border-radius: 16px; padding: 24px 16px;
     display: flex; flex-direction: column; align-items: center; gap: 10px;
-    cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease;
+    cursor: pointer; transition: all 0.25s ease;
     position: relative; overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
   }
-  @media (min-width: 768px) {
-    .sub-btn { padding: 24px 16px; }
-    .sub-btn:hover:not(.sub-locked) {
-      border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06);
-      transform: translateY(-2px);
-    }
+  .sub-btn:hover:not(.sub-locked) {
+    border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); transform: translateY(-2px);
   }
   .sub-btn.sub-active {
     border-color: var(--sub-color) !important;
     background: rgba(var(--sub-rgb),0.1) !important;
-    box-shadow: 0 6px 20px rgba(var(--sub-rgb),0.22) !important;
+    box-shadow: 0 8px 24px rgba(var(--sub-rgb),0.25) !important;
+    transform: translateY(-3px) scale(1.02);
   }
   .sub-locked { opacity: 0.35; cursor: not-allowed; }
 
-  /* ARENA BUTTON */
   .arena-btn {
-    width: 100%; padding: 18px;
+    width: 100%; padding: 20px;
     background: linear-gradient(135deg, #0ea5e9, #0284c7);
-    border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; color: white;
-    font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900;
-    letter-spacing: 0.15em; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; color: white;
+    font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900;
+    letter-spacing: 0.2em; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 12px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
+    transition: all 0.3s; position: relative; overflow: hidden;
   }
-  .arena-btn:active { transform: scale(0.97); }
-  @media (min-width: 768px) {
-    .arena-btn { padding: 20px; font-size: 18px; letter-spacing: 0.2em; }
-    .arena-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(14,165,233,0.35); }
-  }
+  .arena-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(14,165,233,0.4); }
+  .arena-btn:active { transform: translateY(0) scale(0.98); }
 
   .nav-link {
     font-size: 11px; font-weight: 800; letter-spacing: 0.15em;
-    text-transform: uppercase; opacity: 0.4; transition: opacity 0.15s;
+    text-transform: uppercase; opacity: 0.4; transition: opacity 0.2s;
     cursor: pointer; color: white; text-decoration: none;
   }
   .nav-link:hover { opacity: 0.8; }
@@ -295,275 +258,15 @@ const GLOBAL_CSS = `
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.3); border-radius: 2px; }
 
-  .rank-card-hover { transition: transform 0.15s ease; }
   .rank-card-hover:hover { transform: scale(1.02); }
+  .rank-card-hover { transition: transform 0.2s ease; }
 `;
-
-
-
-// ============================================================
-// RANK BADGE SVG ICONS — Gorgeous LoL-style emblems
-// ============================================================
-function RankBadgeSVG({ rankId, size = 24 }: { rankId: string; size?: number }) {
-  const uid = `pg-${rankId}`;
-  const s = size;
-
-  const badges: Record<string, React.ReactElement> = {
-    e: (
-      <svg width={s} height={s} viewBox="0 0 40 44" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="20" y1="0" x2="20" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#b5651d"/><stop offset="100%" stopColor="#5c2d0a"/>
-          </linearGradient>
-          <linearGradient id={`${uid}-gem`} x1="14" y1="12" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#f0a862"/><stop offset="50%" stopColor="#cd7f32"/><stop offset="100%" stopColor="#7b3f00"/>
-          </linearGradient>
-          <linearGradient id={`${uid}-shine`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#e8913a" stopOpacity="0.5"/><stop offset="100%" stopColor="#7b3f00" stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        <path d="M20 2 L36 8 L36 26 Q36 37 20 43 Q4 37 4 26 L4 8 Z" fill={`url(#${uid}-bg)`} stroke="#7b3f00" strokeWidth="1.5"/>
-        <path d="M20 2 L36 8 L36 26 Q36 37 20 43 Q4 37 4 26 L4 8 Z" fill={`url(#${uid}-shine)`}/>
-        <line x1="4" y1="16" x2="36" y2="16" stroke="rgba(255,180,80,0.25)" strokeWidth="0.8"/>
-        <polygon points="20,12 27,20 20,29 13,20" fill={`url(#${uid}-gem)`} stroke="#e8913a" strokeWidth="1"/>
-        <polygon points="20,15 24,20 20,26 16,20" fill="rgba(255,200,120,0.5)"/>
-        <circle cx="20" cy="7" r="2" fill="#b5651d" stroke="#e8913a" strokeWidth="0.8"/>
-        <circle cx="20" cy="7" r="1" fill="#f0a862"/>
-      </svg>
-    ),
-    d: (
-      <svg width={s} height={s} viewBox="0 0 40 44" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="20" y1="0" x2="20" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#d4d8e0"/><stop offset="100%" stopColor="#6b7280"/>
-          </linearGradient>
-          <radialGradient id={`${uid}-gem`} cx="40%" cy="35%" r="55%">
-            <stop offset="0%" stopColor="#ffffff"/><stop offset="45%" stopColor="#c8cdd6"/><stop offset="100%" stopColor="#8a9299"/>
-          </radialGradient>
-          <linearGradient id={`${uid}-shine`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35"/><stop offset="100%" stopColor="#6b7280" stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        <path d="M20 2 L36 8 L36 26 Q36 37 20 43 Q4 37 4 26 L4 8 Z" fill={`url(#${uid}-bg)`} stroke="#9ca3af" strokeWidth="1.5"/>
-        <path d="M20 2 L36 8 L36 26 Q36 37 20 43 Q4 37 4 26 L4 8 Z" fill={`url(#${uid}-shine)`}/>
-        <path d="M20 5 L33 10 L33 25 Q33 35 20 40 Q7 35 7 25 L7 10 Z" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8"/>
-        <polygon points="20,12 22,17 27,16 23,20 27,24 22,23 20,28 18,23 13,24 17,20 13,16 18,17" fill={`url(#${uid}-gem)`} stroke="#d4d8e0" strokeWidth="0.7"/>
-        <circle cx="20" cy="20" r="2.5" fill="rgba(255,255,255,0.6)"/>
-        <circle cx="20" cy="7" r="2.5" fill="#9ca3af" stroke="#d4d8e0" strokeWidth="0.8"/>
-        <circle cx="20" cy="7" r="1.2" fill="#ffffff"/>
-      </svg>
-    ),
-    c: (
-      <svg width={s} height={s} viewBox="0 0 40 44" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="20" y1="0" x2="20" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#d4a017"/><stop offset="50%" stopColor="#b8860b"/><stop offset="100%" stopColor="#7a5800"/>
-          </linearGradient>
-          <radialGradient id={`${uid}-gem`} cx="38%" cy="32%" r="55%">
-            <stop offset="0%" stopColor="#fff9e0"/><stop offset="40%" stopColor="#ffd700"/><stop offset="100%" stopColor="#a07800"/>
-          </radialGradient>
-          <linearGradient id={`${uid}-shine`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ffec7a" stopOpacity="0.45"/><stop offset="100%" stopColor="#7a5800" stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        <path d="M20 2 L36 8 L36 26 Q36 37 20 43 Q4 37 4 26 L4 8 Z" fill={`url(#${uid}-bg)`} stroke="#a07800" strokeWidth="1.5"/>
-        <path d="M20 2 L36 8 L36 26 Q36 37 20 43 Q4 37 4 26 L4 8 Z" fill={`url(#${uid}-shine)`}/>
-        <line x1="4" y1="15" x2="36" y2="15" stroke="rgba(255,220,60,0.3)" strokeWidth="0.9"/>
-        <path d="M20 5 L33 10 L33 25 Q33 36 20 41 Q7 36 7 25 L7 10 Z" fill="none" stroke="rgba(255,215,0,0.25)" strokeWidth="0.8"/>
-        <polygon points="20,11 28,19 20,28 12,19" fill={`url(#${uid}-gem)`} stroke="#ffd700" strokeWidth="1"/>
-        <polygon points="20,14 25,19 20,25 15,19" fill="rgba(255,255,220,0.55)"/>
-        <circle cx="10" cy="14" r="1.8" fill="#ffd700" opacity="0.65"/>
-        <circle cx="30" cy="14" r="1.8" fill="#ffd700" opacity="0.65"/>
-        <polygon points="20,2 22.5,7 20,6 17.5,7" fill="#ffd700"/>
-      </svg>
-    ),
-    b: (
-      <svg width={s} height={s} viewBox="0 0 46 44" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="23" y1="0" x2="23" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#e2f6f9"/><stop offset="100%" stopColor="#7ab8c4"/>
-          </linearGradient>
-          <radialGradient id={`${uid}-gem`} cx="38%" cy="32%" r="55%">
-            <stop offset="0%" stopColor="#f0fbff"/><stop offset="45%" stopColor="#22d3ee"/><stop offset="100%" stopColor="#0891b2"/>
-          </radialGradient>
-          <linearGradient id={`${uid}-wing`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#a5e0ea"/><stop offset="100%" stopColor="#5baabd"/>
-          </linearGradient>
-        </defs>
-        <path d="M3 22 Q1 15 5 10 Q8 15 10 22 Q8 27 5 28 Q2 27 3 22Z" fill={`url(#${uid}-wing)`} stroke="#7ab8c4" strokeWidth="0.8" opacity="0.9"/>
-        <path d="M3 18 Q6 15 8 13" stroke="#ffffff" strokeWidth="0.7" fill="none" opacity="0.7"/>
-        <path d="M43 22 Q45 15 41 10 Q38 15 36 22 Q38 27 41 28 Q44 27 43 22Z" fill={`url(#${uid}-wing)`} stroke="#7ab8c4" strokeWidth="0.8" opacity="0.9"/>
-        <path d="M43 18 Q40 15 38 13" stroke="#ffffff" strokeWidth="0.7" fill="none" opacity="0.7"/>
-        <path d="M23 2 L38 8 L38 26 Q38 37 23 43 Q8 37 8 26 L8 8 Z" fill={`url(#${uid}-bg)`} stroke="#7ab8c4" strokeWidth="1.5"/>
-        <path d="M23 5 L35 10 L35 25 Q35 35 23 40 Q11 35 11 25 L11 10 Z" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8"/>
-        <polygon points="23,11 31,19 23,28 15,19" fill={`url(#${uid}-gem)`} stroke="#7eeaf8" strokeWidth="1"/>
-        <polygon points="23,14 28,19 23,25 18,19" fill="rgba(240,251,255,0.6)"/>
-        <line x1="23" y1="11" x2="23" y2="28" stroke="rgba(255,255,255,0.4)" strokeWidth="0.7"/>
-        <line x1="15" y1="19" x2="31" y2="19" stroke="rgba(255,255,255,0.4)" strokeWidth="0.7"/>
-        <circle cx="23" cy="6" r="2.2" fill="#7ab8c4" stroke="#a5e0ea" strokeWidth="0.8"/>
-      </svg>
-    ),
-    a: (
-      <svg width={s} height={s} viewBox="0 0 46 46" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="23" y1="0" x2="23" y2="46" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#9333ea"/><stop offset="60%" stopColor="#6d28d9"/><stop offset="100%" stopColor="#3b0764"/>
-          </linearGradient>
-          <radialGradient id={`${uid}-gem`} cx="38%" cy="30%" r="55%">
-            <stop offset="0%" stopColor="#f3e8ff"/><stop offset="40%" stopColor="#c084fc"/><stop offset="100%" stopColor="#6d28d9"/>
-          </radialGradient>
-          <linearGradient id={`${uid}-wing`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#a855f7"/><stop offset="100%" stopColor="#5b21b6"/>
-          </linearGradient>
-          <filter id={`${uid}-glow`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="1.5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <path d="M1 24 Q0 14 6 8 Q10 16 11 24 Q9 30 5 32 Q1 30 1 24Z" fill={`url(#${uid}-wing)`} opacity="0.9"/>
-        <path d="M2 18 Q6 14 9 11" stroke="#d8b4fe" strokeWidth="0.8" fill="none" opacity="0.7"/>
-        <path d="M45 24 Q46 14 40 8 Q36 16 35 24 Q37 30 41 32 Q45 30 45 24Z" fill={`url(#${uid}-wing)`} opacity="0.9"/>
-        <path d="M44 18 Q40 14 37 11" stroke="#d8b4fe" strokeWidth="0.8" fill="none" opacity="0.7"/>
-        <polygon points="23,2 39,20 23,44 7,20" fill={`url(#${uid}-bg)`} stroke="#a855f7" strokeWidth="1.5"/>
-        <polygon points="23,6 35,20 23,38 11,20" fill="none" stroke="rgba(192,132,252,0.3)" strokeWidth="0.9"/>
-        <polygon points="23,2 26,8 23,7 20,8" fill="#c084fc"/>
-        <polygon points="23,12 32,21 23,31 14,21" fill={`url(#${uid}-gem)`} stroke="#d8b4fe" strokeWidth="1" filter={`url(#${uid}-glow)`}/>
-        <polygon points="23,16 28,21 23,27 18,21" fill="rgba(255,255,255,0.5)"/>
-      </svg>
-    ),
-    s: (
-      <svg width={s} height={s} viewBox="0 0 48 50" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="24" y1="0" x2="24" y2="50" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#fbbf24"/><stop offset="45%" stopColor="#d97706"/><stop offset="100%" stopColor="#78350f"/>
-          </linearGradient>
-          <radialGradient id={`${uid}-gem`} cx="38%" cy="30%" r="55%">
-            <stop offset="0%" stopColor="#fefce8"/><stop offset="40%" stopColor="#fcd34d"/><stop offset="100%" stopColor="#b45309"/>
-          </radialGradient>
-          <linearGradient id={`${uid}-wing`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#fbbf24"/><stop offset="100%" stopColor="#92400e"/>
-          </linearGradient>
-          <filter id={`${uid}-glow`} x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="2" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <path d="M0 26 Q-1 14 6 8 Q11 17 12 26 Q10 32 5 34 Q0 31 0 26Z" fill={`url(#${uid}-wing)`} opacity="0.92"/>
-        <path d="M1 20 Q6 16 9 13" stroke="#fde68a" strokeWidth="0.9" fill="none"/>
-        <path d="M0 26 Q5 23 9 20" stroke="#fde68a" strokeWidth="0.7" fill="none"/>
-        <path d="M48 26 Q49 14 42 8 Q37 17 36 26 Q38 32 43 34 Q48 31 48 26Z" fill={`url(#${uid}-wing)`} opacity="0.92"/>
-        <path d="M47 20 Q42 16 39 13" stroke="#fde68a" strokeWidth="0.9" fill="none"/>
-        <path d="M48 26 Q43 23 39 20" stroke="#fde68a" strokeWidth="0.7" fill="none"/>
-        <path d="M14 7 L24 2 L34 7 L31 11 L27.5 9 L24 11 L20.5 9 L17 11 Z" fill={`url(#${uid}-wing)`} stroke="#fde68a" strokeWidth="0.9"/>
-        <circle cx="24" cy="3" r="2.5" fill="#fcd34d" filter={`url(#${uid}-glow)`}/>
-        <circle cx="24" cy="3" r="1.2" fill="#ffffff"/>
-        <circle cx="16" cy="8" r="1.3" fill="#fbbf24"/>
-        <circle cx="32" cy="8" r="1.3" fill="#fbbf24"/>
-        <path d="M24 10 L40 17 L40 31 Q40 43 24 49 Q8 43 8 31 L8 17 Z" fill={`url(#${uid}-bg)`} stroke="#fbbf24" strokeWidth="1.8"/>
-        <path d="M24 14 L36 20 L36 30 Q36 41 24 46 Q12 41 12 30 L12 20 Z" fill="none" stroke="rgba(253,230,138,0.35)" strokeWidth="1"/>
-        <polygon points="24,18 33,26 24,36 15,26" fill={`url(#${uid}-gem)`} stroke="#fde68a" strokeWidth="1.2" filter={`url(#${uid}-glow)`}/>
-        <polygon points="24,22 29,26 24,32 19,26" fill="rgba(255,255,220,0.6)"/>
-        <polygon points="24,49 27,44 24,46 21,44" fill="#fcd34d"/>
-      </svg>
-    ),
-    national: (
-      <svg width={s} height={s} viewBox="0 0 50 52" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="25" y1="0" x2="25" y2="52" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#f472b6"/><stop offset="45%" stopColor="#db2777"/><stop offset="100%" stopColor="#831843"/>
-          </linearGradient>
-          <linearGradient id={`${uid}-gold`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#fde68a"/><stop offset="100%" stopColor="#d97706"/>
-          </linearGradient>
-          <radialGradient id={`${uid}-gem`} cx="38%" cy="30%" r="55%">
-            <stop offset="0%" stopColor="#fce7f3"/><stop offset="40%" stopColor="#f9a8d4"/><stop offset="100%" stopColor="#be185d"/>
-          </radialGradient>
-          <filter id={`${uid}-glow`} x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2.5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <path d="M0 28 Q-1 15 7 8 Q12 18 13 28 L11 37 Q5 35 0 28Z" fill={`url(#${uid}-gold)`} opacity="0.95"/>
-        <path d="M1 20 Q7 16 10 13" stroke="#fef9c3" strokeWidth="1" fill="none"/>
-        <path d="M0 27 Q6 23 10 20" stroke="#fef9c3" strokeWidth="0.8" fill="none"/>
-        <path d="M50 28 Q51 15 43 8 Q38 18 37 28 L39 37 Q45 35 50 28Z" fill={`url(#${uid}-gold)`} opacity="0.95"/>
-        <path d="M49 20 Q43 16 40 13" stroke="#fef9c3" strokeWidth="1" fill="none"/>
-        <path d="M50 27 Q44 23 40 20" stroke="#fef9c3" strokeWidth="0.8" fill="none"/>
-        <path d="M13 7 L25 2 L37 7 L34 12 L30.5 10 L25 13 L19.5 10 L16 12 Z" fill={`url(#${uid}-gold)`} stroke="#fef9c3" strokeWidth="1"/>
-        <circle cx="25" cy="3.5" r="3" fill="#f472b6" filter={`url(#${uid}-glow)`}/>
-        <circle cx="25" cy="3.5" r="1.5" fill="#fce7f3"/>
-        <circle cx="17" cy="9" r="1.8" fill="#fbbf24"/>
-        <circle cx="33" cy="9" r="1.8" fill="#fbbf24"/>
-        <path d="M25 11 L42 18 L42 33 Q42 45 25 51 Q8 45 8 33 L8 18 Z" fill={`url(#${uid}-bg)`} stroke={`url(#${uid}-gold)`} strokeWidth="2"/>
-        <path d="M25 15 L38 21 L38 32 Q38 43 25 48 Q12 43 12 32 L12 21 Z" fill="none" stroke="rgba(253,230,138,0.4)" strokeWidth="1.2"/>
-        <polygon points="25,20 34,29 25,40 16,29" fill={`url(#${uid}-gem)`} stroke="#f9a8d4" strokeWidth="1.3" filter={`url(#${uid}-glow)`}/>
-        <polygon points="25,24 30,29 25,35 20,29" fill="rgba(255,255,255,0.55)"/>
-        <polygon points="25,51 28,46 25,48 22,46" fill="#fde68a"/>
-      </svg>
-    ),
-    shadow_monarch: (
-      <svg width={s} height={s} viewBox="0 0 50 54" fill="none">
-        <defs>
-          <linearGradient id={`${uid}-bg`} x1="25" y1="0" x2="25" y2="54" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#7c3aed"/><stop offset="50%" stopColor="#4c1d95"/><stop offset="100%" stopColor="#1e0a3c"/>
-          </linearGradient>
-          <linearGradient id={`${uid}-wing`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#6d28d9"/><stop offset="100%" stopColor="#1e0a3c"/>
-          </linearGradient>
-          <radialGradient id={`${uid}-gem`} cx="38%" cy="28%" r="55%">
-            <stop offset="0%" stopColor="#faf5ff"/><stop offset="35%" stopColor="#c084fc"/><stop offset="100%" stopColor="#5b21b6"/>
-          </radialGradient>
-          <filter id={`${uid}-glow`} x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <filter id={`${uid}-soft`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="1.5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <path d="M0 30 Q-1 15 8 7 Q14 19 15 30 Q13 40 6 43 Q1 38 0 30Z" fill={`url(#${uid}-wing)`} opacity="0.95"/>
-        <path d="M1 22 Q8 16 12 12" stroke="#a855f7" strokeWidth="0.9" fill="none" opacity="0.8"/>
-        <path d="M0 30 Q7 25 12 21" stroke="#a855f7" strokeWidth="0.7" fill="none" opacity="0.7"/>
-        <path d="M50 30 Q51 15 42 7 Q36 19 35 30 Q37 40 44 43 Q49 38 50 30Z" fill={`url(#${uid}-wing)`} opacity="0.95"/>
-        <path d="M49 22 Q42 16 38 12" stroke="#a855f7" strokeWidth="0.9" fill="none" opacity="0.8"/>
-        <path d="M50 30 Q43 25 38 21" stroke="#a855f7" strokeWidth="0.7" fill="none" opacity="0.7"/>
-        <path d="M13 9 L25 3 L37 9" stroke="#c084fc" strokeWidth="1.8" fill="none"/>
-        <line x1="25" y1="3" x2="25" y2="10" stroke="#c084fc" strokeWidth="2.2"/>
-        <line x1="17" y1="6" x2="19" y2="10" stroke="#c084fc" strokeWidth="1.2" opacity="0.8"/>
-        <line x1="33" y1="6" x2="31" y2="10" stroke="#c084fc" strokeWidth="1.2" opacity="0.8"/>
-        <circle cx="25" cy="3" r="3.5" fill="#4c1d95" stroke="#c084fc" strokeWidth="1.2" filter={`url(#${uid}-soft)`}/>
-        <circle cx="25" cy="3" r="2" fill="#7c3aed" filter={`url(#${uid}-glow)`}/>
-        <circle cx="25" cy="3" r="1" fill="#f3e8ff"/>
-        <path d="M25 9 L42 17 L42 33 Q42 46 25 54 Q8 46 8 33 L8 17 Z" fill={`url(#${uid}-bg)`} stroke="#8b5cf6" strokeWidth="2"/>
-        <path d="M25 13 L38 20 L38 32 Q38 44 25 50 Q12 44 12 32 L12 20 Z" fill="none" stroke="rgba(192,132,252,0.25)" strokeWidth="1.2"/>
-        <polygon points="25,19 36,30 25,42 14,30" fill={`url(#${uid}-gem)`} stroke="#c084fc" strokeWidth="1.5" filter={`url(#${uid}-glow)`}/>
-        <polygon points="25,23 32,30 25,38 18,30" fill="rgba(255,255,255,0.4)"/>
-        <circle cx="19" cy="22" r="1.2" fill="#c084fc" opacity="0.6" filter={`url(#${uid}-soft)`}/>
-        <circle cx="31" cy="38" r="1" fill="#c084fc" opacity="0.5" filter={`url(#${uid}-soft)`}/>
-        <circle cx="18" cy="36" r="0.8" fill="#c084fc" opacity="0.7" filter={`url(#${uid}-soft)`}/>
-        <polygon points="25,54 28.5,48 25,51 21.5,48" fill="#8b5cf6"/>
-      </svg>
-    ),
-  };
-
-  return badges[rankId] ?? (
-    <svg width={s} height={s} viewBox="0 0 40 44" fill="none">
-      <path d="M20 2 L36 8 L36 26 Q36 37 20 43 Q4 37 4 26 L4 8 Z"
-        fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"/>
-    </svg>
-  );
-}
 
 // ============================================================
 // RANK BADGE COMPONENT
 // ============================================================
 function RankBadge({ rank, size = "md" }: { rank: RankInfo; size?: "sm" | "md" | "lg" }) {
-  const sizes = {
-    sm: { px: "6px 10px",  fs: 9,  img: 18 },
-    md: { px: "8px 14px",  fs: 11, img: 24 },
-    lg: { px: "12px 20px", fs: 14, img: 32 },
-  };
+  const sizes = { sm: { px: "8px 12px", fs: 9, icon: 14 }, md: { px: "10px 16px", fs: 11, icon: 18 }, lg: { px: "14px 22px", fs: 14, icon: 24 } };
   const s = sizes[size];
   return (
     <div style={{
@@ -572,7 +275,7 @@ function RankBadge({ rank, size = "md" }: { rank: RankInfo; size?: "sm" | "md" |
       background: rank.bgColor, border: `1px solid ${rank.color}44`,
       boxShadow: `0 0 16px ${rank.glowColor}`,
     }}>
-      <RankBadgeSVG rankId={rank.id} size={s.img} />
+      <span style={{ fontSize: s.icon }}>{rank.icon}</span>
       <div>
         <p style={{
           fontFamily: "'Orbitron', sans-serif", fontSize: s.fs, fontWeight: 900,
@@ -617,9 +320,7 @@ function RankModal({ onClose, currentXP }: { onClose: () => void; currentXP: num
                 boxShadow: isCurrent ? `0 0 20px ${r.glowColor}` : "none",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ width: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <RankBadgeSVG rankId={r.id} size={30} />
-                  </div>
+                  <span style={{ fontSize: 22, width: 32, textAlign: "center" }}>{r.icon}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                       <p style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 900, color: r.color, letterSpacing: "0.1em" }}>{r.name}</p>
@@ -684,7 +385,7 @@ function ProfileModal({ onClose, user, stats }: { onClose: () => void; user: any
           <div style={{ display: "flex", alignItems: "flex-end", gap: 16, marginBottom: 20 }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
               <div style={{ width: 88, height: 88, borderRadius: "50%", border: `3px solid ${rank.color}`, boxShadow: `0 0 24px ${rank.glowColor}`, overflow: "hidden" }}>
-                <img src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="avatar" />
+                <img src={user?.photoURL || "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg"} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="avatar" />
               </div>
               <div style={{ position: "absolute", bottom: 0, right: -4, background: `linear-gradient(135deg, ${rank.color}, ${rank.color}bb)`, borderRadius: 8, padding: "3px 7px", fontFamily: "'Orbitron', sans-serif", fontSize: 9, fontWeight: 900, border: "2px solid #06040f" }}>
                 LVL {stats.level}
@@ -698,14 +399,7 @@ function ProfileModal({ onClose, user, stats }: { onClose: () => void; user: any
             </div>
           </div>
 
-          {/* Bio */}
-          {(stats as any).bio && (
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, fontStyle: "italic" }}>
-                "{(stats as any).bio}"
-              </p>
-            </div>
-          )}
+          {/* XP Bar */}
           <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <div>
@@ -765,14 +459,14 @@ function ProfileModal({ onClose, user, stats }: { onClose: () => void; user: any
                       <React.Fragment key={r.id}>
                         <div title={r.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: "0 0 auto" }}>
                           <div style={{
-                            width: isCurrent ? 36 : 26, height: isCurrent ? 36 : 26,
+                            width: isCurrent ? 34 : 26, height: isCurrent ? 34 : 26,
                             borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
                             background: unlocked ? r.bgColor : "rgba(255,255,255,0.04)",
                             border: isCurrent ? `2px solid ${r.color}` : unlocked ? `1px solid ${r.color}55` : "1px solid rgba(255,255,255,0.08)",
+                            fontSize: isCurrent ? 16 : 12,
                             boxShadow: isCurrent ? `0 0 14px ${r.glowColor}` : "none",
-                            transition: "all 0.3s", overflow: "hidden",
-                            opacity: unlocked ? 1 : 0.35,
-                          }}><RankBadgeSVG rankId={r.id} size={isCurrent ? 26 : 18} /></div>
+                            transition: "all 0.3s",
+                          }}>{r.icon}</div>
                           {isCurrent && <div style={{ width: 4, height: 4, borderRadius: "50%", background: r.color }} />}
                         </div>
                         {i < RANKS.length - 1 && (
@@ -908,213 +602,36 @@ function RivalModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// Leaderboard entry shape used inside the dashboard Firebase listener
-interface DashboardLeaderboardEntry {
-  id: string;
-  name: string;
-  xp: number;
-  avatar: string;
-  rankInfo: RankInfo;
-  isCurrentUser: boolean;
-  score: string;
-  rank: string;
-}
-
 // ============================================================
 // MAIN DASHBOARD
 // ============================================================
 export default function RankPushDashboard() {
   const [selectedSub, setSelectedSub]       = useState("Physics");
   const [user, setUser]                     = useState<any>(null);
-  const [isAuthLoading, setIsAuthLoading]   = useState(true);
   const [showProModal, setShowProModal]     = useState(false);
   const [showRivalModal, setShowRivalModal] = useState(false);
   const [showRankModal, setShowRankModal]   = useState(false);
   const [showProfile, setShowProfile]       = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
   const [showNotif, setShowNotif]           = useState(false);
   const [isMobileMenuOpen, setMobileMenu]   = useState(false);
-  const [animXP, setAnimXP]                 = useState(0);
-  
-  // 🔥 State
-  const [stats, setStats]                         = useState<any>(MOCK_STATS);
-  const [liveLeaderboard, setLiveLeaderboard]      = useState<any[]>([]);
-  const [leaderboardLoading, setLeaderboardLoading]= useState(true);
-  const [onlineCount, setOnlineCount]              = useState(3892);
-  const [liveQuests, setLiveQuests]                = useState<any[]>([]);
-  
+  const [animXP, setAnimXP]                = useState(0);
   const router = useRouter();
 
-  // Memoized rank computations — no re-run unless xp changes
-  const rank     = useMemo(() => getRankByXP(stats.xp),        [stats.xp]);
-  const nextRank = useMemo(() => getNextRank(rank),             [rank]);
-  const xpPct    = useMemo(() => getXPProgress(stats.xp, rank),[stats.xp, rank]);
+  const stats    = MOCK_STATS;
+  const rank     = getRankByXP(stats.xp);
+  const nextRank = getNextRank(rank);
+  const xpPct    = getXPProgress(stats.xp, rank);
 
-  // Real streak calculation
-  const { streakDays, streakDone } = useMemo(() => {
-    const days = ["M","T","W","T","F","S","S"];
-    const done = Array(7).fill(false);
-    const streak = stats.streak || 0;
-    
-    // Fill backwards from today based on streak count (cap at 7 for UI)
-    const todayIdx = (new Date().getDay() + 6) % 7;
-    const count = Math.min(streak, 7);
-    
-    const lastStudyTimestamp = stats.lastStudyDate?.toMillis?.() || 0;
-    const isToday = new Date().toDateString() === new Date(lastStudyTimestamp).toDateString();
-    
-    // If not studied today, the streak boxes end at yesterday
-    const endIdx = isToday ? todayIdx : (todayIdx - 1 + 7) % 7;
-    
-    for (let i = 0; i < count; i++) {
-        const idx = (endIdx - i + 7) % 7;
-        done[idx] = true;
-    }
-    
-    return { streakDays: days, streakDone: done };
-  }, [stats.streak, stats.lastStudyDate]);
-
-  // 🔥 Firebase Real-Time Listeners (User + Leaderboard + Online Count + Quests)
   useEffect(() => {
-    // Track cleanup functions for staggered listeners
-    const staggeredTimers: ReturnType<typeof setTimeout>[] = [];
-    let unsubUser:        (() => void) | null = null;
-    let unsubLeaderboard: (() => void) | null = null;
-    let unsubOnline:      (() => void) | null = null;
-    let unsubQuests:      (() => void) | null = null;
+    const unsub = onAuthStateChanged(auth, u => setUser(u));
+    return () => unsub();
+  }, []);
 
-    // Snapshot key and debounced setter are created once per effect mount.
-    // Placing them here (outside onAuthStateChanged) ensures a single, stable
-    // debounce instance that is NOT reset on every auth-state emission.
-    let prevLbKey = "";
-    const debouncedSetLeaderboard = debounce((combined: DashboardLeaderboardEntry[]) => {
-      setLiveLeaderboard(combined);
-      setLeaderboardLoading(false);
-    }, 300);
-
-    const unsubAuth = onAuthStateChanged(auth, async (u) => {
-      setIsAuthLoading(false);
-      if (!u) { router.push("/"); return; }
-      setUser(u);
-
-      // ── Weekly reset check on load ──
-      checkAndResetWeeklyStats(u.uid);
-      // ── Initialize default quests if not present ──
-      initializeDefaultQuests(u.uid);
-
-      // Clean up any previous subscriptions before setting up new ones
-      // (guards against onAuthStateChanged firing multiple times)
-      unsubUser?.();
-      unsubLeaderboard?.();
-      unsubOnline?.();
-      unsubQuests?.();
-      staggeredTimers.forEach(clearTimeout);
-      staggeredTimers.length = 0;
-
-      // ── ① ইউজার ডেটা (immediate) ──
-      const userRef = doc(db, "users", u.uid);
-      unsubUser = onSnapshot(userRef, (snap) => {
-        if (snap.exists()) {
-          setStats({ ...MOCK_STATS, ...snap.data() } as any);
-        } else {
-          const initialData = {
-            ...MOCK_STATS, xp: 0, level: 1,
-            displayName: u.displayName || "Hunter",
-            photoURL: u.photoURL || "",
-            weeklyXP: 0, weeklyBattles: 0,
-            weeklyCorrect: 0, weeklyRankUps: 0,
-          };
-          setDoc(userRef, initialData);
-          setStats(initialData);
-        }
-      }, (err) => {
-        console.error("[Dashboard] User snapshot error:", err.code, err.message);
-      });
-
-      // ── ② লিডারবোর্ড — staggered by 150 ms ──
-      const t1 = setTimeout(() => {
-        const lbQuery = query(collection(db, "users"), orderBy("xp", "desc"), limit(5));
-        unsubLeaderboard = onSnapshot(lbQuery, (snap) => {
-          const realUsers = snap.empty ? [] : snap.docs.map(d => {
-            const data = d.data();
-            return {
-              id:            d.id,
-              name:          data.displayName || data.name || "Hunter",
-              xp:            data.xp || 0,
-              avatar:        data.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${d.id}`,
-              rankInfo:      getRankByXP(data.xp || 0),
-              isCurrentUser: d.id === u.uid,
-            };
-          });
-
-          const combined: DashboardLeaderboardEntry[] = realUsers
-            .sort((a, b) => b.xp - a.xp)
-            .slice(0, 5)
-            .map((p, i) => ({
-               ...p,
-               score: p.xp.toLocaleString(),
-               rank: String(i + 1).padStart(2, "0")
-            }));
-
-          // Skip update if rankings have not changed (uid + xp key comparison)
-          const lbKey = combined.map(p => `${p.id}:${p.xp}`).join("|");
-          if (lbKey === prevLbKey) {
-            setLeaderboardLoading(false);
-            return;
-          }
-          prevLbKey = lbKey;
-
-          debouncedSetLeaderboard(combined);
-        }, () => {
-          setLeaderboardLoading(false);
-        });
-      }, 150);
-      staggeredTimers.push(t1);
-
-      // ── ③ Online Count — staggered by 300 ms ──
-      const t2 = setTimeout(() => {
-        const metaRef = doc(db, "meta", "online");
-        unsubOnline = onSnapshot(metaRef, (snap) => {
-          if (snap.exists() && snap.data().count) setOnlineCount(snap.data().count);
-        }, () => {});
-      }, 300);
-      staggeredTimers.push(t2);
-
-      // ── ④ Quest real-time listener — staggered by 450 ms ──
-      const t3 = setTimeout(() => {
-        const questRef = collection(db, "users", u.uid, "quests");
-        unsubQuests = onSnapshot(questRef, (snap) => {
-          if (!snap.empty) {
-            const iconMap: Record<string, any> = { atom: Atom, clock: Clock, flame: Flame };
-            const quests = snap.docs.map(d => ({
-              ...d.data(),
-              id: d.id,
-              icon: iconMap[d.data().iconName] || Atom,
-            }));
-            setLiveQuests(quests);
-          }
-        }, () => {});
-      }, 450);
-      staggeredTimers.push(t3);
-    });
-
-    return () => {
-      unsubAuth();
-      staggeredTimers.forEach(clearTimeout);
-      unsubUser?.();
-      unsubLeaderboard?.();
-      unsubOnline?.();
-      unsubQuests?.();
-    };
-  }, [router]);
-
-  // XP এনিমেশন
   useEffect(() => {
     let start = 0; const end = stats.xp; const step = end / (1200 / 16);
     const t = setInterval(() => { start = Math.min(start + step, end); setAnimXP(Math.round(start)); if (start >= end) clearInterval(t); }, 16);
     return () => clearInterval(t);
-  }, [stats.xp]);
+  }, []);
 
   useEffect(() => {
     const close = () => setMobileMenu(false);
@@ -1122,141 +639,26 @@ export default function RankPushDashboard() {
     return () => window.removeEventListener("click", close);
   }, [isMobileMenuOpen]);
 
-  const handleSignOut = useCallback(async () => { await signOut(auth); router.push("/"); }, [router]);
-
-  // Real-time notification hooks
-  useXPNotifications(user?.uid ?? null);
-  useBattleNotifications(user?.uid ?? null);
-  useSessionNotifications(user?.uid ?? null);
-  const { notifications: liveNotifs, unreadCount, markAllRead, markOneRead } = useRealtimeNotifications(user?.uid ?? null);
-
-  // Show a full-screen loading spinner while Firebase resolves auth state.
-  // This prevents the page from briefly flashing mock content or redirecting
-  // prematurely on reload before the persisted session is confirmed.
-  if (isAuthLoading) {
-    return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center"
-        style={{ background: "#02010a" }}
-      >
-        <div
-          className="w-12 h-12 rounded-full animate-spin mb-4"
-          style={{ border: "3px solid rgba(34,211,238,0.15)", borderTopColor: "#22d3ee" }}
-        />
-        <p
-          className="text-[11px] uppercase tracking-widest font-black"
-          style={{ fontFamily: "'Orbitron',sans-serif", color: "rgba(34,211,238,0.6)" }}
-        >
-          Loading...
-        </p>
-      </div>
-    );
-  }
+  const handleSignOut = async () => { await signOut(auth); router.push("/"); };
 
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet" />
+      <script src="https://cdn.tailwindcss.com" async />
       <style>{GLOBAL_CSS}</style>
-
-      {/* Sonner toaster for real-time notifications */}
-      <Toaster position="top-right" richColors={false} />
 
       {showProModal   && <ProUpgradeModal  onClose={() => setShowProModal(false)} />}
       {showRivalModal && <RivalModal       onClose={() => setShowRivalModal(false)} />}
       {showRankModal  && <RankModal        onClose={() => setShowRankModal(false)} currentXP={stats.xp} />}
       {showProfile    && <ProfileModal     onClose={() => setShowProfile(false)} user={user} stats={stats} />}
-      {showUploadModal && (
-        <ProfilePictureUpload
-          onClose={() => setShowUploadModal(false)}
-          currentPhotoURL={user?.photoURL}
-          onUploadSuccess={(url) => setUser((prev: any) => ({ ...prev, photoURL: url }))}
-        />
-      )}
-      {selectedProfileUserId && (
-        <UserProfileModal
-          userId={selectedProfileUserId}
-          viewerUid={user?.uid}
-          onClose={() => setSelectedProfileUserId(null)}
-        />
-      )}
 
-      {/* Ambient BG — simplified for mobile (no blur filter), full effect on desktop */}
-      <div className="fixed inset-0 z-0 pointer-events-none hidden md:block">
+      {/* Ambient BG */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <div style={{ position:"absolute", top:"-15%", left:"-10%", width:700, height:700, background:"#0ea5e9", opacity:0.05, filter:"blur(140px)", borderRadius:"50%" }} />
         <div style={{ position:"absolute", bottom:"-15%", right:"-10%", width:700, height:700, background:rank.color, opacity:0.04, filter:"blur(140px)", borderRadius:"50%" }} />
       </div>
-      {/* Mobile: simple radial gradient BG (no blur filter = no GPU hit) */}
-      <div className="fixed inset-0 z-0 pointer-events-none md:hidden" style={{
-        background: `radial-gradient(ellipse at 20% 10%, rgba(14,165,233,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, ${rank.color}08 0%, transparent 50%)`
-      }} />
 
-      <div className="min-h-screen w-full relative z-10">
-        <div className="w-full max-w-[1920px] mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
-
-        <aside className="hidden lg:flex lg:sticky lg:top-6 lg:w-[260px] lg:shrink-0 h-[calc(100vh-3rem)] card p-5 flex-col border border-white/10">
-          <div className="flex items-center gap-3 mb-7">
-            <div className="p-2.5 bg-sky-500 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.5)] border border-white/20">
-              <Swords size={18} color="white" />
-            </div>
-            <span className="font-logo text-[20px] tracking-tight">RANKPUSH</span>
-          </div>
-
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 mb-5">
-            <img
-              src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`}
-              alt={user?.displayName ? `${user.displayName}'s profile picture` : "Profile picture"}
-              className="w-10 h-10 rounded-full object-cover border border-white/20"
-            />
-            <div className="min-w-0">
-              <p className="text-[11px] font-black truncate">{user?.displayName || "Hunter"}</p>
-              <p className="text-[8px] opacity-45 uppercase tracking-widest truncate">{rank.name}</p>
-            </div>
-          </div>
-
-          <nav aria-label="Primary dashboard navigation" className="flex flex-col gap-1">
-            {[
-              { label: "Dashboard", icon: LayoutDashboard, fn: () => router.push("/dashboard"), active: true },
-              { label: "Profile", icon: User, fn: () => setShowProfile(true) },
-              { label: "Battle Arena", icon: Swords, fn: () => router.push(`/arena/${selectedSub.toLowerCase()}`) },
-              { label: "Shadow Focus", icon: Timer, fn: () => router.push("/timer") },
-              { label: "Leaderboard", icon: Trophy, disabled: true },
-              { label: "Analytics", icon: BarChart2, disabled: true },
-            ].map(item => (
-              <button
-                key={item.label}
-                onClick={item.fn}
-                disabled={item.disabled}
-                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${item.active ? "bg-cyan-400/10 text-cyan-400 border border-cyan-400/25" : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"}`}
-              >
-                <span className="flex items-center gap-2.5">
-                  <item.icon size={14} />
-                  {item.label}
-                </span>
-                <ChevronRight size={12} className={item.active ? "opacity-100" : "opacity-30"} />
-              </button>
-            ))}
-          </nav>
-
-          <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-2">
-            {stats.plan === "free" && (
-              <button
-                onClick={() => setShowProModal(true)}
-                className="w-full bg-gradient-to-br from-violet-600 to-purple-500 rounded-xl px-4 py-3 text-white font-black text-[10px] tracking-widest flex items-center justify-center gap-2"
-              >
-                <Crown size={14} /> GO PRO
-              </button>
-            )}
-            <button
-              onClick={handleSignOut}
-              className="w-full bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 font-black text-[10px] tracking-widest flex items-center justify-center gap-2"
-            >
-              <LogOut size={14} /> SIGN OUT
-            </button>
-          </div>
-        </aside>
-
-        <div className="min-w-0 flex-1">
+      <div className="min-h-screen px-4 md:px-6 py-6 md:py-8 relative z-10 max-w-[1920px] mx-auto">
 
         {/* ═══ HEADER ═══ */}
         <header className="flex justify-between items-center mb-8 md:mb-10">
@@ -1292,6 +694,14 @@ export default function RankPushDashboard() {
               </AnimatePresence>
             </div>
 
+            {/* Desktop nav */}
+            <nav className="hidden xl:flex gap-7">
+              <a href="#" className="nav-link active">Dashboard</a>
+              <a href="#" className="nav-link" onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)}>Battle Arena</a>
+              <a href="#" className="nav-link" onClick={() => router.push("/timer")}>Shadow Focus</a>
+              <a href="#" className="nav-link">Leaderboard</a>
+              <a href="#" className="nav-link">Analytics</a>
+            </nav>
           </div>
 
           {/* Right */}
@@ -1302,122 +712,28 @@ export default function RankPushDashboard() {
             </div>
             <div className="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
               <div className="w-2 h-2 rounded-full bg-green-500" style={{ boxShadow: "0 0 8px #22c55e" }} />
-              <span className="text-[11px] font-extrabold tracking-widest opacity-70">{onlineCount.toLocaleString()} ONLINE</span>
+              <span className="text-[11px] font-extrabold tracking-widest opacity-70">3,892 ONLINE</span>
             </div>
             {/* Notifications */}
             <div className="relative">
-              <button
-                onClick={() => { setShowNotif(!showNotif); }}
-                className="bg-white/5 border border-white/10 rounded-xl p-2.5 cursor-pointer text-white flex relative"
-              >
+              <button onClick={() => setShowNotif(!showNotif)} className="bg-white/5 border border-white/10 rounded-xl p-2.5 cursor-pointer text-white flex">
                 <Bell size={18} />
               </button>
-              {/* Unread badge — real count */}
-              {unreadCount > 0 && (
-                <div className="badge-bounce absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-[#02010a] px-1">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </div>
-              )}
+              <div className="badge-bounce absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-[#02010a]">3</div>
               <AnimatePresence>
                 {showNotif && (
-                  <motion.div
-                    initial={{ opacity:0, y:8, scale:0.95 }}
-                    animate={{ opacity:1, y:0, scale:1 }}
-                    exit={{ opacity:0, y:8, scale:0.95 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute top-12 -right-14 md:right-0 w-[300px] md:w-80 z-50"
-                    style={{
-                      background: "rgba(8,6,20,0.98)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 20,
-                      boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
-                      backdropFilter: "blur(20px)",
-                    }}
-                  >
-                    {/* Header */}
-                    <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <Bell size={13} color="#22d3ee" />
-                        <p style={{ fontFamily:"'Orbitron',sans-serif", fontSize:10, fontWeight:900, letterSpacing:"0.15em", color:"#22d3ee" }}>
-                          NOTIFICATIONS
-                        </p>
-                        {unreadCount > 0 && (
-                          <span style={{ fontSize:9, background:"rgba(34,211,238,0.15)", border:"1px solid rgba(34,211,238,0.3)", color:"#22d3ee", borderRadius:20, padding:"2px 7px", fontWeight:800 }}>
-                            {unreadCount} NEW
-                          </span>
-                        )}
+                  <motion.div initial={{ opacity:0, y:8, scale:0.95 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:8, scale:0.95 }}
+                    className="absolute top-12 -right-14 md:right-0 w-[270px] md:w-72 bg-[#0d1420] border border-white/10 rounded-2xl p-4 z-50 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+                    {[
+                      { msg: "You ranked up to B-Rank! ⚡", time: "2m ago", color: "#22d3ee" },
+                      { msg: "Daily quest reset — new challenges!", time: "1h ago", color: "#f59e0b" },
+                      { msg: "ZeroOne challenged you ⚔️", time: "3h ago", color: "#ef4444" },
+                    ].map((n, i) => (
+                      <div key={i} className={`py-2.5 ${i < 2 ? "border-b border-white/5" : ""}`}>
+                        <p className="text-xs text-white/80 mb-1">{n.msg}</p>
+                        <p className="text-[10px]" style={{ color: n.color }}>{n.time}</p>
                       </div>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={() => markAllRead()}
-                          style={{ display:"flex", alignItems:"center", gap:4, fontSize:9, color:"rgba(255,255,255,0.35)", fontWeight:700, cursor:"pointer", background:"none", border:"none" }}
-                        >
-                          <CheckCheck size={12} /> Mark all read
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Notification list */}
-                    <div style={{ maxHeight: 320, overflowY:"auto", padding:"8px 0" }}>
-                      {liveNotifs.length === 0 ? (
-                        <div style={{ padding:"28px 16px", textAlign:"center" }}>
-                          <BellOff size={28} color="rgba(255,255,255,0.15)" style={{ margin:"0 auto 10px" }} />
-                          <p style={{ fontSize:11, color:"rgba(255,255,255,0.25)", fontFamily:"'Orbitron',sans-serif", letterSpacing:"0.1em" }}>NO NOTIFICATIONS</p>
-                          <p style={{ fontSize:9, color:"rgba(255,255,255,0.15)", marginTop:4 }}>Notifications will appear here when you earn XP, win battles, or level up.</p>
-                        </div>
-                      ) : liveNotifs.map((n, i) => {
-                        const cfg = NOTIF_CONFIG[n.type] || NOTIF_CONFIG.system;
-                        return (
-                          <div
-                            key={n.id}
-                            onClick={() => !n.read && markOneRead(n.id)}
-                            style={{
-                              display:"flex", alignItems:"flex-start", gap:12,
-                              padding:"10px 16px",
-                              borderBottom: i < liveNotifs.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                              background: n.read ? "transparent" : `${cfg.color}08`,
-                              cursor: n.read ? "default" : "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            {/* Icon dot */}
-                            <div style={{
-                              width:32, height:32, borderRadius:"50%", flexShrink:0,
-                              background: `${cfg.color}15`,
-                              border: `1px solid ${cfg.color}30`,
-                              display:"flex", alignItems:"center", justifyContent:"center",
-                              fontSize:14, marginTop:1,
-                            }}>
-                              {cfg.icon}
-                            </div>
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <p style={{ fontSize:11, fontWeight:700, color: n.read ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.9)", marginBottom:2, lineHeight:1.4 }}>
-                                {n.message}
-                              </p>
-                              {n.subtext && (
-                                <p style={{ fontSize:9, color:"rgba(255,255,255,0.3)", marginBottom:3 }}>{n.subtext}</p>
-                              )}
-                              <p style={{ fontSize:9, color: cfg.color, fontWeight:700, opacity: n.read ? 0.5 : 0.8 }}>
-                                {relativeTime(n.createdAt)}
-                              </p>
-                            </div>
-                            {/* Unread dot */}
-                            {!n.read && (
-                              <div style={{ width:6, height:6, borderRadius:"50%", background:cfg.color, flexShrink:0, marginTop:6, boxShadow:`0 0 6px ${cfg.color}` }} />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Footer */}
-                    {liveNotifs.length > 0 && (
-                      <div style={{ padding:"10px 16px", borderTop:"1px solid rgba(255,255,255,0.06)", textAlign:"center" }}>
-                        <p style={{ fontSize:9, color:"rgba(255,255,255,0.2)", letterSpacing:"0.08em" }}>
-                          Showing last {liveNotifs.length} notifications
-                        </p>
-                      </div>
-                    )}
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1447,15 +763,12 @@ export default function RankPushDashboard() {
             <div className="card p-6 md:p-7 text-center relative overflow-hidden" style={{ borderTop: `3px solid ${rank.color}` }}>
               <div style={{ position:"absolute", top:"-30%", left:"50%", transform:"translateX(-50%)", width:220, height:220, borderRadius:"50%", background:rank.color, opacity:0.06, filter:"blur(50px)", pointerEvents:"none" }} />
 
-              {/* Avatar — clickable opens upload modal */}
+              {/* Avatar — clickable opens profile */}
               <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 rounded-full cursor-pointer hover:scale-105 transition-transform"
                 style={{ border: `2px solid ${rank.color}`, boxShadow: `0 0 24px ${rank.glowColor}` }}
-                onClick={() => setShowUploadModal(true)}>
-                <img 
-  src={user?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.uid || "default"}`} 
-  style={{ width: "96px", height: "96px", minWidth: "96px", minHeight: "96px", objectFit: "cover", borderRadius: "50%" }} 
-  alt="Profile" 
-/>
+                onClick={() => setShowProfile(true)}>
+                <img src={user?.photoURL || "https://i.pinimg.com/736x/8e/31/31/8e3131065715975e53381e4b85c2c77d.jpg"}
+                  className="w-full h-full rounded-full object-cover" alt="Profile" />
                 <div style={{ position:"absolute", bottom:-4, right:-4, background:`linear-gradient(135deg,${rank.color},${rank.color}bb)`, borderRadius:8, padding:"3px 7px", fontFamily:"'Orbitron',sans-serif", fontSize:8, fontWeight:900, border:"2px solid #02010a" }}>
                   LVL {stats.level}
                 </div>
@@ -1467,16 +780,9 @@ export default function RankPushDashboard() {
                 </div>
               </div>
 
-              <h2 className="font-logo text-base md:text-lg tracking-wide mb-1 text-white">
+              <h2 className="font-logo text-base md:text-lg tracking-wide mb-3 text-white">
                 {user?.displayName || "CYBER HUNTER"}
               </h2>
-
-              {/* Bio */}
-              {(stats as any).bio && (
-                <p className="text-[10px] text-white/40 italic mb-3 px-2 leading-relaxed">
-                  {(stats as any).bio}
-                </p>
-              )}
 
               {/* Rank Badge — clickable opens rank modal */}
               <div className="flex justify-center mb-4">
@@ -1557,13 +863,13 @@ export default function RankPushDashboard() {
               <div className="flex items-center gap-2 mb-4">
                 <Flame size={16} color="#f59e0b" />
                 <h3 className="text-[9px] font-black tracking-widest uppercase opacity-70">Daily Streak</h3>
-                <span className="ml-auto text-lg font-black text-amber-500">{stats.streak || 0} 🔥</span>
+                <span className="ml-auto text-lg font-black text-amber-500">{stats.streak} 🔥</span>
               </div>
               <div className="flex gap-1.5 md:gap-2">
-                {streakDays.map((d,i) => (
+                {STREAK_DAYS.map((d,i) => (
                   <div key={i} className="streak-pip flex-1 text-center" style={{ animationDelay:`${i*80}ms` }}>
-                    <div className="h-7 md:h-8 rounded-lg flex items-center justify-center mb-1" style={{ background:streakDone[i]?"#f59e0b":"rgba(255,255,255,0.05)", border:streakDone[i]?"none":"1px solid rgba(255,255,255,0.08)", boxShadow:streakDone[i]?"0 0 10px rgba(245,158,11,0.4)":"none" }}>
-                      {streakDone[i] && <span className="text-[10px]">✓</span>}
+                    <div className="h-7 md:h-8 rounded-lg flex items-center justify-center mb-1" style={{ background:STREAK_DONE[i]?"#f59e0b":"rgba(255,255,255,0.05)", border:STREAK_DONE[i]?"none":"1px solid rgba(255,255,255,0.08)", boxShadow:STREAK_DONE[i]?"0 0 10px rgba(245,158,11,0.4)":"none" }}>
+                      {STREAK_DONE[i] && <span className="text-[10px]">✓</span>}
                     </div>
                     <span className="text-[8px] font-bold opacity-40 uppercase">{d}</span>
                   </div>
@@ -1703,9 +1009,9 @@ export default function RankPushDashboard() {
                 <h3 className="font-logo text-sm md:text-base text-red-500 uppercase mb-1">Rival Battle</h3>
                 <p className="text-[10px] opacity-45">Challenge a friend to real-time 1v1 MCQ battle</p>
               </div>
-              <button onClick={() => setShowRivalModal(true)}
+              <button onClick={() => stats.plan === "pro" ? setShowRivalModal(true) : setShowProModal(true)}
                 className="w-full md:w-auto bg-gradient-to-br from-red-600 to-red-500 border-none rounded-xl py-2.5 px-5 text-white font-black text-[10px] tracking-wide flex items-center justify-center gap-2">
-                <Wifi size={14} /> Find Rival
+                {stats.plan === "pro" ? <><Wifi size={14} /> Find Rival</> : <><Lock size={14} /> PRO Only</>}
               </button>
             </div>
 
@@ -1717,10 +1023,10 @@ export default function RankPushDashboard() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label:"Battles",   value: stats.weeklyBattles ?? 18,  suffix:"",   color:"#22d3ee", icon:Swords      },
-                  { label:"Correct",   value: stats.weeklyCorrect ?? 142,  suffix:"",   color:"#34d399", icon:CheckCircle },
-                  { label:"XP Earned", value: stats.weeklyXP     ?? 0,   suffix:"",   color:"#f59e0b", icon:Zap         },
-                  { label:"Rank ▲",    value: stats.weeklyRankUps?? 0,   suffix:" ↑", color:"#a855f7", icon:ChevronUp   },
+                  { label:"Battles",   value:18,   suffix:"",   color:"#22d3ee", icon:Swords      },
+                  { label:"Correct",   value:142,  suffix:"",   color:"#34d399", icon:CheckCircle },
+                  { label:"XP Earned", value:2340, suffix:"",   color:"#f59e0b", icon:Zap         },
+                  { label:"Rank ▲",    value:3,    suffix:" ↑", color:"#a855f7", icon:ChevronUp   },
                 ].map(s => (
                   <div key={s.label} className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-center">
                     <s.icon size={16} className="mx-auto mb-2" color={s.color} />
@@ -1743,88 +1049,44 @@ export default function RankPushDashboard() {
                 </h3>
                 <span className="text-[8px] font-black text-cyan-400 border border-cyan-400/30 px-2 py-0.5 rounded-full">LIVE</span>
               </div>
-              {/* Leaderboard skeleton while loading */}
-              {leaderboardLoading ? (
-                <div className="flex flex-col gap-2">
-                  {[1,2,3,4,5].map(n => (
-                    <div key={n} className="flex items-center gap-2.5 p-2.5 rounded-xl animate-pulse">
-                      <div className="w-6 h-3 bg-white/10 rounded"/>
-                      <div className="w-9 h-9 bg-white/10 rounded-full"/>
-                      <div className="flex-1">
-                        <div className="h-2.5 bg-white/10 rounded w-24 mb-1.5"/>
-                        <div className="h-1.5 bg-white/5 rounded w-full"/>
-                      </div>
-                      <div className="w-12 h-3 bg-white/10 rounded"/>
-                    </div>
-                  ))}
-                </div>
-              ) : liveLeaderboard.map((p, i) => (
-                  <div key={p.id || p.name}
-                    className="flex items-center gap-2.5 p-2 md:p-2.5 rounded-xl cursor-pointer transition-all"
-                    onClick={() => p.id && setSelectedProfileUserId(p.id)}
-                    style={{
-                      background: p.isCurrentUser
-                        ? `rgba(${p.rankInfo?.color ? "34,211,238" : "34,211,238"},0.08)`
-                        : i===0 ? "rgba(34,211,238,0.05)" : "transparent",
-                      border: p.isCurrentUser
-                        ? `1px solid ${p.rankInfo?.color || "#22d3ee"}44`
-                        : i===0 ? "1px solid rgba(34,211,238,0.1)" : "1px solid transparent",
-                    }}
-                    onMouseEnter={e => { if(!p.isCurrentUser && i!==0)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)"; }}
-                    onMouseLeave={e => { if(!p.isCurrentUser && i!==0)(e.currentTarget as HTMLElement).style.background="transparent"; }}
-                  >
-                    {/* Rank number */}
-                    <span className="text-[13px] font-black italic min-w-[24px]" style={{ color: i===0?"#22d3ee":"rgba(255,255,255,0.35)" }}>
-                      {p.rank}
-                    </span>
-                    {/* Avatar */}
+              <div className="flex flex-col gap-1.5">
+                {LEADERBOARD.map((p,i) => (
+                  <div key={p.name} className="flex items-center gap-2.5 p-2 md:p-2.5 rounded-xl cursor-pointer transition-all"
+                    style={{ background:i===0?"rgba(34,211,238,0.05)":"transparent", border:i===0?"1px solid rgba(34,211,238,0.1)":"1px solid transparent" }}
+                    onMouseEnter={e => { if(i!==0)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)"; }}
+                    onMouseLeave={e => { if(i!==0)(e.currentTarget as HTMLElement).style.background="transparent"; }}>
+                    <span className="text-[13px] font-black italic min-w-[24px]" style={{ color:i===0?"#22d3ee":"rgba(255,255,255,0.35)" }}>{p.rank}</span>
                     <div className="relative shrink-0">
-                      <img
-                        src={p.avatar} loading="lazy"
-                        className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover"
-                        style={{ border:`2px solid ${p.rankInfo?.color || "#22d3ee"}` }}
-                        alt={p.name}
-                      />
-                      {/* SVG rank mini-badge */}
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 flex items-center justify-center" style={{ filter:"drop-shadow(0 0 3px rgba(0,0,0,0.8))" }}>
-                        <RankBadgeSVG rankId={p.rankInfo?.id || "e"} size={14} />
-                      </div>
+                      <img src={p.avatar} className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover" style={{ border:`2px solid ${p.rankInfo.color}` }} alt={p.name} />
+                      <span className="absolute -bottom-0.5 -right-0.5 text-[9px]">{p.rankInfo.icon}</span>
                     </div>
-                    {/* Name + bar */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <p className="text-[10px] font-extrabold uppercase italic truncate"
-                          style={{ color: p.isCurrentUser ? p.rankInfo?.color || "#22d3ee" : i===0?"#22d3ee":"rgba(255,255,255,0.8)" }}
-                        >{p.name}</p>
-                        {p.isCurrentUser && <span className="text-[7px] bg-cyan-400/20 text-cyan-400 px-1 py-0.5 rounded font-black shrink-0">YOU</span>}
-                      </div>
-                      <div className="h-[3px] bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width:`${Math.max(20, 100-i*15)}%`, background: p.rankInfo?.color || "#22d3ee" }} />
+                      <p className="text-[10px] font-extrabold uppercase italic truncate" style={{ color:i===0?"#22d3ee":"rgba(255,255,255,0.8)" }}>{p.name}</p>
+                      <div className="h-[3px] bg-white/5 rounded-full mt-1 overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width:`${100-i*12}%`, background:p.rankInfo.color }} />
                       </div>
                     </div>
-                    {/* XP Score */}
                     <div className="text-right shrink-0">
-                      <p className="text-[10px] font-black" style={{ color: p.rankInfo?.color || "#22d3ee" }}>{p.score}</p>
+                      <p className="text-[10px] font-black text-cyan-400">{p.score}</p>
                       <p className="text-[7px] opacity-35 uppercase">EXP</p>
                     </div>
                   </div>
                 ))}
+              </div>
               <button className="w-full mt-3 p-2 bg-white/5 border border-white/10 rounded-lg text-white/40 text-[9px] font-extrabold uppercase tracking-widest flex items-center justify-center gap-1.5">
                 View Full Leaderboard <ArrowRight size={11} />
               </button>
             </div>
 
-            {/* Daily Quests — Real Firestore */}
+            {/* Daily Quests */}
             <div className="card p-5 md:p-6 border-l-[3px] border-orange-500 bg-orange-500/5">
               <div className="flex items-center gap-2 mb-4 opacity-80">
                 <Flame size={14} color="#f97316" />
                 <h3 className="text-[9px] font-black tracking-widest uppercase">Daily Quests</h3>
-                <span className="ml-auto text-[9px] text-orange-500 font-extrabold">
-                  {(liveQuests.length > 0 ? liveQuests : DAILY_QUESTS).filter(q => q.done).length}/{(liveQuests.length > 0 ? liveQuests : DAILY_QUESTS).length} Done
-                </span>
+                <span className="ml-auto text-[9px] text-orange-500 font-extrabold">1/3 Done</span>
               </div>
               <div className="flex flex-col gap-2.5">
-                {(liveQuests.length > 0 ? liveQuests : DAILY_QUESTS).map(q => (
+                {DAILY_QUESTS.map(q => (
                   <div key={q.id} className="rounded-xl p-3 md:p-3.5" style={{ background:q.done?"rgba(34,197,94,0.05)":"rgba(255,255,255,0.03)", border:`1px solid ${q.done?"rgba(34,197,94,0.2)":"rgba(255,255,255,0.05)"}` }}>
                     <div className={`flex items-start gap-2.5 ${q.done?"mb-0":"mb-2.5"}`}>
                       <q.icon size={14} className="shrink-0 mt-0.5" color={q.done?"#22c55e":q.color} />
@@ -1843,7 +1105,7 @@ export default function RankPushDashboard() {
                           <span className="text-[8px] font-extrabold" style={{ color:q.color }}>{q.progress}/{q.total}</span>
                         </div>
                         <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                          <div className="quest-bar h-full rounded-full" style={{ width:`${Math.round((q.progress/q.total)*100)}%`, background:`linear-gradient(90deg,${q.color},${q.color}aa)` }} />
+                          <div className="quest-bar h-full rounded-full" style={{ width:`${(q.progress/q.total)*100}%`, background:`linear-gradient(90deg,${q.color},${q.color}aa)` }} />
                         </div>
                       </div>
                     )}
@@ -1862,8 +1124,8 @@ export default function RankPushDashboard() {
               </div>
               <p className="text-[13px] font-bold text-white/80 mb-1.5">Physics Chapter 3 Boss</p>
               <p className="text-[10px] opacity-35 mb-4">10 hard questions. Defeat the boss to earn rare XP!</p>
-              <button onClick={() => router.push(`/arena/${selectedSub.toLowerCase()}`)} className="w-full py-2.5 bg-red-500/10 border border-red-500/25 rounded-lg text-red-500 font-black text-[10px] flex items-center justify-center gap-1.5">
-                <Layers size={12} /> Start Boss Fight
+              <button onClick={() => setShowProModal(true)} className="w-full py-2.5 bg-red-500/10 border border-red-500/25 rounded-lg text-red-500 font-black text-[10px] flex items-center justify-center gap-1.5">
+                <Lock size={12} /> PRO Feature
               </button>
             </div>
 
@@ -1871,12 +1133,9 @@ export default function RankPushDashboard() {
         </div>
 
         {/* Footer */}
-          <footer className="mt-12 md:mt-[60px] pt-6 border-t border-white/5 text-center opacity-20">
-            <p className="font-logo text-[9px] tracking-[1.2em] text-cyan-400 uppercase">RankPush · Shadow System · 2026</p>
-          </footer>
-        </div>
-        </div>
-        </div>
+        <footer className="mt-12 md:mt-[60px] pt-6 border-t border-white/5 text-center opacity-20">
+          <p className="font-logo text-[9px] tracking-[1.2em] text-cyan-400 uppercase">RankPush · Shadow System · 2026</p>
+        </footer>
       </div>
     </>
   );

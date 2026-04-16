@@ -120,7 +120,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#02010a] text-white font-sans overflow-x-hidden pb-12">
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-      <script src="https://cdn.tailwindcss.com" async />
+
 
       <style>{`
         .font-logo { font-family: 'Orbitron', sans-serif; }
@@ -145,8 +145,8 @@ export default function ProfilePage() {
         <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] rounded-full bg-purple-600/5 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 max-w-[800px] mx-auto px-4 md:px-8 pt-8 md:pt-12">
-        
+      <div className="relative z-10 px-4 md:px-8 pt-8 md:pt-12 w-full">
+
         {/* HEADER */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ export default function ProfilePage() {
               </h1>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
             className={`px-5 py-2.5 rounded-xl font-black text-[10px] md:text-xs tracking-widest uppercase flex items-center gap-2 transition-all ${isEditing ? 'bg-cyan-400 text-black shadow-[0_0_20px_rgba(34,211,238,0.4)]' : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10'}`}
           >
@@ -168,7 +168,7 @@ export default function ProfilePage() {
         </div>
 
         {/* MAIN PROFILE CARD */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden"
         >
@@ -176,23 +176,23 @@ export default function ProfilePage() {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50" />
 
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12">
-            
+
             {/* AVATAR SECTION WITH LOCK LOGIC */}
             <div className="flex flex-col items-center">
-              <div 
+              <div
                 className={`relative w-32 h-32 md:w-40 md:h-40 rounded-full p-1.5 transition-all duration-500 ${isCRankUnlocked ? 'cursor-pointer hover:scale-105' : ''}`}
-                style={{ 
+                style={{
                   border: `2px solid ${isCRankUnlocked ? '#22d3ee' : 'rgba(255,255,255,0.1)'}`,
                   boxShadow: isCRankUnlocked ? '0 0 30px rgba(34,211,238,0.2)' : 'none'
                 }}
                 onClick={handleImageClick}
               >
-                <img 
-                  src={user.photoURL} 
+                <img
+                  src={user.photoURL}
                   className={`w-full h-full rounded-full object-cover transition-all duration-500 ${!isCRankUnlocked ? 'grayscale blur-[3px] opacity-40' : ''}`}
-                  alt="Avatar" 
+                  alt="Avatar"
                 />
-                
+
                 {/* Lock Overlay */}
                 {!isCRankUnlocked && (
                   <div className="absolute inset-0 m-1.5 bg-black/60 rounded-full flex flex-col items-center justify-center border border-white/5">
@@ -234,16 +234,16 @@ export default function ProfilePage() {
             {/* FORM SECTION */}
             <div className="flex-1 w-full space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                
+
                 {/* Display Name */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">
                     <User size={12} /> Hunter Name
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.displayName}
-                    onChange={(e) => setFormData({...formData, displayName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                     disabled={!isEditing}
                     className="input-field font-logo text-sm tracking-wide"
                   />
@@ -254,8 +254,8 @@ export default function ProfilePage() {
                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">
                     <Mail size={12} /> Sync Email
                   </label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={user.email}
                     disabled
                     className="input-field text-sm opacity-50"
@@ -267,10 +267,10 @@ export default function ProfilePage() {
                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">
                     <Phone size={12} /> Comms Link
                   </label>
-                  <input 
-                    type="tel" 
+                  <input
+                    type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     disabled={!isEditing}
                     className="input-field text-sm"
                     placeholder="+880..."
@@ -295,9 +295,9 @@ export default function ProfilePage() {
                 <label className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">
                   <Shield size={12} /> Hunter Bio / Status
                 </label>
-                <textarea 
+                <textarea
                   value={formData.bio}
-                  onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   disabled={!isEditing}
                   rows={3}
                   className="input-field text-sm resize-none custom-scrollbar"
