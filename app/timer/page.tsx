@@ -770,7 +770,7 @@ export default function ShadowTimer() {
       const entries: LeaderboardEntry[] = snap.docs.map((d, i) => {
         const data = d.data();
         const uid = d.id;
-        const rankInfo = getRankBadgeByXP(data.xp || 0);
+        const rankBadge = getRankBadgeByXP(data.xp || 0);
 
         return {
           rank: i + 1,
@@ -779,8 +779,8 @@ export default function ShadowTimer() {
           avatar: data.photoURL || `https://i.pravatar.cc/150?u=${uid}`,
           todayMinutes: data.today_study_time || 0,
           totalXP: data.xp || 0,
-          rankColor: rankInfo.color,
-          rankId: rankInfo.id || "e",
+          rankColor: rankBadge.color,
+          rankId: rankBadge.id || "e",
           isCurrentUser: uid === currentUid,
         };
       });

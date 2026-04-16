@@ -102,9 +102,12 @@ export default function RankPushLogin() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@800&display=swap');
         
-        .login-page { 
+        html, body { 
           max-width: 100vw;
           overflow-x: hidden;
+        }
+
+        body {
           background-color: #02010a;
           color: white; 
           font-family: 'Outfit', sans-serif;
