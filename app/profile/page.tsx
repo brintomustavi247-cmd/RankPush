@@ -118,12 +118,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="profile-page min-h-screen bg-[#02010a] text-white font-sans overflow-x-hidden pb-12">
+    <div className="profile-page min-h-screen bg-[#02010a] text-white font-sans overflow-x-hidden pb-12 relative">
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
 
       <style>{`
         .font-logo { font-family: 'Orbitron', sans-serif; }
         .profile-page { font-family: 'Outfit', sans-serif; background-color: #02010a; }
+        .profile-page::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px); pointer-events: none; z-index: 1; }
         
         .input-field {
           width: 100%; padding: 14px 16px; border-radius: 12px;
