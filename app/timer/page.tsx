@@ -767,10 +767,10 @@ export default function ShadowTimer() {
         return;
       }
 
-        const entries: LeaderboardEntry[] = snap.docs.map((d, i) => {
-          const data = d.data();
-          const uid = d.id;
-          const rankInfo = getRankBadgeByXP(data.xp || 0);
+      const entries: LeaderboardEntry[] = snap.docs.map((d, i) => {
+        const data = d.data();
+        const uid = d.id;
+        const rankInfo = getRankBadgeByXP(data.xp || 0);
 
         return {
           rank: i + 1,
